@@ -7,7 +7,7 @@
     "maxShiftBy": 5
   },
   "client": [
-    "MinecraftMixin"
+    "me.vlink102.melomod.mixin.MinecraftMixin"
   ],
   "verbose": true
 }

@@ -1,6 +1,6 @@
-package org.polyfrost.example.command;
+package me.vlink102.melomod.command;
 
-import org.polyfrost.example.ExampleMod;
+import me.vlink102.melomod.MeloMod;
 import cc.polyfrost.oneconfig.utils.commands.annotations.Command;
 import cc.polyfrost.oneconfig.utils.commands.annotations.Main;
 
@@ -10,12 +10,12 @@ import cc.polyfrost.oneconfig.utils.commands.annotations.Main;
  *
  * @see Command
  * @see Main
- * @see ExampleMod
+ * @see MeloMod
  */
-@Command(value = ExampleMod.MODID, description = "Access the " + ExampleMod.NAME + " GUI.")
-public class ExampleCommand {
+@Command(value = MeloMod.MODID, description = "Access the " + MeloMod.NAME + " GUI.")
+public class MeloCommand {
     @Main
     private void handle() {
-        ExampleMod.INSTANCE.config.openGui();
+        MeloMod.config.openGui();
     }
 }

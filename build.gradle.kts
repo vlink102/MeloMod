@@ -17,6 +17,7 @@ plugins {
     java
 }
 
+
 // Gets the mod name, version and id from the `gradle.properties` file.
 val mod_name: String by project
 val mod_version: String by project
@@ -83,11 +84,13 @@ sourceSets {
 
 // Adds the Polyfrost maven repository so that we can get the libraries necessary to develop the mod.
 repositories {
-    maven("https://repo.polyfrost.org/releases")
+    maven("https://repo.polyfrost.org/releases");
+    maven("https://repo.hypixel.net/repository/Hypixel/");
 }
 
 // Configures the libraries/dependencies for your mod.
 dependencies {
+    implementation("net.hypixel:hypixel-api-transport-reactor:4.1")
     // Adds the OneConfig library, so we can develop with it.
     modCompileOnly("cc.polyfrost:oneconfig-$platform:0.2.2-alpha+")
 
@@ -98,6 +101,7 @@ dependencies {
     if (platform.isLegacyForge) {
         compileOnly("org.spongepowered:mixin:0.7.11-SNAPSHOT")
         shade("cc.polyfrost:oneconfig-wrapper-launchwrapper:1.0.0-beta17")
+
     }
 }
 

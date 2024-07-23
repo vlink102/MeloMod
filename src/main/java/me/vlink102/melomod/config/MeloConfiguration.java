@@ -1,7 +1,7 @@
-package org.polyfrost.example.config;
+package me.vlink102.melomod.config;
 
-import org.polyfrost.example.ExampleMod;
-import org.polyfrost.example.hud.TestHud;
+import me.vlink102.melomod.hud.MeloHUD;
+import me.vlink102.melomod.MeloMod;
 import cc.polyfrost.oneconfig.config.Config;
 import cc.polyfrost.oneconfig.config.annotations.Dropdown;
 import cc.polyfrost.oneconfig.config.annotations.HUD;
@@ -15,11 +15,11 @@ import cc.polyfrost.oneconfig.config.data.OptionSize;
  * The main Config entrypoint that extends the Config type and inits the config options.
  * See <a href="https://docs.polyfrost.cc/oneconfig/config/adding-options">this link</a> for more config Options
  */
-public class TestConfig extends Config {
+public class MeloConfiguration extends Config {
     @HUD(
-            name = "Example HUD"
+            name = "MeloMod HUD"
     )
-    public TestHud hud = new TestHud();
+    public MeloHUD hud = new MeloHUD();
 
     @Switch(
             name = "Example Switch",
@@ -40,8 +40,8 @@ public class TestConfig extends Config {
     )
     public static int exampleDropdown = 1; // Default option (in this case "Option 2")
 
-    public TestConfig() {
-        super(new Mod(ExampleMod.NAME, ModType.UTIL_QOL), ExampleMod.MODID + ".json");
+    public MeloConfiguration() {
+        super(new Mod(MeloMod.NAME, ModType.SKYBLOCK), MeloMod.MODID + ".json");
         initialize();
     }
 }

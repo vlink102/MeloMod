@@ -2,13 +2,14 @@
   {
     "modid": "${id}",
     "name": "${name}",
-    "description": "",
+    "description": "Wouldn't you like to know.",
     "version": "${version}",
     "mcversion": "${mcVersionStr}",
     "url": "",
     "updateUrl": "",
     "authorList": [
-      "Your Name"
+      "Melo",
+      "vlink102"
     ],
     "credits": "",
     "logoFile": "",
