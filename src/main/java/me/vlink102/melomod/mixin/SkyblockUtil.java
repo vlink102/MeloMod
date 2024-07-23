@@ -1283,6 +1283,10 @@ public class SkyblockUtil {
                     this.master = master;
                 }
 
+                public BigInteger getExperience() {
+                    return experience;
+                }
+
                 public HashMap<String, Float> getMobsKilled() {
                     return mobsKilled;
                 }
