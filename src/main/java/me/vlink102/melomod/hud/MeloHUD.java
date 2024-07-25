@@ -2,6 +2,7 @@ package me.vlink102.melomod.hud;
 
 import cc.polyfrost.oneconfig.hud.TextHud;
 import cc.polyfrost.oneconfig.utils.hypixel.HypixelUtils;
+import cc.polyfrost.oneconfig.utils.hypixel.LocrawUtil;
 import me.vlink102.melomod.MeloMod;
 import me.vlink102.melomod.config.MeloConfiguration;
 import me.vlink102.melomod.events.InternalLocraw;
@@ -58,18 +59,49 @@ public class MeloHUD extends TextHud {
             lines.add(GRAY + "  Z: " + DARK_AQUA + "???");
             lines.add(GRAY + "  Drill: " + RED + "None");
         } else {
+            if (!HypixelUtils.INSTANCE.isHypixel() || Minecraft.getMinecraft().thePlayer == null) {
+                return;
+            }
             lines.add(GOLD + "Mining Highlights:");
-            BlockPos pos = MeloMod.internalLocraw.getCoords();
-            lines.add(GRAY + "  X: " + DARK_AQUA + pos.getX());
-            lines.add(GRAY + "  Y: " + DARK_AQUA + pos.getY());
-            lines.add(GRAY + "  Z: " + DARK_AQUA + pos.getZ());
+            if (MeloConfiguration.enableCoords) {
+                BlockPos pos = MeloMod.internalLocraw.getCoords();
+
+                lines.add(GRAY + "  X: " + DARK_AQUA + pos.getX());
+                lines.add(GRAY + "  Y: " + DARK_AQUA + pos.getY());
+                lines.add(GRAY + "  Z: " + DARK_AQUA + pos.getZ());
+            }
+
             ItemStack heldItem = PlayerObjectUtil.getHeldItem();
-            SkyblockUtil.ItemType type = SkyblockUtil.ItemType.parseFromItemStack(heldItem);
-            if (type == SkyblockUtil.ItemType.DRILL || type == SkyblockUtil.ItemType.GAUNTLET || type == SkyblockUtil.ItemType.PICKAXE) {
-                lines.add(GRAY + "  Drill: " + RED + PlayerObjectUtil.getHeldItemName());
+            if (heldItem != null) {
+                SkyblockUtil.ItemType type = SkyblockUtil.ItemType.parseFromItemStack(heldItem);
+                if (type == SkyblockUtil.ItemType.DRILL || type == SkyblockUtil.ItemType.GAUNTLET || type == SkyblockUtil.ItemType.PICKAXE) {
+                    lines.add(GRAY + "  Drill: " + RED + PlayerObjectUtil.getHeldItemName());
+                } else {
+                    lines.add(GRAY + "  Drill: " + RED + "None");
+                }
             } else {
                 lines.add(GRAY + "  Drill: " + RED + "None");
             }
+
+            if (MeloConfiguration.miningHighlightType == 2) {
+                lines.add(GRAY + "  Type: " + YELLOW + "Automatic");
+                switch (SkyblockUtil.getPlayerLocation()) {
+                    case DWARVEN_MINES:
+                        lines.add(GRAY + "  Detected: " + DARK_GREEN + "Mithril");
+                        break;
+                    case CRYSTAL_HOLLOWS:
+                        lines.add(GRAY + "  Detected: " + DARK_PURPLE + "Gemstone");
+                        break;
+                    default:
+                        lines.add(GRAY + "  Detected: " + RED + "None");
+                        break;
+                }
+            } else if (MeloConfiguration.miningHighlightType == 0) {
+                lines.add(GRAY + "  Type: " + DARK_GREEN + "Mithril");
+            } else if (MeloConfiguration.miningHighlightType == 1) {
+                lines.add(GRAY + "  Type: " + DARK_PURPLE + "Gemstone");
+            }
+
         }
     }
 }

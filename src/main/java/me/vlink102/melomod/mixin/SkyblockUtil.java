@@ -1,7 +1,10 @@
 package me.vlink102.melomod.mixin;
 
+import cc.polyfrost.oneconfig.utils.hypixel.HypixelUtils;
 import com.google.gson.*;
 import me.vlink102.melomod.MeloMod;
+import me.vlink102.melomod.events.InternalLocraw;
+import me.vlink102.melomod.world.ItemResolutionQuery;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTBase;
 import net.minecraft.nbt.NBTTagCompound;
@@ -58,7 +61,9 @@ public class SkyblockUtil {
         }
 
         public static ItemType parseFromItemStack(ItemStack stack) {
+            if (stack == null) return null;
             List<String> lore = getLore(stack);
+            System.out.println(lore);
             for (String s : lore) {
                 if (s.matches(".*?(COMMON|UNCOMMON|RARE|EPIC|LEGENDARY|MYTHIC|DIVINE|SPECIAL|VERY SPECIAL|ADMIN)\\s(BELT|BRACELET|CLOAK|GLOVES|NECKLACE|SWORD|LONGSWORD|BOW|SHORTBOW|FISHING ROD|FISHING WEAPON|PICKAXE|DRILL|AXE|GAUNTLET|SHOVEL|HOE|WAND|HELMET|CHESTPLATE|LEGGINGS|BOOTS|ACCESSORY|HATCESSORY|POWER STONE|REFORGE STONE|VACUUM|DEPLOYABLE).*?")) {
                     for (ItemType value : ItemType.values()) {
@@ -70,6 +75,48 @@ public class SkyblockUtil {
                 }
             }
 
+            return null;
+        }
+    }
+
+    public static Location getPlayerLocation() {
+        return Location.parseFromLocraw(HypixelUtils.INSTANCE.getLocrawInfo().getGameMode());
+    }
+
+    public enum Location {
+        PRIVATE_ISLAND("dynamic"),
+        GARDEN("garden"),
+        HUB("hub"),
+        BARN("farming_1"),
+        PARK("foraging_1"),
+        SPIDER_DEN("combat_1"),
+        END("combat_3"),
+        CRIMSON_ISLE("crimson_isle"),
+        GOLD_MINE("mining_1"),
+        DEEP_CAVERNS("mining_2"),
+        DWARVEN_MINES("mining_3"),
+        CRYSTAL_HOLLOWS("crystal_hollows"),
+        WINTER(""), // TODO
+        DUNGEON_HUB("dungeon_hub"),
+        RIFT("rift"),
+        DARK_AUCTION(""); // TODO
+
+        private final String internal;
+
+        Location(String internal) {
+            this.internal = internal;
+        }
+
+        public String getInternal() {
+            return internal;
+        }
+
+        public static Location parseFromLocraw(String locrawGamemode) {
+            for (Location value : Location.values()) {
+                if (locrawGamemode.equalsIgnoreCase(value.getInternal())) {
+                    return value;
+                }
+            }
             return null;
         }
     }
@@ -497,8 +544,7 @@ public class SkyblockUtil {
         NBTTagList lore = display.getTagList("Lore", Constants.NBT.TAG_STRING);
         List<String> loreList = new ArrayList<>();
         for (int i = 0; i < lore.tagCount(); i++) {
-            NBTBase base = lore.getCompoundTagAt(i);
-            loreList.add(base.toString());
+            loreList.add(lore.get(i).toString());
         }
         return loreList;
     }

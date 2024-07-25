@@ -6,6 +6,8 @@ import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 // Adds support for kotlin, and adds the Polyfrost Gradle Toolkit
 // which we use to prepare the environment.
 plugins {
+    idea
+    java
     kotlin("jvm")
     id("org.polyfrost.multi-version")
     id("org.polyfrost.defaults.repo")
@@ -14,7 +16,6 @@ plugins {
     id("com.github.johnrengelman.shadow")
     id("net.kyori.blossom") version "1.3.2"
     id("signing")
-    java
 }
 
 // Gets the mod name, version and id from the `gradle.properties` file.
@@ -83,19 +84,30 @@ sourceSets {
 
 // Adds the Polyfrost maven repository so that we can get the libraries necessary to develop the mod.
 repositories {
-    //mavenCentral()
+    mavenCentral()
+    maven("https://repo.spongepowered.org/maven/")
     //maven("https://repo.hypixel.net/repository/Hypixel/")
     maven("https://repo.polyfrost.org/releases")
+    maven("https://repo.hypixel.net/repository/Hypixel/")
+
+}
+
+val devenvMod: Configuration by configurations.creating {
+    isTransitive = false
+    isVisible = false
 }
 
 // Configures the libraries/dependencies for your mod.
 dependencies {
+    minecraft("com.mojang:minecraft:1.8.9")
+    mappings("de.oceanlabs.mcp:mcp_stable:22-1.8.9")
     //implementation("net.hypixel:HypixelAPI:3.0.0")
     //compileOnly("net.hypixel:hypixel-api-transport-reactor:4.1")
     // Adds the OneConfig library, so we can develop with it.
     modCompileOnly("cc.polyfrost:oneconfig-$platform:0.2.2-alpha+")
-
+    forge("net.minecraftforge:forge:1.8.9-11.15.1.2318-1.8.9")
     // Adds DevAuth, which we can use to log in to Minecraft in development.
+    implementation("net.hypixel:mod-api:0.3.1")
     modRuntimeOnly("me.djtheredstoner:DevAuth-${if (platform.isFabric) "fabric" else if (platform.isLegacyForge) "forge-legacy" else "forge-latest"}:1.2.0")
 
     // If we are building for legacy forge, includes the launch wrapper with `shade` as we configured earlier, as well as mixin 0.7.11
@@ -104,6 +116,8 @@ dependencies {
         shade("cc.polyfrost:oneconfig-wrapper-launchwrapper:1.0.0-beta17")
     }
 }
+
+
 
 tasks {
     // Processes the `src/resources/mcmod.info`, `fabric.mod.json`, or `mixins.${mod_id}.json` and replaces

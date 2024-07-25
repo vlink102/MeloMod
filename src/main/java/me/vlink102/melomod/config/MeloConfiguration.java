@@ -22,11 +22,12 @@ public class MeloConfiguration extends Config {
     public MeloHUD hud = new MeloHUD();
 
     @Switch(
-            name = "Example Switch",
+            name = "Enable Coordinates",
             size = OptionSize.SINGLE // Optional
     )
-    public static boolean exampleSwitch = false; // The default value for the boolean Switch.
+    public static boolean enableCoords = true; // The default value for the boolean Switch.
 
+    /*
     @Slider(
             name = "Example Slider",
             min = 0f, max = 100f, // Minimum and maximum values for the slider.
@@ -34,11 +35,13 @@ public class MeloConfiguration extends Config {
     )
     public static float exampleSlider = 50f; // The default value for the float Slider.
 
+     */
+
     @Dropdown(
-            name = "Example Dropdown", // Name of the Dropdown
-            options = {"Option 1", "Option 2", "Option 3", "Option 4"} // Options available.
+            name = "Mining Highlight Type", // Name of the Dropdown
+            options = {"Mithril", "Gemstones", "Auto"} // Options available.
     )
-    public static int exampleDropdown = 1; // Default option (in this case "Option 2")
+    public static int miningHighlightType = 2; // Default option (in this case "Option 2")
 
     public MeloConfiguration() {
         super(new Mod(MeloMod.NAME, ModType.SKYBLOCK), MeloMod.MODID + ".json");

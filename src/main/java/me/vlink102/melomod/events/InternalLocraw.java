@@ -52,9 +52,6 @@ public class InternalLocraw {
         if (!HypixelUtils.INSTANCE.isHypixel()) return;
         if (Minecraft.getMinecraft().thePlayer == null) return;
         LocrawInfo info = event.info;
-        if (info.getGameType() == LocrawInfo.GameType.SKYBLOCK) {
-            BlockPos coords = Minecraft.getMinecraft().thePlayer.getPosition();
-
-        }
+        System.out.println("GameMode: " + info.getGameMode());
     }
 }
