@@ -1,17 +1,20 @@
 package me.vlink102.melomod.mixin;
 
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import kotlinx.serialization.json.Json;
+import com.google.gson.*;
 import me.vlink102.melomod.MeloMod;
-import net.hypixel.api.reply.PlayerReply;
-import net.hypixel.api.reply.skyblock.SkyBlockProfileReply;
-import scala.util.parsing.json.JSONObject;
+import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NBTBase;
+import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.nbt.NBTTagList;
+import net.minecraftforge.common.util.Constants;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.math.BigInteger;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.util.*;
-import java.util.concurrent.ExecutionException;
 
 public class SkyblockUtil {
     private final MeloMod meloMod;
@@ -20,44 +23,104 @@ public class SkyblockUtil {
         this.meloMod = meloMod;
     }
 
-    public PlayerReply.Player getPlayerByName(String name) {
-        try {
-            return meloMod.hypixelAPI.getPlayerByName(name)
-                    .exceptionally(throwable -> {
-                        throwable.printStackTrace();
-                        return null;
-                    })
-                    .get().getPlayer();
-        } catch (InterruptedException | ExecutionException e) {
-            throw new RuntimeException(e);
+    public enum ItemType {
+        BELT,
+        BRACELET,
+        CLOAK,
+        GLOVES,
+        NECKLACE,
+        SWORD,
+        LONGSWORD,
+        BOW,
+        SHORTBOW,
+        FISHING_ROD,
+        FISHING_WEAPON,
+        PICKAXE,
+        DRILL,
+        AXE,
+        GAUNTLET,
+        SHOVEL,
+        HOE,
+        WAND,
+        HELMET,
+        CHESTPLATE,
+        LEGGINGS,
+        BOOTS,
+        ACCESSORY,
+        HATCESSORY,
+        POWER_STONE,
+        REFORGE_STONE,
+        VACUUM,
+        DEPLOYABLE;
+
+        ItemType() {
+
         }
-    }
 
-    public PlayerReply.Player getPlayerByUUID(UUID uuid) {
-        try {
-            return meloMod.hypixelAPI.getPlayerByUuid(uuid)
-                    .exceptionally(throwable -> {
-                        throwable.printStackTrace();
-                        return null;
-                    })
-                    .get().getPlayer();
-        } catch (InterruptedException | ExecutionException e) {
-            throw new RuntimeException(e);
-        }
+        public static ItemType parseFromItemStack(ItemStack stack) {
+            List<String> lore = getLore(stack);
+            for (String s : lore) {
+                if (s.matches(".*?(COMMON|UNCOMMON|RARE|EPIC|LEGENDARY|MYTHIC|DIVINE|SPECIAL|VERY SPECIAL|ADMIN)\\s(BELT|BRACELET|CLOAK|GLOVES|NECKLACE|SWORD|LONGSWORD|BOW|SHORTBOW|FISHING ROD|FISHING WEAPON|PICKAXE|DRILL|AXE|GAUNTLET|SHOVEL|HOE|WAND|HELMET|CHESTPLATE|LEGGINGS|BOOTS|ACCESSORY|HATCESSORY|POWER STONE|REFORGE STONE|VACUUM|DEPLOYABLE).*?")) {
+                    for (ItemType value : ItemType.values()) {
+                        if (s.contains(value.toString().replaceAll("_", " "))) {
+                            return value;
+                        }
+                    }
+                    return null;
+                }
+            }
 
-    }
-
-    public SkyBlockProfileReply getPlayerProfile(PlayerReply.Player player) {
-        SkyBlockProfileReply reply = new SkyBlockProfileReply();
-        JsonObject object = reply.getProfile();
-        if (object == null) return null;
-        if (!object.has("success")) return null;
-
-        if (object.get("success").getAsBoolean()) {
-            return reply;
-        } else {
             return null;
         }
+    }
+
+    public JsonArray getPlayerProfiles(UUID player) {
+        try {
+            URL url = new URL("https://api.hypixel.net/v2/skyblock/profiles?uuid=" + player);
+            HttpURLConnection con = (HttpURLConnection) url.openConnection();
+            con.setRequestMethod("GET");
+            con.setRequestProperty("Content-Type", "application/json");
+            con.setRequestProperty("API-Key", MeloMod.API_KEY);
+
+            con.setConnectTimeout(5000);
+            con.setReadTimeout(5000);
+            int status = con.getResponseCode();
+
+            if (status == 200) {
+                BufferedReader in = new BufferedReader(
+                        new InputStreamReader(con.getInputStream())
+                );
+                String inputLine;
+                StringBuffer content = new StringBuffer();
+                while ((inputLine = in.readLine()) != null) {
+                    content.append(inputLine);
+                }
+                in.close();
+                con.disconnect();
+                String contentString = content.toString();
+                JsonObject toReturn = new JsonParser().parse(contentString).getAsJsonObject();
+                if (toReturn.get("success").getAsBoolean()) {
+                    return toReturn.getAsJsonArray("profiles");
+                }
+            }
+
+
+            return null;
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
+    }
+
+    public JsonObject getActiveProfile(UUID player) {
+        JsonArray profiles = getPlayerProfiles(player);
+        for (JsonElement profile : profiles) {
+            JsonObject profileObj = profile.getAsJsonObject();
+            if (profileObj.get("selected").getAsBoolean()) {
+                return profileObj;
+            }
+        }
+        return null;
     }
 
     public class SkyblockProfile {
@@ -94,10 +157,43 @@ public class SkyblockUtil {
             }
             this.communityUpgrades = upgrades;
             this.createdAt = profileObject.get("created_at").getAsLong();
-            JsonObject members = profileObject.get("members").getAsJsonObject();
-            for (String string : members.keySet()) {
-
+            this.members = new ArrayList<>();
+            JsonObject membersObject = profileObject.get("members").getAsJsonObject();
+            for (Map.Entry<String, JsonElement> entry : membersObject.entrySet()) {
+                String string = entry.getKey();
+                members.add(new ProfileMember(UUID.fromString(string), membersObject.get(string).getAsJsonObject()));
             }
+            this.selected = profileObject.get("selected").getAsBoolean();
+            this.cuteName = profileObject.get("cute_name").getAsString();
+            this.gamemode = Gamemode.parseFromJSON(profileObject.get("game_mode").getAsString());
+        }
+
+        public Boolean getSelected() {
+            return selected;
+        }
+
+        public Gamemode getGamemode() {
+            return gamemode;
+        }
+
+        public List<CommunityUpgrade> getCommunityUpgrades() {
+            return communityUpgrades;
+        }
+
+        public List<ProfileMember> getMembers() {
+            return members;
+        }
+
+        public Long getCreatedAt() {
+            return createdAt;
+        }
+
+        public String getCuteName() {
+            return cuteName;
+        }
+
+        public UUID getProfileID() {
+            return profileID;
         }
     }
 
@@ -256,11 +352,76 @@ public class SkyblockUtil {
     public class ProfileMember {
         private final UUID playerID;
         private final RiftData riftData;
+        private final PlayerData playerData;
+        private final GlacitePlayerData glacitePlayerData;
+        private final Events events;
+        private final GardenPlayerData gardenPlayerData;
+        private final PetsData petsData;
+        private final AccessoryBagStorage accessoryBagStorage;
+        private final Levelling levelling;
+        private final ItemData itemData;
+        private final JacobsContest jacobsContest;
+        private final Currencies currencies;
+        private final Dungeons dungeons;
 
         public ProfileMember(UUID playerID, JsonObject object) {
             this.playerID = playerID;
             this.riftData = new RiftData(object.getAsJsonObject("rift"));
+            this.playerData = new PlayerData(object.get("player_data").getAsJsonObject());
+            this.glacitePlayerData = new GlacitePlayerData(object.get("glacite_player_data").getAsJsonObject());
+            this.events = new Events(object.get("events").getAsJsonObject());
+            this.gardenPlayerData = new GardenPlayerData(object.get("garden_player_data").getAsJsonObject());
+            this.petsData = new PetsData(object.get("pets_data").getAsJsonObject());
+            this.accessoryBagStorage = new AccessoryBagStorage(object.get("accessory_bag").getAsJsonObject());
+            this.levelling = new Levelling(object.get("levelling").getAsJsonObject());
+            this.itemData = new ItemData(object.get("item_data").getAsJsonObject());
+            this.jacobsContest = new JacobsContest(object.get("jacobs_contest").getAsJsonObject());
+            this.currencies = new Currencies(object.get("currencies").getAsJsonObject());
+            this.dungeons = new Dungeons(object.get("dungeons").getAsJsonObject());
+        }
 
+        public AccessoryBagStorage getAccessoryBagStorage() {
+            return accessoryBagStorage;
+        }
+
+        public Currencies getCurrencies() {
+            return currencies;
+        }
+
+        public Dungeons getDungeons() {
+            return dungeons;
+        }
+
+        public Events getEvents() {
+            return events;
+        }
+
+        public GardenPlayerData getGardenPlayerData() {
+            return gardenPlayerData;
+        }
+
+        public GlacitePlayerData getGlacitePlayerData() {
+            return glacitePlayerData;
+        }
+
+        public ItemData getItemData() {
+            return itemData;
+        }
+
+        public JacobsContest getJacobsContest() {
+            return jacobsContest;
+        }
+
+        public Levelling getLevelling() {
+            return levelling;
+        }
+
+        public PetsData getPetsData() {
+            return petsData;
+        }
+
+        public PlayerData getPlayerData() {
+            return playerData;
         }
 
         public RiftData getRiftData() {
@@ -285,15 +446,15 @@ public class SkyblockUtil {
     }
 
     public enum ItemRarity {
+        UNCOMMON('a'), // swapped for matching
         COMMON('f'),
-        UNCOMMON('a'),
         RARE('9'),
         EPIC('5'),
         LEGENDARY('6'),
         MYTHIC('d'),
         DIVINE('b'),
+        VERY_SPECIAL('c'), // swapped for matching
         SPECIAL('c'),
-        VERY_SPECIAL('c'),
         SUPREME('4'),
         ADMIN('4');
 
@@ -310,6 +471,36 @@ public class SkyblockUtil {
         public static ItemRarity parseRarity(String rarity) {
             return ItemRarity.valueOf(rarity.toUpperCase());
         }
+
+        public static ItemRarity parseFromItemStack(ItemStack stack) {
+            List<String> lore = getLore(stack);
+            String entry = lore.get(lore.size() - 1);
+            for (ItemRarity value : ItemRarity.values()) {
+                if (entry.contains(value.toString().replaceAll("_", " "))) {
+                    return value;
+                }
+            }
+            return null;
+        }
+    }
+
+    public static List<String> getLore(ItemStack stack) {
+        if (stack == null) return null;
+        NBTTagCompound tag = stack.getTagCompound();
+        if (!tag.hasKey("display")) {
+            return null;
+        }
+        NBTTagCompound display = tag.getCompoundTag("display");
+        if (!display.hasKey("Lore")) {
+            return null;
+        }
+        NBTTagList lore = display.getTagList("Lore", Constants.NBT.TAG_STRING);
+        List<String> loreList = new ArrayList<>();
+        for (int i = 0; i < lore.tagCount(); i++) {
+            NBTBase base = lore.getCompoundTagAt(i);
+            loreList.add(base.toString());
+        }
+        return loreList;
     }
 
     public class RiftData {
@@ -796,7 +987,8 @@ public class SkyblockUtil {
                 public CrazyKloon(JsonObject object) {
                     this.selectedColors = new HashMap<>();
                     JsonObject selectedColorsMap = object.getAsJsonObject("selected_colors");
-                    for (String string : selectedColorsMap.keySet()) {
+                    for (Map.Entry<String, JsonElement> entry : selectedColorsMap.entrySet()) {
+                        String string = entry.getKey();
                         selectedColors.put(string, selectedColorsMap.get(string).getAsString());
                     }
                     this.talked = object.get("talked").getAsBoolean();
@@ -1153,704 +1345,883 @@ public class SkyblockUtil {
         private final List<String> craftedGenerators;
         private final int fishingTreasureCaught;
         private final HashMap<String, BigInteger> experience;
-        private final GlacitePlayerData glacitePlayerData;
-        private final Events events;
-        private final GardenPlayerData gardenPlayerData;
-        private final PetsData petsData;
-        private final AccessoryBagStorage accessoryBagStorage;
-        private final Levelling levelling;
-        private final ItemData itemData;
-        private final JacobsContest jacobsContest;
-        private final Currencies currencies;
-        private final Dungeons dungeons;
-        private final Dungeons masterDungeons;
 
 
-
-        public class Dungeons {
-            public class Catacombs {
-                private final HashMap<String, Float> mobsKilled;
-                private final HashMap<String, Float> fastestTimeS;
-                private final HashMap<String, Float> mostDamageTank;
-                private final HashMap<String, Float> fastestTime;
-                private final HashMap<String, Float> mostDamageMage;
-                private final HashMap<String, Float> tierCompletions;
-                private final HashMap<String, Float> mostDamageHealer;
-                private final HashMap<String, Float> mostDamageArcher;
-                private final HashMap<String, Float> watcherKills;
-                private final HashMap<String, Float> mostHealing;
-                private final HashMap<String, Float> bestScore;
-                private final HashMap<String, Float> mostDamageBerserk;
-                private final HashMap<String, Float> fastestTimeSPlus;
-                private final HashMap<String, Float> mostMobsKilled;
-                private final HashMap<String, Float> timesPlayed;
-                private final HashMap<String, Float> milestoneCompletions;
-                private final BigInteger experience;
-                private final HashMap<String, List<BestRun>> bestRuns;
-                private final boolean master;
-
-                public Catacombs(JsonObject object, boolean master) {
-                    this.mobsKilled = new HashMap<>();
-                    JsonObject mobsKilledObject = object.getAsJsonObject("mobs_killed");
-                    for (String string : mobsKilledObject.keySet()) {
-                        mobsKilled.put(string, mobsKilledObject.get(string).getAsFloat());
-                    }
-                    this.fastestTimeS = new HashMap<>();
-                    JsonObject fastestTimeSObject = object.getAsJsonObject("fastest_time_s");
-                    for (String string : fastestTimeSObject.keySet()) {
-                        fastestTimeS.put(string, fastestTimeSObject.get(string).getAsFloat());
-                    }
-                    this.mostDamageTank = new HashMap<>();
-                    JsonObject mostDamageTankObject = object.getAsJsonObject("most_damage_tank");
-                    for (String string : mostDamageTankObject.keySet()) {
-                        mostDamageTank.put(string, mostDamageTankObject.get(string).getAsFloat());
-                    }
-                    this.fastestTime = new HashMap<>();
-                    JsonObject fastestTimeObject = object.getAsJsonObject("fastest_time");
-                    for (String string : fastestTimeObject.keySet()) {
-                        fastestTime.put(string, fastestTimeObject.get(string).getAsFloat());
-                    }
-                    this.mostDamageMage = new HashMap<>();
-                    JsonObject mostDamageMageObject = object.getAsJsonObject("most_damage_mage");
-                    for (String string : mostDamageMageObject.keySet()) {
-                        mostDamageMage.put(string, mostDamageMageObject.get(string).getAsFloat());
-                    }
-                    this.tierCompletions = new HashMap<>();
-                    JsonObject tierCompletionsObject = object.getAsJsonObject("tier_completions");
-                    for (String string : tierCompletionsObject.keySet()) {
-                        tierCompletions.put(string, tierCompletionsObject.get(string).getAsFloat());
-                    }
-                    this.mostDamageHealer = new HashMap<>();
-                    JsonObject mostDamageHealerObject = object.getAsJsonObject("most_damage_healer");
-                    for (String string : mostDamageHealerObject.keySet()) {
-                        mostDamageHealer.put(string, mostDamageHealerObject.get(string).getAsFloat());
-                    }
-                    this.mostDamageArcher = new HashMap<>();
-                    JsonObject mostDamageArcherObject = object.getAsJsonObject("most_damage_archer");
-                    for (String string : mostDamageArcherObject.keySet()) {
-                        mostDamageArcher.put(string, mostDamageArcherObject.get(string).getAsFloat());
-                    }
-                    this.watcherKills = new HashMap<>();
-                    JsonObject watcherKillsObject = object.getAsJsonObject("watcher_kills");
-                    for (String string : watcherKillsObject.keySet()) {
-                        watcherKills.put(string, watcherKillsObject.get(string).getAsFloat());
-                    }
-                    this.mostHealing = new HashMap<>();
-                    JsonObject mostHealingObject = object.getAsJsonObject("most_healing");
-                    for (String string : mostHealingObject.keySet()) {
-                        mostHealing.put(string, mostHealingObject.get(string).getAsFloat());
-                    }
-                    this.bestScore = new HashMap<>();
-                    JsonObject bestScoreObject = object.getAsJsonObject("best_score");
-                    for (String string : bestScoreObject.keySet()) {
-                        bestScore.put(string, bestScoreObject.get(string).getAsFloat());
-                    }
-                    this.mostDamageBerserk = new HashMap<>();
-                    JsonObject mostDamageBerserkObject = object.getAsJsonObject("most_damage_berserk");
-                    for (String string : mostDamageBerserkObject.keySet()) {
-                        mostDamageBerserk.put(string, mostDamageBerserkObject.get(string).getAsFloat());
-                    }
-                    this.fastestTimeSPlus = new HashMap<>();
-                    JsonObject fastestTimeSPlusObject = object.getAsJsonObject("fastest_time_s_plus");
-                    for (String string : fastestTimeSPlusObject.keySet()) {
-                        fastestTimeSPlus.put(string, fastestTimeSPlusObject.get(string).getAsFloat());
-                    }
-                    this.mostMobsKilled = new HashMap<>();
-                    JsonObject mostMobsKilledObject = object.getAsJsonObject("most_mobs_killed");
-                    for (String string : mostMobsKilledObject.keySet()) {
-                        mostMobsKilled.put(string, mostMobsKilledObject.get(string).getAsFloat());
-                    }
-                    this.timesPlayed = new HashMap<>();
-                    JsonObject timesPlayedObject = object.getAsJsonObject("times_played");
-                    for (String string : timesPlayedObject.keySet()) {
-                        timesPlayed.put(string, timesPlayedObject.get(string).getAsFloat());
-                    }
-                    this.milestoneCompletions = new HashMap<>();
-                    JsonObject milestoneCompletionsObject = object.getAsJsonObject("milestone_completions");
-                    for (String string : milestoneCompletionsObject.keySet()) {
-                        milestoneCompletions.put(string, milestoneCompletionsObject.get(string).getAsFloat());
-                    }
-                    this.experience = object.get("experience").getAsBigInteger();
-                    this.bestRuns = new HashMap<>();
-                    JsonObject bestRunsObject = object.getAsJsonObject("best_runs");
-                    for (String string : bestRunsObject.keySet()) {
-                        bestRuns.put(string, new ArrayList<>());
-                        JsonArray bestRunsArray = bestRunsObject.getAsJsonArray(string);
-                        for (JsonElement jsonElement : bestRunsArray) {
-                            bestRuns.get(string).add(new BestRun(jsonElement.getAsJsonObject()));
-                        }
-                    }
-                    this.master = master;
-                }
-
-                public BigInteger getExperience() {
-                    return experience;
-                }
-
-                public HashMap<String, Float> getMobsKilled() {
-                    return mobsKilled;
-                }
-                public HashMap<String, Float> getFastestTimeS() {
-                    return fastestTimeS;
-                }
-                public HashMap<String, Float> getMostDamageTank() {
-                    return mostDamageTank;
-                }
-                public HashMap<String, Float> getFastestTime() {
-                    return fastestTime;
-                }
-                public HashMap<String, Float> getMostDamageMage() {
-                    return mostDamageMage;
-                }
-                public HashMap<String, Float> getTierCompletions() {
-                    return tierCompletions;
-                }
-                public HashMap<String, Float> getMostDamageHealer() {
-                    return mostDamageHealer;
-                }
-                public HashMap<String, Float> getMostDamageArcher() {
-                    return mostDamageArcher;
-                }
-                public HashMap<String, Float> getWatcherKills() {
-                    return watcherKills;
-                }
-                public HashMap<String, Float> getMostHealing() {
-                    return mostHealing;
-                }
-                public HashMap<String, Float> getBestScore() {
-                    return bestScore;
-                }
-                public HashMap<String, Float> getMostDamageBerserk() {
-                    return mostDamageBerserk;
-                }
-                public HashMap<String, Float> getFastestTimeSPlus() {
-                    return fastestTimeSPlus;
-                }
-                public HashMap<String, Float> getMostMobsKilled() {
-                    return mostMobsKilled;
-                }
-                public HashMap<String, Float> getTimesPlayed() {
-                    return timesPlayed;
-                }
-                public HashMap<String, Float> getMilestoneCompletions() {
-                    return milestoneCompletions;
-                }
-
-                public boolean isMaster() {
-                    return master;
-                }
-
-                public HashMap<String, List<BestRun>> getBestRuns() {
-                    return bestRuns;
-                }
-
-                public class BestRun {
-                    private final long timeStamp;
-                    private final int scoreExploration;
-                    private final int scoreSpeed;
-                    private final int scoreSkill;
-                    private final int scoreBonus;
-                    private final String dungeonClass;
-                    private final List<String> teammates;
-                    private final int elapsedTime;
-                    private final double damageDealt;
-                    private final int deaths;
-                    private final int mobsKilled;
-                    private final int secretsFound;
-                    private final int damageMitigated;
-                    private final int allyHealing;
-
-                    public BestRun(JsonObject object) {
-                        this.timeStamp = object.get("time_stamp").getAsLong();
-                        this.scoreExploration = object.get("score_exploration").getAsInt();
-                        this.scoreSpeed = object.get("score_speed").getAsInt();
-                        this.scoreSkill = object.get("score_skill").getAsInt();
-                        this.scoreBonus = object.get("score_bonus").getAsInt();
-                        this.dungeonClass = object.get("dungeon_class").getAsString();
-                        this.teammates = new ArrayList<>();
-                        JsonArray teammatesArray = object.getAsJsonArray("teammates");
-                        for (JsonElement jsonElement : teammatesArray) {
-                            teammates.add(jsonElement.getAsString());
-                        }
-                        this.elapsedTime = object.get("elapsed_time").getAsInt();
-                        this.damageDealt = object.get("damage_dealt").getAsDouble();
-                        this.deaths = object.get("deaths").getAsInt();
-                        this.mobsKilled = object.get("mobs_killed").getAsInt();
-                        this.secretsFound = object.get("secrets_found").getAsInt();
-                        this.damageMitigated = object.get("damage_mitigated").getAsInt();
-                        this.allyHealing = object.get("ally_healing").getAsInt();
-                    }
-
-                    public double getDamageDealt() {
-                        return damageDealt;
-                    }
-
-                    public int getAllyHealing() {
-                        return allyHealing;
-                    }
-
-                    public int getDamageMitigated() {
-                        return damageMitigated;
-                    }
-
-                    public int getDeaths() {
-                        return deaths;
-                    }
-
-                    public int getElapsedTime() {
-                        return elapsedTime;
-                    }
-
-                    public int getMobsKilled() {
-                        return mobsKilled;
-                    }
-
-                    public int getScoreExploration() {
-                        return scoreExploration;
-                    }
-
-                    public int getScoreSkill() {
-                        return scoreSkill;
-                    }
-
-                    public int getScoreBonus() {
-                        return scoreBonus;
-                    }
-
-                    public int getScoreSpeed() {
-                        return scoreSpeed;
-                    }
-
-                    public int getSecretsFound() {
-                        return secretsFound;
-                    }
-
-                    public List<String> getTeammates() {
-                        return teammates;
-                    }
-
-                    public long getTimeStamp() {
-                        return timeStamp;
-                    }
-
-                    public String getDungeonClass() {
-                        return dungeonClass;
-                    }
-                }
+        public PlayerData(JsonObject object) {
+            this.visitedZones = new ArrayList<>();
+            JsonArray visitedZonesArray = object.getAsJsonArray("visited_zones");
+            for (JsonElement jsonElement : visitedZonesArray) {
+                visitedZones.add(jsonElement.getAsString());
+            }
+            this.lastDeath = object.get("last_death").getAsLong();
+            this.perks = new HashMap<>();
+            JsonObject perksObject = object.getAsJsonObject("perks");
+            for (Map.Entry<String, JsonElement> entry : perksObject.entrySet()) {
+                String string = entry.getKey();
+                perks.put(string, perksObject.get(string).getAsInt());
+            }
+            this.reaperPeppersEaten = object.get("reaper_peppers_eaten").getAsInt();
+            this.buffs = new ArrayList<>();
+            JsonArray buffsArray = object.getAsJsonArray("temp_stat_buffs");
+            for (JsonElement jsonElement : buffsArray) {
+                buffs.add(new TempStatBuff(jsonElement.getAsJsonObject()));
+            }
+            this.deathCount = object.get("death_count").getAsInt();
+            this.achievementSpawnedIslandTypes = new ArrayList<>();
+            JsonArray achievementSpawnedIslandTypesArray = object.get("achievement_spawned_island_types").getAsJsonArray();
+            for (JsonElement jsonElement : achievementSpawnedIslandTypesArray) {
+                achievementSpawnedIslandTypes.add(jsonElement.getAsString());
+            }
+            this.visitedModes = new ArrayList<>();
+            JsonArray visitedModesArray = object.get("visited_modes").getAsJsonArray();
+            for (JsonElement jsonElement : visitedModesArray) {
+                visitedModes.add(jsonElement.getAsString());
+            }
+            this.unlockedCollTiers = new ArrayList<>();
+            JsonArray unlockedCollTiersArray = object.get("unlocked_coll_tiers").getAsJsonArray();
+            for (JsonElement jsonElement : unlockedCollTiersArray) {
+                unlockedCollTiers.add(jsonElement.getAsString());
+            }
+            this.craftedGenerators = new ArrayList<>();
+            JsonArray craftedGeneratorsArray = object.get("crafted_generators").getAsJsonArray();
+            for (JsonElement jsonElement : craftedGeneratorsArray) {
+                craftedGenerators.add(jsonElement.getAsString());
+            }
+            this.fishingTreasureCaught = object.get("fishing_treasure_caught").getAsInt();
+            this.experience = new HashMap<>();
+            JsonObject experienceObject = object.getAsJsonObject("experience");
+            for (Map.Entry<String, JsonElement> entry : experienceObject.entrySet()) {
+                String string = entry.getKey();
+                experience.put(string, experienceObject.get(string).getAsBigInteger());
             }
 
         }
-        public class Currencies {
-            private final double coinPurse;
-            private final double motesPurse;
-            private final HashMap<String, Integer> essence;
 
-            public Currencies(JsonObject object) {
-                this.coinPurse = object.get("coin_purse").getAsDouble();
-                this.motesPurse = object.get("motes_purse").getAsDouble();
-                this.essence = new HashMap<>();
-                JsonObject essenceObject = object.getAsJsonObject("essence");
-                for (String string : essenceObject.keySet()) {
-                    essence.put(string, essenceObject.getAsJsonObject(string).get("current").getAsInt());
-                }
+
+    }
+
+    public class Dungeons {
+        private final Catacombs catacombs;
+        private final Catacombs masterCatacombs;
+        private final HashMap<String, BigInteger> playerClasses;
+        private final List<String> unlockedJournals;
+        private final List<String> dungeonsBlahBlah;
+
+        private final DailyRuns dailyRuns;
+
+        public Dungeons(JsonObject object) {
+            JsonObject typeObject = object.getAsJsonObject("dungeon_types");
+            this.catacombs = new Catacombs(typeObject.get("catacombs").getAsJsonObject(), false);
+            this.masterCatacombs = new Catacombs(typeObject.get("master_catacombs").getAsJsonObject(), true);
+            this.playerClasses = new HashMap<>();
+            JsonObject playerClassesObject = object.getAsJsonObject("player_classes");
+            for (Map.Entry<String, JsonElement> entry  : playerClassesObject.entrySet()) {
+                String string = entry.getKey();
+                playerClasses.put(string, playerClassesObject.get(string).getAsBigInteger());
             }
-
-            public double getCoinPurse() {
-                return coinPurse;
+            this.unlockedJournals = new ArrayList<>();
+            this.dungeonsBlahBlah = new ArrayList<>();
+            this.dailyRuns = new DailyRuns(object.getAsJsonObject("daily_runs"));
+            JsonArray unlockedJournalsArray = object.getAsJsonObject("dungeon_journal").get("unlocked_journals").getAsJsonArray();
+            for (JsonElement jsonElement : unlockedJournalsArray) {
+                unlockedJournals.add(jsonElement.getAsString());
             }
-
-            public double getMotesPurse() {
-                return motesPurse;
-            }
-
-            public HashMap<String, Integer> getEssence() {
-                return essence;
+            JsonArray dungeonsBlahBlahArray = object.getAsJsonArray("dungeons_blah_blah");
+            for (JsonElement jsonElement : dungeonsBlahBlahArray) {
+                dungeonsBlahBlah.add(jsonElement.getAsString());
             }
         }
-        public class JacobsContest {
-            private final HashMap<String, Integer> medalsInv;
-            private final HashMap<String, Integer> perks;
-            private final List<JacobsContestData> jacobsContestDataList;
-            private final boolean talked;
-            private final HashMap<String, List<String>> uniqueBrackets;
-            private final boolean migration;
-            private final HashMap<String, Integer> personalBests;
 
-            public JacobsContest(JsonObject object) {
-                this.medalsInv = new HashMap<>();
-                JsonObject medalsInvObject = object.getAsJsonObject("medals_inv");
-                for (String string : medalsInvObject.keySet()) {
-                    medalsInv.put(string, medalsInvObject.get(string).getAsInt());
+        public Catacombs getCatacombs() {
+            return catacombs;
+        }
+
+        public Catacombs getMasterCatacombs() {
+            return masterCatacombs;
+        }
+
+        public DailyRuns getDailyRuns() {
+            return dailyRuns;
+        }
+
+        public HashMap<String, BigInteger> getPlayerClasses() {
+            return playerClasses;
+        }
+
+        public List<String> getDungeonsBlahBlah() {
+            return dungeonsBlahBlah;
+        }
+
+        public List<String> getUnlockedJournals() {
+            return unlockedJournals;
+        }
+        // TODO line 8991
+
+        public class DailyRuns {
+            private final int currentDayStamp;
+            private final int completedRunsCount;
+
+            public DailyRuns(JsonObject object) {
+                this.currentDayStamp = object.get("current_day_stamp").getAsInt();
+                this.completedRunsCount = object.get("completed_runs_count").getAsInt();
+            }
+
+            public int getCompletedRunsCount() {
+                return completedRunsCount;
+            }
+
+            public int getCurrentDayStamp() {
+                return currentDayStamp;
+            }
+
+        }
+
+        public class Catacombs {
+            private final HashMap<String, Float> mobsKilled;
+            private final HashMap<String, Float> fastestTimeS;
+            private final HashMap<String, Float> mostDamageTank;
+            private final HashMap<String, Float> fastestTime;
+            private final HashMap<String, Float> mostDamageMage;
+            private final HashMap<String, Float> tierCompletions;
+            private final HashMap<String, Float> mostDamageHealer;
+            private final HashMap<String, Float> mostDamageArcher;
+            private final HashMap<String, Float> watcherKills;
+            private final HashMap<String, Float> mostHealing;
+            private final HashMap<String, Float> bestScore;
+            private final HashMap<String, Float> mostDamageBerserk;
+            private final HashMap<String, Float> fastestTimeSPlus;
+            private final HashMap<String, Float> mostMobsKilled;
+            private final HashMap<String, Float> timesPlayed;
+            private final HashMap<String, Float> milestoneCompletions;
+            private final BigInteger experience;
+            private final HashMap<String, List<BestRun>> bestRuns;
+            private final boolean master;
+
+            public Catacombs(JsonObject object, boolean master) {
+                this.mobsKilled = new HashMap<>();
+                JsonObject mobsKilledObject = object.getAsJsonObject("mobs_killed");
+                for (Map.Entry<String, JsonElement> entry : mobsKilledObject.entrySet()) {
+                    String string = entry.getKey();
+                    mobsKilled.put(string, mobsKilledObject.get(string).getAsFloat());
                 }
-                this.perks = new HashMap<>();
-                JsonObject perksObject = object.getAsJsonObject("perks");
-                for (String string : perksObject.keySet()) {
-                    perks.put(string, perksObject.get(string).getAsInt());
+                this.fastestTimeS = new HashMap<>();
+                JsonObject fastestTimeSObject = object.getAsJsonObject("fastest_time_s");
+                for (Map.Entry<String, JsonElement> entry : fastestTimeSObject.entrySet()) {
+                    String string = entry.getKey();
+                    fastestTimeS.put(string, fastestTimeSObject.get(string).getAsFloat());
                 }
-                this.jacobsContestDataList = new ArrayList<>();
-                JsonArray jacobsContestDataListArray = object.getAsJsonArray("contests");
-                for (JsonElement jsonElement : jacobsContestDataListArray) {
-                    JsonObject contestObject = jsonElement.getAsJsonObject();
+                this.mostDamageTank = new HashMap<>();
+                JsonObject mostDamageTankObject = object.getAsJsonObject("most_damage_tank");
+                for (Map.Entry<String, JsonElement> entry : mostDamageTankObject.entrySet()) {
+                    String string = entry.getKey();
+                    mostDamageTank.put(string, mostDamageTankObject.get(string).getAsFloat());
                 }
-                this.talked = object.get("talked").getAsBoolean();
-                this.uniqueBrackets = new HashMap<>();
-                JsonObject uniqueBracketsObject = object.getAsJsonObject("unique_brackets");
-                for (String string : uniqueBracketsObject.keySet()) {
-                    uniqueBrackets.put(string, new ArrayList<>());
-                    JsonArray stringArray = uniqueBracketsObject.getAsJsonArray(string);
-                    for (JsonElement jsonElement : stringArray) {
-                        uniqueBrackets.get(string).add(jsonElement.getAsString());
+                this.fastestTime = new HashMap<>();
+                JsonObject fastestTimeObject = object.getAsJsonObject("fastest_time");
+                for (Map.Entry<String, JsonElement> entry : fastestTimeObject.entrySet()) {
+                    String string = entry.getKey();
+                    fastestTime.put(string, fastestTimeObject.get(string).getAsFloat());
+                }
+                this.mostDamageMage = new HashMap<>();
+                JsonObject mostDamageMageObject = object.getAsJsonObject("most_damage_mage");
+                for (Map.Entry<String, JsonElement> entry : mostDamageMageObject.entrySet()) {
+                    String string = entry.getKey();
+                    mostDamageMage.put(string, mostDamageMageObject.get(string).getAsFloat());
+                }
+                this.tierCompletions = new HashMap<>();
+                JsonObject tierCompletionsObject = object.getAsJsonObject("tier_completions");
+                for (Map.Entry<String, JsonElement> entry : tierCompletionsObject.entrySet()) {
+                    String string = entry.getKey();
+                    tierCompletions.put(string, tierCompletionsObject.get(string).getAsFloat());
+                }
+                this.mostDamageHealer = new HashMap<>();
+                JsonObject mostDamageHealerObject = object.getAsJsonObject("most_damage_healer");
+                for (Map.Entry<String, JsonElement> entry : mostDamageHealerObject.entrySet()) {
+                    String string = entry.getKey();
+                    mostDamageHealer.put(string, mostDamageHealerObject.get(string).getAsFloat());
+                }
+                this.mostDamageArcher = new HashMap<>();
+                JsonObject mostDamageArcherObject = object.getAsJsonObject("most_damage_archer");
+                for (Map.Entry<String, JsonElement> entry : mostDamageArcherObject.entrySet()) {
+                    String string = entry.getKey();
+                    mostDamageArcher.put(string, mostDamageArcherObject.get(string).getAsFloat());
+                }
+                this.watcherKills = new HashMap<>();
+                JsonObject watcherKillsObject = object.getAsJsonObject("watcher_kills");
+                for (Map.Entry<String, JsonElement> entry : watcherKillsObject.entrySet()) {
+                    String string = entry.getKey();
+                    watcherKills.put(string, watcherKillsObject.get(string).getAsFloat());
+                }
+                this.mostHealing = new HashMap<>();
+                JsonObject mostHealingObject = object.getAsJsonObject("most_healing");
+                for (Map.Entry<String, JsonElement> entry : mostHealingObject.entrySet()) {
+                    String string = entry.getKey();
+                    mostHealing.put(string, mostHealingObject.get(string).getAsFloat());
+                }
+                this.bestScore = new HashMap<>();
+                JsonObject bestScoreObject = object.getAsJsonObject("best_score");
+                for (Map.Entry<String, JsonElement> entry : bestScoreObject.entrySet()) {
+                    String string = entry.getKey();
+                    bestScore.put(string, bestScoreObject.get(string).getAsFloat());
+                }
+                this.mostDamageBerserk = new HashMap<>();
+                JsonObject mostDamageBerserkObject = object.getAsJsonObject("most_damage_berserk");
+                for (Map.Entry<String, JsonElement> entry : mostDamageBerserkObject.entrySet()) {
+                    String string = entry.getKey();
+                    mostDamageBerserk.put(string, mostDamageBerserkObject.get(string).getAsFloat());
+                }
+                this.fastestTimeSPlus = new HashMap<>();
+                JsonObject fastestTimeSPlusObject = object.getAsJsonObject("fastest_time_s_plus");
+                for (Map.Entry<String, JsonElement> entry : fastestTimeSPlusObject.entrySet()) {
+                    String string = entry.getKey();
+                    fastestTimeSPlus.put(string, fastestTimeSPlusObject.get(string).getAsFloat());
+                }
+                this.mostMobsKilled = new HashMap<>();
+                JsonObject mostMobsKilledObject = object.getAsJsonObject("most_mobs_killed");
+                for (Map.Entry<String, JsonElement> entry : mostMobsKilledObject.entrySet()) {
+                    String string = entry.getKey();
+                    mostMobsKilled.put(string, mostMobsKilledObject.get(string).getAsFloat());
+                }
+                this.timesPlayed = new HashMap<>();
+                JsonObject timesPlayedObject = object.getAsJsonObject("times_played");
+                for (Map.Entry<String, JsonElement> entry : timesPlayedObject.entrySet()) {
+                    String string = entry.getKey();
+                    timesPlayed.put(string, timesPlayedObject.get(string).getAsFloat());
+                }
+                this.milestoneCompletions = new HashMap<>();
+                JsonObject milestoneCompletionsObject = object.getAsJsonObject("milestone_completions");
+                for (Map.Entry<String, JsonElement> entry : milestoneCompletionsObject.entrySet()) {
+                    String string = entry.getKey();
+                    milestoneCompletions.put(string, milestoneCompletionsObject.get(string).getAsFloat());
+                }
+                this.experience = object.get("experience").getAsBigInteger();
+                this.bestRuns = new HashMap<>();
+                JsonObject bestRunsObject = object.getAsJsonObject("best_runs");
+                for (Map.Entry<String, JsonElement> entry : bestRunsObject.entrySet()) {
+                    String string = entry.getKey();
+                    bestRuns.put(string, new ArrayList<>());
+                    JsonArray bestRunsArray = bestRunsObject.getAsJsonArray(string);
+                    for (JsonElement jsonElement : bestRunsArray) {
+                        bestRuns.get(string).add(new BestRun(jsonElement.getAsJsonObject()));
                     }
                 }
-                this.migration = object.get("migration").getAsBoolean();
-                this.personalBests = new HashMap<>();
-                JsonObject personalBestsObject = object.getAsJsonObject("personal_bests");
-                for (String string : personalBestsObject.keySet()) {
-                    personalBests.put(string, personalBestsObject.get(string).getAsInt());
-                }
+                this.master = master;
             }
 
-            public HashMap<String, Integer> getMedalsInv() {
-                return medalsInv;
-            }
-
-            public HashMap<String, Integer> getPerks() {
-                return perks;
-            }
-
-            public HashMap<String, Integer> getPersonalBests() {
-                return personalBests;
-            }
-
-            public HashMap<String, List<String>> getUniqueBrackets() {
-                return uniqueBrackets;
-            }
-
-            public List<JacobsContestData> getJacobsContestDataList() {
-                return jacobsContestDataList;
-            }
-
-            public boolean isTalked() {
-                return talked;
-            }
-
-            public boolean isMigration() {
-                return migration;
-            }
-
-            public class JacobsContestData {
-                private final int collected;
-                private final Boolean claimedRewards;
-                private final int claimedPosition;
-                private final String claimedMedal;
-                private final int claimedParticipants;
-
-                public JacobsContestData(JsonObject object) {
-                    this.collected = object.get("collected").getAsInt();
-                    this.claimedParticipants = object.get("claimed_participants").getAsInt();
-                    this.claimedMedal = object.get("claimed_medal").getAsString();
-                    this.claimedPosition = object.get("claimed_position").getAsInt();
-                    this.claimedRewards = object.get("claimed_rewards").getAsBoolean();
-                }
-
-                public Boolean getClaimedRewards() {
-                    return claimedRewards;
-                }
-
-                public String getClaimedMedal() {
-                    return claimedMedal;
-                }
-
-                public int getClaimedParticipants() {
-                    return claimedParticipants;
-                }
-
-                public int getClaimedPosition() {
-                    return claimedPosition;
-                }
-
-                public int getCollected() {
-                    return collected;
-                }
-            }
-        }
-        public class ItemData {
-            private final int soulflow;
-            private final int favoriteArrow;
-            public ItemData(JsonObject object) {
-                this.soulflow = object.get("soulflow").getAsInt();
-                this.favoriteArrow = object.get("favorite_arrow").getAsInt();
-            }
-
-            public int getFavoriteArrow() {
-                return favoriteArrow;
-            }
-
-            public int getSoulflow() {
-                return soulflow;
-            }
-        }
-        public class Levelling {
-            private final int experience;
-            private final HashMap<String, Integer> completions;
-            private final List<String> completed;
-            private final boolean migratedCompletions;
-            private final List<String> completedTasks;
-            private final String highestPetScore;
-            private final int miningFiestaOresMined;
-            private final int fishingFestivalSharksKilled;
-            private final boolean migrated;
-            private final boolean migratedCompletions2;
-            private final List<String> lastViewedTasks;
-            private final boolean claimedTalisman;
-            private final String bopBonus;
-            private final boolean categoryExpanded;
-            private final List<String> emblemUnlocks;
-            private final String taskSort;
-
-            public Levelling(JsonObject object) {
-                this.experience = object.get("experience").getAsInt();
-                this.completions = new HashMap<>();
-                JsonObject completionsObject = object.getAsJsonObject("completions");
-                for (String string : completionsObject.keySet()) {
-                    completions.put(string, completionsObject.get(string).getAsInt());
-                }
-                this.completed = new ArrayList<>();
-                JsonArray completedArray = object.getAsJsonArray("completed");
-                for (JsonElement jsonElement : completedArray) {
-                    completed.add(jsonElement.getAsString());
-                }
-                this.migratedCompletions = object.get("migrated_completions").getAsBoolean();
-                this.completedTasks = new ArrayList<>();
-                JsonArray completedTasksArray = object.getAsJsonArray("completed_tasks");
-                for (JsonElement jsonElement : completedTasksArray) {
-                    completedTasks.add(jsonElement.getAsString());
-                }
-                this.highestPetScore = object.get("highest_pet_score").getAsString();
-                this.miningFiestaOresMined = object.get("mining_fiesta_ores_mined").getAsInt();
-                this.fishingFestivalSharksKilled = object.get("fishing_festival_sharks_killed").getAsInt();
-                this.migrated = object.get("migrated").getAsBoolean();
-                this.migratedCompletions2 = object.get("migrated_completions2").getAsBoolean();
-                this.lastViewedTasks = new ArrayList<>();
-                JsonArray lastViewedTasksArray = object.getAsJsonArray("last_viewed_tasks");
-                for (JsonElement jsonElement : lastViewedTasksArray) {
-                    lastViewedTasks.add(jsonElement.getAsString());
-                }
-                this.claimedTalisman = object.get("claimed_talisman").getAsBoolean();
-                this.bopBonus = object.get("bop_bonus").getAsString();
-                this.categoryExpanded = object.get("category_expanded").getAsBoolean();
-                this.emblemUnlocks = new ArrayList<>();
-                JsonArray emblemUnlocksArray = object.getAsJsonArray("emblem_unlocks");
-                for (JsonElement jsonElement : emblemUnlocksArray) {
-                    emblemUnlocks.add(jsonElement.getAsString());
-                }
-                this.taskSort = object.get("task_sort").getAsString();
-            }
-
-            public HashMap<String, Integer> getCompletions() {
-                return completions;
-            }
-
-            public int getExperience() {
+            public BigInteger getExperience() {
                 return experience;
             }
 
-            public int getFishingFestivalSharksKilled() {
-                return fishingFestivalSharksKilled;
+            public HashMap<String, Float> getMobsKilled() {
+                return mobsKilled;
+            }
+            public HashMap<String, Float> getFastestTimeS() {
+                return fastestTimeS;
+            }
+            public HashMap<String, Float> getMostDamageTank() {
+                return mostDamageTank;
+            }
+            public HashMap<String, Float> getFastestTime() {
+                return fastestTime;
+            }
+            public HashMap<String, Float> getMostDamageMage() {
+                return mostDamageMage;
+            }
+            public HashMap<String, Float> getTierCompletions() {
+                return tierCompletions;
+            }
+            public HashMap<String, Float> getMostDamageHealer() {
+                return mostDamageHealer;
+            }
+            public HashMap<String, Float> getMostDamageArcher() {
+                return mostDamageArcher;
+            }
+            public HashMap<String, Float> getWatcherKills() {
+                return watcherKills;
+            }
+            public HashMap<String, Float> getMostHealing() {
+                return mostHealing;
+            }
+            public HashMap<String, Float> getBestScore() {
+                return bestScore;
+            }
+            public HashMap<String, Float> getMostDamageBerserk() {
+                return mostDamageBerserk;
+            }
+            public HashMap<String, Float> getFastestTimeSPlus() {
+                return fastestTimeSPlus;
+            }
+            public HashMap<String, Float> getMostMobsKilled() {
+                return mostMobsKilled;
+            }
+            public HashMap<String, Float> getTimesPlayed() {
+                return timesPlayed;
+            }
+            public HashMap<String, Float> getMilestoneCompletions() {
+                return milestoneCompletions;
             }
 
-            public int getMiningFiestaOresMined() {
-                return miningFiestaOresMined;
+            public boolean isMaster() {
+                return master;
             }
 
-            public List<String> getCompleted() {
-                return completed;
+            public HashMap<String, List<BestRun>> getBestRuns() {
+                return bestRuns;
             }
 
-            public List<String> getCompletedTasks() {
-                return completedTasks;
+            public class BestRun {
+                private final long timeStamp;
+                private final int scoreExploration;
+                private final int scoreSpeed;
+                private final int scoreSkill;
+                private final int scoreBonus;
+                private final String dungeonClass;
+                private final List<String> teammates;
+                private final int elapsedTime;
+                private final double damageDealt;
+                private final int deaths;
+                private final int mobsKilled;
+                private final int secretsFound;
+                private final int damageMitigated;
+                private final int allyHealing;
+
+                public BestRun(JsonObject object) {
+                    this.timeStamp = object.get("time_stamp").getAsLong();
+                    this.scoreExploration = object.get("score_exploration").getAsInt();
+                    this.scoreSpeed = object.get("score_speed").getAsInt();
+                    this.scoreSkill = object.get("score_skill").getAsInt();
+                    this.scoreBonus = object.get("score_bonus").getAsInt();
+                    this.dungeonClass = object.get("dungeon_class").getAsString();
+                    this.teammates = new ArrayList<>();
+                    JsonArray teammatesArray = object.getAsJsonArray("teammates");
+                    for (JsonElement jsonElement : teammatesArray) {
+                        teammates.add(jsonElement.getAsString());
+                    }
+                    this.elapsedTime = object.get("elapsed_time").getAsInt();
+                    this.damageDealt = object.get("damage_dealt").getAsDouble();
+                    this.deaths = object.get("deaths").getAsInt();
+                    this.mobsKilled = object.get("mobs_killed").getAsInt();
+                    this.secretsFound = object.get("secrets_found").getAsInt();
+                    this.damageMitigated = object.get("damage_mitigated").getAsInt();
+                    this.allyHealing = object.get("ally_healing").getAsInt();
+                }
+
+                public double getDamageDealt() {
+                    return damageDealt;
+                }
+
+                public int getAllyHealing() {
+                    return allyHealing;
+                }
+
+                public int getDamageMitigated() {
+                    return damageMitigated;
+                }
+
+                public int getDeaths() {
+                    return deaths;
+                }
+
+                public int getElapsedTime() {
+                    return elapsedTime;
+                }
+
+                public int getMobsKilled() {
+                    return mobsKilled;
+                }
+
+                public int getScoreExploration() {
+                    return scoreExploration;
+                }
+
+                public int getScoreSkill() {
+                    return scoreSkill;
+                }
+
+                public int getScoreBonus() {
+                    return scoreBonus;
+                }
+
+                public int getScoreSpeed() {
+                    return scoreSpeed;
+                }
+
+                public int getSecretsFound() {
+                    return secretsFound;
+                }
+
+                public List<String> getTeammates() {
+                    return teammates;
+                }
+
+                public long getTimeStamp() {
+                    return timeStamp;
+                }
+
+                public String getDungeonClass() {
+                    return dungeonClass;
+                }
+            }
+        }
+
+    }
+    public class Currencies {
+        private final double coinPurse;
+        private final double motesPurse;
+        private final HashMap<String, Integer> essence;
+
+        public Currencies(JsonObject object) {
+            this.coinPurse = object.get("coin_purse").getAsDouble();
+            this.motesPurse = object.get("motes_purse").getAsDouble();
+            this.essence = new HashMap<>();
+            JsonObject essenceObject = object.getAsJsonObject("essence");
+            for (Map.Entry<String, JsonElement> entry : essenceObject.entrySet()) {
+                String string = entry.getKey();
+                essence.put(string, essenceObject.getAsJsonObject(string).get("current").getAsInt());
+            }
+        }
+
+        public double getCoinPurse() {
+            return coinPurse;
+        }
+
+        public double getMotesPurse() {
+            return motesPurse;
+        }
+
+        public HashMap<String, Integer> getEssence() {
+            return essence;
+        }
+    }
+    public class JacobsContest {
+        private final HashMap<String, Integer> medalsInv;
+        private final HashMap<String, Integer> perks;
+        private final List<JacobsContestData> jacobsContestDataList;
+        private final boolean talked;
+        private final HashMap<String, List<String>> uniqueBrackets;
+        private final boolean migration;
+        private final HashMap<String, Integer> personalBests;
+
+        public JacobsContest(JsonObject object) {
+            this.medalsInv = new HashMap<>();
+            JsonObject medalsInvObject = object.getAsJsonObject("medals_inv");
+            for (Map.Entry<String, JsonElement> entry: medalsInvObject.entrySet()) {
+                String string = entry.getKey();
+                medalsInv.put(string, medalsInvObject.get(string).getAsInt());
+            }
+            this.perks = new HashMap<>();
+            JsonObject perksObject = object.getAsJsonObject("perks");
+            for (Map.Entry<String, JsonElement> entry: perksObject.entrySet()) {
+                String string = entry.getKey();
+                perks.put(string, perksObject.get(string).getAsInt());
+            }
+            this.jacobsContestDataList = new ArrayList<>();
+            JsonArray jacobsContestDataListArray = object.getAsJsonArray("contests");
+            for (JsonElement jsonElement : jacobsContestDataListArray) {
+                JsonObject contestObject = jsonElement.getAsJsonObject();
+            }
+            this.talked = object.get("talked").getAsBoolean();
+            this.uniqueBrackets = new HashMap<>();
+            JsonObject uniqueBracketsObject = object.getAsJsonObject("unique_brackets");
+            for (Map.Entry<String, JsonElement> entry: uniqueBracketsObject.entrySet()) {
+                String string = entry.getKey();
+                uniqueBrackets.put(string, new ArrayList<>());
+                JsonArray stringArray = uniqueBracketsObject.getAsJsonArray(string);
+                for (JsonElement jsonElement : stringArray) {
+                    uniqueBrackets.get(string).add(jsonElement.getAsString());
+                }
+            }
+            this.migration = object.get("migration").getAsBoolean();
+            this.personalBests = new HashMap<>();
+            JsonObject personalBestsObject = object.getAsJsonObject("personal_bests");
+            for (Map.Entry<String, JsonElement> entry : personalBestsObject.entrySet()) {
+                String string = entry.getKey();
+                personalBests.put(string, personalBestsObject.get(string).getAsInt());
+            }
+        }
+
+        public HashMap<String, Integer> getMedalsInv() {
+            return medalsInv;
+        }
+
+        public HashMap<String, Integer> getPerks() {
+            return perks;
+        }
+
+        public HashMap<String, Integer> getPersonalBests() {
+            return personalBests;
+        }
+
+        public HashMap<String, List<String>> getUniqueBrackets() {
+            return uniqueBrackets;
+        }
+
+        public List<JacobsContestData> getJacobsContestDataList() {
+            return jacobsContestDataList;
+        }
+
+        public boolean isTalked() {
+            return talked;
+        }
+
+        public boolean isMigration() {
+            return migration;
+        }
+
+        public class JacobsContestData {
+            private final int collected;
+            private final Boolean claimedRewards;
+            private final int claimedPosition;
+            private final String claimedMedal;
+            private final int claimedParticipants;
+
+            public JacobsContestData(JsonObject object) {
+                this.collected = object.get("collected").getAsInt();
+                this.claimedParticipants = object.get("claimed_participants").getAsInt();
+                this.claimedMedal = object.get("claimed_medal").getAsString();
+                this.claimedPosition = object.get("claimed_position").getAsInt();
+                this.claimedRewards = object.get("claimed_rewards").getAsBoolean();
             }
 
-            public List<String> getEmblemUnlocks() {
-                return emblemUnlocks;
+            public Boolean getClaimedRewards() {
+                return claimedRewards;
             }
 
-            public List<String> getLastViewedTasks() {
-                return lastViewedTasks;
+            public String getClaimedMedal() {
+                return claimedMedal;
             }
 
-            public String getBopBonus() {
-                return bopBonus;
+            public int getClaimedParticipants() {
+                return claimedParticipants;
             }
 
-            public String getHighestPetScore() {
-                return highestPetScore;
+            public int getClaimedPosition() {
+                return claimedPosition;
             }
 
-            public String getTaskSort() {
-                return taskSort;
+            public int getCollected() {
+                return collected;
+            }
+        }
+    }
+    public class ItemData {
+        private final int soulflow;
+        private final int favoriteArrow;
+        public ItemData(JsonObject object) {
+            this.soulflow = object.get("soulflow").getAsInt();
+            this.favoriteArrow = object.get("favorite_arrow").getAsInt();
+        }
+
+        public int getFavoriteArrow() {
+            return favoriteArrow;
+        }
+
+        public int getSoulflow() {
+            return soulflow;
+        }
+    }
+    public class Levelling {
+        private final int experience;
+        private final HashMap<String, Integer> completions;
+        private final List<String> completed;
+        private final boolean migratedCompletions;
+        private final List<String> completedTasks;
+        private final String highestPetScore;
+        private final int miningFiestaOresMined;
+        private final int fishingFestivalSharksKilled;
+        private final boolean migrated;
+        private final boolean migratedCompletions2;
+        private final List<String> lastViewedTasks;
+        private final boolean claimedTalisman;
+        private final String bopBonus;
+        private final boolean categoryExpanded;
+        private final List<String> emblemUnlocks;
+        private final String taskSort;
+
+        public Levelling(JsonObject object) {
+            this.experience = object.get("experience").getAsInt();
+            this.completions = new HashMap<>();
+            JsonObject completionsObject = object.getAsJsonObject("completions");
+            for (Map.Entry<String, JsonElement> entry : completionsObject.entrySet()) {
+                String string = entry.getKey();
+                completions.put(string, completionsObject.get(string).getAsInt());
+            }
+            this.completed = new ArrayList<>();
+            JsonArray completedArray = object.getAsJsonArray("completed");
+            for (JsonElement jsonElement : completedArray) {
+                completed.add(jsonElement.getAsString());
+            }
+            this.migratedCompletions = object.get("migrated_completions").getAsBoolean();
+            this.completedTasks = new ArrayList<>();
+            JsonArray completedTasksArray = object.getAsJsonArray("completed_tasks");
+            for (JsonElement jsonElement : completedTasksArray) {
+                completedTasks.add(jsonElement.getAsString());
+            }
+            this.highestPetScore = object.get("highest_pet_score").getAsString();
+            this.miningFiestaOresMined = object.get("mining_fiesta_ores_mined").getAsInt();
+            this.fishingFestivalSharksKilled = object.get("fishing_festival_sharks_killed").getAsInt();
+            this.migrated = object.get("migrated").getAsBoolean();
+            this.migratedCompletions2 = object.get("migrated_completions2").getAsBoolean();
+            this.lastViewedTasks = new ArrayList<>();
+            JsonArray lastViewedTasksArray = object.getAsJsonArray("last_viewed_tasks");
+            for (JsonElement jsonElement : lastViewedTasksArray) {
+                lastViewedTasks.add(jsonElement.getAsString());
+            }
+            this.claimedTalisman = object.get("claimed_talisman").getAsBoolean();
+            this.bopBonus = object.get("bop_bonus").getAsString();
+            this.categoryExpanded = object.get("category_expanded").getAsBoolean();
+            this.emblemUnlocks = new ArrayList<>();
+            JsonArray emblemUnlocksArray = object.getAsJsonArray("emblem_unlocks");
+            for (JsonElement jsonElement : emblemUnlocksArray) {
+                emblemUnlocks.add(jsonElement.getAsString());
+            }
+            this.taskSort = object.get("task_sort").getAsString();
+        }
+
+        public HashMap<String, Integer> getCompletions() {
+            return completions;
+        }
+
+        public int getExperience() {
+            return experience;
+        }
+
+        public int getFishingFestivalSharksKilled() {
+            return fishingFestivalSharksKilled;
+        }
+
+        public int getMiningFiestaOresMined() {
+            return miningFiestaOresMined;
+        }
+
+        public List<String> getCompleted() {
+            return completed;
+        }
+
+        public List<String> getCompletedTasks() {
+            return completedTasks;
+        }
+
+        public List<String> getEmblemUnlocks() {
+            return emblemUnlocks;
+        }
+
+        public List<String> getLastViewedTasks() {
+            return lastViewedTasks;
+        }
+
+        public String getBopBonus() {
+            return bopBonus;
+        }
+
+        public String getHighestPetScore() {
+            return highestPetScore;
+        }
+
+        public String getTaskSort() {
+            return taskSort;
+        }
+
+        public boolean isMigrated() {
+            return migrated;
+        }
+
+        public boolean isClaimedTalisman() {
+            return claimedTalisman;
+        }
+
+        public boolean isCategoryExpanded() {
+            return categoryExpanded;
+        }
+
+        public boolean isMigratedCompletions() {
+            return migratedCompletions;
+        }
+
+        public boolean isMigratedCompletions2() {
+            return migratedCompletions2;
+        }
+    }
+    public class AccessoryBagStorage {
+        private final Tuning tuning;
+        private final String selectedPower;
+        private final List<String> unlockedPowers;
+        private final int bagUpgradesPurchased;
+        private final int highestMagicalPower;
+
+        public AccessoryBagStorage(JsonObject object) {
+            this.tuning = new Tuning(object.getAsJsonObject("tuning"));
+            this.selectedPower = object.getAsJsonPrimitive("selected_power").getAsString();
+            this.bagUpgradesPurchased = object.getAsJsonPrimitive("bag_upgrades_purchased").getAsInt();
+            this.unlockedPowers = new ArrayList<>();
+            JsonArray unlockedPowersArray = object.getAsJsonArray("unlocked_powers");
+            for (JsonElement jsonElement : unlockedPowersArray) {
+                unlockedPowers.add(jsonElement.getAsString());
+            }
+            this.highestMagicalPower = object.getAsJsonPrimitive("highest_magical_power").getAsInt();
+        }
+
+        public int getBagUpgradesPurchased() {
+            return bagUpgradesPurchased;
+        }
+
+        public int getHighestMagicalPower() {
+            return highestMagicalPower;
+        }
+
+        public List<String> getUnlockedPowers() {
+            return unlockedPowers;
+        }
+
+        public String getSelectedPower() {
+            return selectedPower;
+        }
+
+        public Tuning getTuning() {
+            return tuning;
+        }
+
+        public class Tuning {
+            private final HashMap<String, Integer> slot0;
+            public Tuning(JsonObject object) {
+                this.slot0 = new HashMap<>();
+                JsonObject slot0Object = object.getAsJsonObject("slot_0");
+                for (Map.Entry<String, JsonElement> entry : slot0Object.entrySet()) {
+                    String string = entry.getKey();
+                    slot0.put(string, slot0Object.get(string).getAsInt());
+                }
+            }
+
+            public HashMap<String, Integer> getSlot0() {
+                return slot0;
+            }
+        }
+
+    }
+    public class PetsData {
+        public class PetCare {
+            private final BigInteger coinsSpent;
+            private final List<String> petTypesSacrificed;
+
+            public PetCare(JsonObject object) {
+                this.coinsSpent = object.get("coins_spent").getAsBigInteger();
+                this.petTypesSacrificed = new ArrayList<>();
+                JsonArray petTypesSacrificedArray = object.getAsJsonArray("pet_types_sacrificed");
+                for (JsonElement jsonElement : petTypesSacrificedArray) {
+                    petTypesSacrificed.add(jsonElement.getAsString());
+                }
+            }
+
+            public BigInteger getCoinsSpent() {
+                return coinsSpent;
+            }
+
+            public List<String> getPetTypesSacrificed() {
+                return petTypesSacrificed;
+            }
+        }
+        public class AutoPet {
+            private final int rulesLimit;
+            private final List<AutoPetRule> autoPetRules;
+            private final boolean migrated;
+            private final boolean migrated2;
+
+            public AutoPet(JsonObject object) {
+                this.rulesLimit = object.get("rules_limit").getAsInt();
+                this.autoPetRules = new ArrayList<>();
+                JsonArray autoPetRulesArray = object.getAsJsonArray("rules");
+                for (JsonElement jsonElement : autoPetRulesArray) {
+                    autoPetRules.add(new AutoPetRule(jsonElement.getAsJsonObject()));
+                }
+                this.migrated = object.get("migrated").getAsBoolean();
+                this.migrated2 = object.get("migrated_2").getAsBoolean();
+
             }
 
             public boolean isMigrated() {
                 return migrated;
             }
 
-            public boolean isClaimedTalisman() {
-                return claimedTalisman;
+            public boolean isMigrated2() {
+                return migrated2;
             }
 
-            public boolean isCategoryExpanded() {
-                return categoryExpanded;
+            public List<AutoPetRule> getAutoPetRules() {
+                return autoPetRules;
             }
 
-            public boolean isMigratedCompletions() {
-                return migratedCompletions;
+            public int getRulesLimit() {
+                return rulesLimit;
             }
 
-            public boolean isMigratedCompletions2() {
-                return migratedCompletions2;
-            }
-        }
-        public class AccessoryBagStorage {
-            private final Tuning tuning;
-            private final String selectedPower;
-            private final List<String> unlockedPowers;
-            private final int bagUpgradesPurchased;
-            private final int highestMagicalPower;
-
-            public AccessoryBagStorage(JsonObject object) {
-                this.tuning = new Tuning(object.getAsJsonObject("tuning"));
-                this.selectedPower = object.getAsJsonPrimitive("selected_power").getAsString();
-                this.bagUpgradesPurchased = object.getAsJsonPrimitive("bag_upgrades_purchased").getAsInt();
-                this.unlockedPowers = new ArrayList<>();
-                JsonArray unlockedPowersArray = object.getAsJsonArray("unlocked_powers");
-                for (JsonElement jsonElement : unlockedPowersArray) {
-                    unlockedPowers.add(jsonElement.getAsString());
-                }
-                this.highestMagicalPower = object.getAsJsonPrimitive("highest_magical_power").getAsInt();
-            }
-
-            public int getBagUpgradesPurchased() {
-                return bagUpgradesPurchased;
-            }
-
-            public int getHighestMagicalPower() {
-                return highestMagicalPower;
-            }
-
-            public List<String> getUnlockedPowers() {
-                return unlockedPowers;
-            }
-
-            public String getSelectedPower() {
-                return selectedPower;
-            }
-
-            public Tuning getTuning() {
-                return tuning;
-            }
-
-            public class Tuning {
-                private final HashMap<String, Integer> slot0;
-                public Tuning(JsonObject object) {
-                    this.slot0 = new HashMap<>();
-                    JsonObject slot0Object = object.getAsJsonObject("slot_0");
-                    for (String string : slot0Object.keySet()) {
-                        slot0.put(string, slot0Object.get(string).getAsInt());
+            public class AutoPetRule {
+                private final UUID uuid;
+                private final String id;
+                private final String name;
+                private final UUID uniqueID;
+                private final List<AutoPetRuleException> autoPetRuleExceptions;
+                private final boolean disabled;
+                private final HashMap<String, String> data;
+                public AutoPetRule(JsonObject object) {
+                    this.uuid = UUID.fromString(object.get("uuid").getAsString());
+                    this.id = object.get("id").getAsString();
+                    this.name = object.get("name").getAsString();
+                    this.uniqueID = UUID.fromString(object.get("uniqueId").getAsString());
+                    this.autoPetRuleExceptions = new ArrayList<>();
+                    JsonArray autoPetRuleExceptionsArray = object.getAsJsonArray("exceptions");
+                    for (JsonElement jsonElement : autoPetRuleExceptionsArray) {
+                        autoPetRuleExceptions.add(new AutoPetRuleException(jsonElement.getAsJsonObject()));
                     }
-                }
-
-                public HashMap<String, Integer> getSlot0() {
-                    return slot0;
-                }
-            }
-
-        }
-        public class PetsData {
-            public class PetCare {
-                private final BigInteger coinsSpent;
-                private final List<String> petTypesSacrificed;
-
-                public PetCare(JsonObject object) {
-                    this.coinsSpent = object.get("coins_spent").getAsBigInteger();
-                    this.petTypesSacrificed = new ArrayList<>();
-                    JsonArray petTypesSacrificedArray = object.getAsJsonArray("pet_types_sacrificed");
-                    for (JsonElement jsonElement : petTypesSacrificedArray) {
-                        petTypesSacrificed.add(jsonElement.getAsString());
+                    this.disabled = object.get("disabled").getAsBoolean();
+                    this.data = new HashMap<>();
+                    JsonObject dataObject = object.getAsJsonObject("data");
+                    for (Map.Entry<String, JsonElement> entry : dataObject.entrySet()) {
+                        String string = entry.getKey();
+                        data.put(string, dataObject.get(string).getAsString());
                     }
-                }
-
-                public BigInteger getCoinsSpent() {
-                    return coinsSpent;
-                }
-
-                public List<String> getPetTypesSacrificed() {
-                    return petTypesSacrificed;
-                }
-            }
-            public class AutoPet {
-                private final int rulesLimit;
-                private final List<AutoPetRule> autoPetRules;
-                private final boolean migrated;
-                private final boolean migrated2;
-
-                public AutoPet(JsonObject object) {
-                    this.rulesLimit = object.get("rules_limit").getAsInt();
-                    this.autoPetRules = new ArrayList<>();
-                    JsonArray autoPetRulesArray = object.getAsJsonArray("rules");
-                    for (JsonElement jsonElement : autoPetRulesArray) {
-                        autoPetRules.add(new AutoPetRule(jsonElement.getAsJsonObject()));
-                    }
-                    this.migrated = object.get("migrated").getAsBoolean();
-                    this.migrated2 = object.get("migrated_2").getAsBoolean();
 
                 }
 
-                public boolean isMigrated() {
-                    return migrated;
+                public boolean isDisabled() {
+                    return disabled;
                 }
 
-                public boolean isMigrated2() {
-                    return migrated2;
+                public HashMap<String, String> getData() {
+                    return data;
                 }
 
-                public List<AutoPetRule> getAutoPetRules() {
-                    return autoPetRules;
+                public String getId() {
+                    return id;
                 }
 
-                public int getRulesLimit() {
-                    return rulesLimit;
+                public UUID getUniqueID() {
+                    return uniqueID;
                 }
 
-                public class AutoPetRule {
-                    private final UUID uuid;
+                public UUID getUuid() {
+                    return uuid;
+                }
+
+                public List<AutoPetRuleException> getAutoPetRuleExceptions() {
+                    return autoPetRuleExceptions;
+                }
+
+                public String getName() {
+                    return name;
+                }
+
+                public class AutoPetRuleException {
                     private final String id;
-                    private final String name;
-                    private final UUID uniqueID;
-                    private final List<AutoPetRuleException> autoPetRuleExceptions;
-                    private final boolean disabled;
                     private final HashMap<String, String> data;
-                    public AutoPetRule(JsonObject object) {
-                        this.uuid = UUID.fromString(object.get("uuid").getAsString());
+
+                    public AutoPetRuleException(JsonObject object) {
                         this.id = object.get("id").getAsString();
-                        this.name = object.get("name").getAsString();
-                        this.uniqueID = UUID.fromString(object.get("uniqueId").getAsString());
-                        this.autoPetRuleExceptions = new ArrayList<>();
-                        JsonArray autoPetRuleExceptionsArray = object.getAsJsonArray("exceptions");
-                        for (JsonElement jsonElement : autoPetRuleExceptionsArray) {
-                            autoPetRuleExceptions.add(new AutoPetRuleException(jsonElement.getAsJsonObject()));
-                        }
-                        this.disabled = object.get("disabled").getAsBoolean();
                         this.data = new HashMap<>();
                         JsonObject dataObject = object.getAsJsonObject("data");
-                        for (String string : dataObject.keySet()) {
+                        for (Map.Entry<String, JsonElement> entry : dataObject.entrySet()) {
+                            String string = entry.getKey();
                             data.put(string, dataObject.get(string).getAsString());
                         }
-
-                    }
-
-                    public boolean isDisabled() {
-                        return disabled;
                     }
 
                     public HashMap<String, String> getData() {
@@ -1860,451 +2231,415 @@ public class SkyblockUtil {
                     public String getId() {
                         return id;
                     }
-
-                    public UUID getUniqueID() {
-                        return uniqueID;
-                    }
-
-                    public UUID getUuid() {
-                        return uuid;
-                    }
-
-                    public List<AutoPetRuleException> getAutoPetRuleExceptions() {
-                        return autoPetRuleExceptions;
-                    }
-
-                    public String getName() {
-                        return name;
-                    }
-
-                    public class AutoPetRuleException {
-                        private final String id;
-                        private final HashMap<String, String> data;
-
-                        public AutoPetRuleException(JsonObject object) {
-                            this.id = object.get("id").getAsString();
-                            this.data = new HashMap<>();
-                            JsonObject dataObject = object.getAsJsonObject("data");
-                            for (String string : dataObject.keySet()) {
-                                data.put(string, dataObject.get(string).getAsString());
-                            }
-                        }
-
-                        public HashMap<String, String> getData() {
-                            return data;
-                        }
-
-                        public String getId() {
-                            return id;
-                        }
-                    }
-                }
-            }
-            private final List<Pet> pets;
-            private final PetCare petCare;
-            private final AutoPet autoPet;
-
-            public PetsData(JsonObject object) {
-                this.petCare = new PetCare(object.getAsJsonObject("pet_care"));
-                this.autoPet = new AutoPet(object.getAsJsonObject("autopet"));
-                this.pets = new ArrayList<>();
-                JsonArray petsArray = object.getAsJsonArray("pets");
-                for (JsonElement jsonElement : petsArray) {
-                    pets.add(new Pet(jsonElement.getAsJsonObject()));
-                }
-            }
-
-            public AutoPet getAutoPet() {
-                return autoPet;
-            }
-
-            public List<Pet> getPets() {
-                return pets;
-            }
-
-            public PetCare getPetCare() {
-                return petCare;
-            }
-
-            public class Pet {
-                private final UUID uuid;
-                private final UUID uniqueId;
-                private final String type;
-                private final BigInteger exp;
-                private final boolean active;
-                private final String tier;
-                private final String heldItem;
-                private final int candyUsed;
-                private final String skin;
-
-                public Pet(JsonObject object) {
-                    this.uuid = UUID.fromString(object.get("uuid").getAsString());
-                    this.uniqueId = UUID.fromString(object.get("uniqueId").getAsString());
-                    this.type = object.get("type").getAsString();
-                    this.exp = object.get("exp").getAsBigInteger();
-                    this.active = object.get("active").getAsBoolean();
-                    this.tier = object.get("tier").getAsString();
-                    this.heldItem = object.get("heldItem").getAsString();
-                    this.candyUsed = object.get("candyUsed").getAsInt();
-                    this.skin = object.get("skin").getAsString();
-                }
-
-                public UUID getUuid() {
-                    return uuid;
-                }
-
-                public String getType() {
-                    return type;
-                }
-
-                public int getCandyUsed() {
-                    return candyUsed;
-                }
-
-                public BigInteger getExp() {
-                    return exp;
-                }
-
-                public String getHeldItem() {
-                    return heldItem;
-                }
-
-                public String getSkin() {
-                    return skin;
-                }
-
-                public String getTier() {
-                    return tier;
-                }
-
-                public UUID getUniqueId() {
-                    return uniqueId;
-                }
-
-                public boolean isActive() {
-                    return active;
                 }
             }
         }
-        public class GardenPlayerData {
-            private final int copper;
-            private final int larvaConsumed;
+        private final List<Pet> pets;
+        private final PetCare petCare;
+        private final AutoPet autoPet;
 
-            public GardenPlayerData(JsonObject object) {
-                this.copper = object.get("copper").getAsInt();
-                this.larvaConsumed = object.get("larva_consumed").getAsInt();
-            }
-
-            public int getCopper() {
-                return copper;
-            }
-
-            public int getLarvaConsumed() {
-                return larvaConsumed;
+        public PetsData(JsonObject object) {
+            this.petCare = new PetCare(object.getAsJsonObject("pet_care"));
+            this.autoPet = new AutoPet(object.getAsJsonObject("autopet"));
+            this.pets = new ArrayList<>();
+            JsonArray petsArray = object.getAsJsonArray("pets");
+            for (JsonElement jsonElement : petsArray) {
+                pets.add(new Pet(jsonElement.getAsJsonObject()));
             }
         }
 
-        public class Events {
-            private final Easter easter;
-
-            public Events(JsonObject object) {
-                this.easter = new Easter(object.getAsJsonObject("easter"));
-            }
-
-            public Easter getEaster() {
-                return easter;
-            }
-
-            public class Easter {
-                private final long chocolate;
-                private final long chocolateSincePrestige;
-                private final long totalChocolate;
-                private final HashMap<String, Integer> employees;
-                private final long lastViewedChocolateFactory;
-                private final Rabbits rabbits;
-                private final Shop shop;
-                private final int rabbitBarnCapacityLevel;
-                private final String rabbitSort;
-                private final int chocolateLevel;
-                private final TimeTower timeTower;
-                private final String rabbitFilter;
-                private final int chocolateMultiplierUpgrades;
-                private final int clickUpgrades;
-                private final int rabbitRarityUpgrades;
-                private final int supremeChocolateBars;
-                private final int refinedDarkCacaoTruffles;
-
-                public Easter(JsonObject object) {
-                    this.chocolate = object.get("chocolate").getAsLong();
-                    this.chocolateSincePrestige = object.get("chocolate_since_prestige").getAsLong();
-                    this.totalChocolate = object.get("total_chocolate").getAsLong();
-                    this.employees = new HashMap<>();
-                    JsonObject employeesObject = object.getAsJsonObject("employees");
-                    for (String string : employeesObject.keySet()) {
-                        employees.put(string, employeesObject.get(string).getAsInt());
-                    }
-                    this.lastViewedChocolateFactory = object.get("last_viewed_chocolate_factory").getAsInt();
-                    this.rabbits = new Rabbits(object.getAsJsonObject("rabbits"));
-                    this.shop = new Shop(object.getAsJsonObject("shop"));
-                    this.rabbitBarnCapacityLevel = object.get("rabbit_barn_capacity_level").getAsInt();
-                    this.rabbitSort = object.get("rabbit_sort").getAsString();
-                    this.chocolateLevel = object.get("chocolate_level").getAsInt();
-                    this.timeTower = new TimeTower(object.getAsJsonObject("time_tower"));
-                    this.rabbitFilter = object.get("rabbit_filter").getAsString();
-                    this.chocolateMultiplierUpgrades = object.get("chocolate_multiplier_upgrades").getAsInt();
-                    this.clickUpgrades = object.get("click_upgrades").getAsInt();
-                    this.rabbitRarityUpgrades = object.get("rabbit_rarity_upgrades").getAsInt();
-                    this.supremeChocolateBars = object.get("supreme_chocolate_bars").getAsInt();
-                    this.refinedDarkCacaoTruffles = object.get("refined_dark_cacao_truffles").getAsInt();
-                }
-
-                public class TimeTower {
-                    private final int charges;
-                    private final long lastChargeTime;
-                    private final int level;
-                    private final long activationTime;
-
-                    public TimeTower(JsonObject object) {
-                        this.charges = object.get("charges").getAsInt();
-                        this.lastChargeTime = object.get("last_charge_time").getAsLong();
-                        this.level = object.get("level").getAsInt();
-                        this.activationTime = object.get("activation_time").getAsLong();
-                    }
-
-                    public int getCharges() {
-                        return charges;
-                    }
-
-                    public int getLevel() {
-                        return level;
-                    }
-
-                    public long getActivationTime() {
-                        return activationTime;
-                    }
-
-                    public long getLastChargeTime() {
-                        return lastChargeTime;
-                    }
-                }
-
-                public class Shop {
-                    private final int year;
-                    private final List<String> rabbitsShop;
-                    private final List<String> rabbitsPurchased;
-                    private final long chocolateSpent;
-                    private final int cocoaFortuneUpgrades;
-
-                    public Shop(JsonObject object) {
-                        this.year = object.get("year").getAsInt();
-                        this.rabbitsShop = new ArrayList<>();
-                        JsonArray rabbitsShopArray = object.getAsJsonArray("rabbits");
-                        for (JsonElement jsonElement : rabbitsShopArray) {
-                            rabbitsShop.add(jsonElement.getAsString());
-                        }
-                        this.rabbitsPurchased = new ArrayList<>();
-                        JsonArray rabbitsPurchasedArray = object.getAsJsonArray("rabbits_purchased");
-                        for (JsonElement jsonElement : rabbitsPurchasedArray) {
-                            rabbitsPurchased.add(jsonElement.getAsString());
-                        }
-                        this.chocolateSpent = object.getAsJsonPrimitive("chocolate").getAsLong();
-                        this.cocoaFortuneUpgrades = object.getAsJsonPrimitive("cocoa_fortune_upgrades").getAsInt();
-                    }
-
-                    public int getCocoaFortuneUpgrades() {
-                        return cocoaFortuneUpgrades;
-                    }
-
-                    public int getYear() {
-                        return year;
-                    }
-
-                    public List<String> getRabbitsPurchased() {
-                        return rabbitsPurchased;
-                    }
-
-                    public List<String> getRabbitsShop() {
-                        return rabbitsShop;
-                    }
-
-                    public long getChocolateSpent() {
-                        return chocolateSpent;
-                    }
-                }
-                public class Rabbits {
-                    private final HashMap<String, Long> collectedEggs;
-                    private final HashMap<String, List<String>> collectedLocations;
-
-                    public Rabbits(JsonObject object) {
-                        this.collectedEggs = new HashMap<>();
-                        JsonObject collectedEggsObject = object.getAsJsonObject("collected_eggs");
-                        for (String string : collectedEggsObject.keySet()) {
-                            collectedEggs.put(string, collectedEggsObject.get(string).getAsLong());
-                        }
-                        this.collectedLocations = new HashMap<>();
-                        JsonObject collectedLocationsObject = object.getAsJsonObject("collected_locations");
-                        for (String string : collectedLocationsObject.keySet()) {
-                            collectedLocations.put(string, new ArrayList<>());
-                            JsonArray locationArray = collectedLocationsObject.getAsJsonArray(string);
-                            for (JsonElement jsonElement : locationArray) {
-                                collectedLocations.get(string).add(jsonElement.getAsString());
-                            }
-                        }
-                    }
-
-                    public HashMap<String, List<String>> getCollectedLocations() {
-                        return collectedLocations;
-                    }
-
-                    public HashMap<String, Long> getCollectedEggs() {
-                        return collectedEggs;
-                    }
-                }
-
-                public HashMap<String, Integer> getEmployees() {
-                    return employees;
-                }
-
-                public int getChocolateLevel() {
-                    return chocolateLevel;
-                }
-
-                public long getChocolate() {
-                    return chocolate;
-                }
-
-                public int getChocolateMultiplierUpgrades() {
-                    return chocolateMultiplierUpgrades;
-                }
-
-                public int getClickUpgrades() {
-                    return clickUpgrades;
-                }
-
-                public int getRabbitBarnCapacityLevel() {
-                    return rabbitBarnCapacityLevel;
-                }
-
-                public int getRabbitRarityUpgrades() {
-                    return rabbitRarityUpgrades;
-                }
-
-                public int getRefinedDarkCacaoTruffles() {
-                    return refinedDarkCacaoTruffles;
-                }
-
-                public int getSupremeChocolateBars() {
-                    return supremeChocolateBars;
-                }
-
-                public long getChocolateSincePrestige() {
-                    return chocolateSincePrestige;
-                }
-
-                public long getLastViewedChocolateFactory() {
-                    return lastViewedChocolateFactory;
-                }
-
-                public long getTotalChocolate() {
-                    return totalChocolate;
-                }
-
-                public Rabbits getRabbits() {
-                    return rabbits;
-                }
-
-                public Shop getShop() {
-                    return shop;
-                }
-
-                public String getRabbitFilter() {
-                    return rabbitFilter;
-                }
-
-                public String getRabbitSort() {
-                    return rabbitSort;
-                }
-
-                public TimeTower getTimeTower() {
-                    return timeTower;
-                }
-            }
+        public AutoPet getAutoPet() {
+            return autoPet;
         }
 
-        public class GlacitePlayerData {
-            private final List<String> fossilsDonated;
-            private final double fossilDust;
-            private final HashMap<String, Integer> corpsesLooted;
-            private final int mineshaftsEntered;
-
-            public GlacitePlayerData(JsonObject object) {
-                this.fossilsDonated = new ArrayList<>();
-                JsonArray fossilsDonatedArray = object.getAsJsonArray("fossils_donated");
-                for (JsonElement jsonElement : fossilsDonatedArray) {
-                    fossilsDonated.add(jsonElement.getAsString());
-                }
-                this.corpsesLooted = new HashMap<>();
-                JsonObject corpsesLootedObject = object.getAsJsonObject("corpses_looted");
-                for (String string : corpsesLootedObject.keySet()) {
-                    corpsesLooted.put(string, corpsesLootedObject.get(string).getAsInt());
-                }
-                this.fossilDust = object.getAsJsonPrimitive("fossil_dust").getAsDouble();
-                this.mineshaftsEntered = object.getAsJsonPrimitive("mineshafts_entered").getAsInt();
-            }
-
-            public double getFossilDust() {
-                return fossilDust;
-            }
-
-            public HashMap<String, Integer> getCorpsesLooted() {
-                return corpsesLooted;
-            }
-
-            public int getMineshaftsEntered() {
-                return mineshaftsEntered;
-            }
-
-            public List<String> getFossilsDonated() {
-                return fossilsDonated;
-            }
+        public List<Pet> getPets() {
+            return pets;
         }
 
-        public class TempStatBuff {
-            private final int stat;
-            private final String key;
-            private final int amount;
-            private final long expireAt;
-
-            public TempStatBuff(JsonObject object) {
-                this.stat = object.get("stat").getAsInt();
-                this.key = object.get("key").getAsString();
-                this.amount = object.get("amount").getAsInt();
-                this.expireAt = object.get("expire_at").getAsLong();
-            }
-
-            public int getAmount() {
-                return amount;
-            }
-
-            public int getStat() {
-                return stat;
-            }
-
-            public long getExpireAt() {
-                return expireAt;
-            }
-
-            public String getKey() {
-                return key;
-            }
+        public PetCare getPetCare() {
+            return petCare;
         }
 
+        public class Pet {
+            private final UUID uuid;
+            private final UUID uniqueId;
+            private final String type;
+            private final BigInteger exp;
+            private final boolean active;
+            private final String tier;
+            private final String heldItem;
+            private final int candyUsed;
+            private final String skin;
+
+            public Pet(JsonObject object) {
+                this.uuid = UUID.fromString(object.get("uuid").getAsString());
+                this.uniqueId = UUID.fromString(object.get("uniqueId").getAsString());
+                this.type = object.get("type").getAsString();
+                this.exp = object.get("exp").getAsBigInteger();
+                this.active = object.get("active").getAsBoolean();
+                this.tier = object.get("tier").getAsString();
+                this.heldItem = object.get("heldItem").getAsString();
+                this.candyUsed = object.get("candyUsed").getAsInt();
+                this.skin = object.get("skin").getAsString();
+            }
+
+            public UUID getUuid() {
+                return uuid;
+            }
+
+            public String getType() {
+                return type;
+            }
+
+            public int getCandyUsed() {
+                return candyUsed;
+            }
+
+            public BigInteger getExp() {
+                return exp;
+            }
+
+            public String getHeldItem() {
+                return heldItem;
+            }
+
+            public String getSkin() {
+                return skin;
+            }
+
+            public String getTier() {
+                return tier;
+            }
+
+            public UUID getUniqueId() {
+                return uniqueId;
+            }
+
+            public boolean isActive() {
+                return active;
+            }
+        }
+    }
+    public class GardenPlayerData {
+        private final int copper;
+        private final int larvaConsumed;
+
+        public GardenPlayerData(JsonObject object) {
+            this.copper = object.get("copper").getAsInt();
+            this.larvaConsumed = object.get("larva_consumed").getAsInt();
+        }
+
+        public int getCopper() {
+            return copper;
+        }
+
+        public int getLarvaConsumed() {
+            return larvaConsumed;
+        }
     }
 
-    public UUID getProfileUUID(SkyBlockProfileReply reply) {
-        JsonObject object = reply.getProfile();
-        if (object == null) return null;
-        JsonObject profileObject = object.getAsJsonObject("profile");
-        return profileObject.
+    public class Events {
+        private final Easter easter;
+
+        public Events(JsonObject object) {
+            this.easter = new Easter(object.getAsJsonObject("easter"));
+        }
+
+        public Easter getEaster() {
+            return easter;
+        }
+
+        public class Easter {
+            private final long chocolate;
+            private final long chocolateSincePrestige;
+            private final long totalChocolate;
+            private final HashMap<String, Integer> employees;
+            private final long lastViewedChocolateFactory;
+            private final Rabbits rabbits;
+            private final Shop shop;
+            private final int rabbitBarnCapacityLevel;
+            private final String rabbitSort;
+            private final int chocolateLevel;
+            private final TimeTower timeTower;
+            private final String rabbitFilter;
+            private final int chocolateMultiplierUpgrades;
+            private final int clickUpgrades;
+            private final int rabbitRarityUpgrades;
+            private final int supremeChocolateBars;
+            private final int refinedDarkCacaoTruffles;
+
+            public Easter(JsonObject object) {
+                this.chocolate = object.get("chocolate").getAsLong();
+                this.chocolateSincePrestige = object.get("chocolate_since_prestige").getAsLong();
+                this.totalChocolate = object.get("total_chocolate").getAsLong();
+                this.employees = new HashMap<>();
+                JsonObject employeesObject = object.getAsJsonObject("employees");
+                for (Map.Entry<String, JsonElement> entry : employeesObject.entrySet()) {
+                    String string = entry.getKey();
+                    employees.put(string, employeesObject.get(string).getAsInt());
+                }
+                this.lastViewedChocolateFactory = object.get("last_viewed_chocolate_factory").getAsInt();
+                this.rabbits = new Rabbits(object.getAsJsonObject("rabbits"));
+                this.shop = new Shop(object.getAsJsonObject("shop"));
+                this.rabbitBarnCapacityLevel = object.get("rabbit_barn_capacity_level").getAsInt();
+                this.rabbitSort = object.get("rabbit_sort").getAsString();
+                this.chocolateLevel = object.get("chocolate_level").getAsInt();
+                this.timeTower = new TimeTower(object.getAsJsonObject("time_tower"));
+                this.rabbitFilter = object.get("rabbit_filter").getAsString();
+                this.chocolateMultiplierUpgrades = object.get("chocolate_multiplier_upgrades").getAsInt();
+                this.clickUpgrades = object.get("click_upgrades").getAsInt();
+                this.rabbitRarityUpgrades = object.get("rabbit_rarity_upgrades").getAsInt();
+                this.supremeChocolateBars = object.get("supreme_chocolate_bars").getAsInt();
+                this.refinedDarkCacaoTruffles = object.get("refined_dark_cacao_truffles").getAsInt();
+            }
+
+            public class TimeTower {
+                private final int charges;
+                private final long lastChargeTime;
+                private final int level;
+                private final long activationTime;
+
+                public TimeTower(JsonObject object) {
+                    this.charges = object.get("charges").getAsInt();
+                    this.lastChargeTime = object.get("last_charge_time").getAsLong();
+                    this.level = object.get("level").getAsInt();
+                    this.activationTime = object.get("activation_time").getAsLong();
+                }
+
+                public int getCharges() {
+                    return charges;
+                }
+
+                public int getLevel() {
+                    return level;
+                }
+
+                public long getActivationTime() {
+                    return activationTime;
+                }
+
+                public long getLastChargeTime() {
+                    return lastChargeTime;
+                }
+            }
+
+            public class Shop {
+                private final int year;
+                private final List<String> rabbitsShop;
+                private final List<String> rabbitsPurchased;
+                private final long chocolateSpent;
+                private final int cocoaFortuneUpgrades;
+
+                public Shop(JsonObject object) {
+                    this.year = object.get("year").getAsInt();
+                    this.rabbitsShop = new ArrayList<>();
+                    JsonArray rabbitsShopArray = object.getAsJsonArray("rabbits");
+                    for (JsonElement jsonElement : rabbitsShopArray) {
+                        rabbitsShop.add(jsonElement.getAsString());
+                    }
+                    this.rabbitsPurchased = new ArrayList<>();
+                    JsonArray rabbitsPurchasedArray = object.getAsJsonArray("rabbits_purchased");
+                    for (JsonElement jsonElement : rabbitsPurchasedArray) {
+                        rabbitsPurchased.add(jsonElement.getAsString());
+                    }
+                    this.chocolateSpent = object.getAsJsonPrimitive("chocolate").getAsLong();
+                    this.cocoaFortuneUpgrades = object.getAsJsonPrimitive("cocoa_fortune_upgrades").getAsInt();
+                }
+
+                public int getCocoaFortuneUpgrades() {
+                    return cocoaFortuneUpgrades;
+                }
+
+                public int getYear() {
+                    return year;
+                }
+
+                public List<String> getRabbitsPurchased() {
+                    return rabbitsPurchased;
+                }
+
+                public List<String> getRabbitsShop() {
+                    return rabbitsShop;
+                }
+
+                public long getChocolateSpent() {
+                    return chocolateSpent;
+                }
+            }
+            public class Rabbits {
+                private final HashMap<String, Long> collectedEggs;
+                private final HashMap<String, List<String>> collectedLocations;
+
+                public Rabbits(JsonObject object) {
+                    this.collectedEggs = new HashMap<>();
+                    JsonObject collectedEggsObject = object.getAsJsonObject("collected_eggs");
+                    for (Map.Entry<String, JsonElement> entry : collectedEggsObject.entrySet()) {
+                        String string = entry.getKey();
+                        collectedEggs.put(string, collectedEggsObject.get(string).getAsLong());
+                    }
+                    this.collectedLocations = new HashMap<>();
+                    JsonObject collectedLocationsObject = object.getAsJsonObject("collected_locations");
+                    for (Map.Entry<String, JsonElement> entry : collectedLocationsObject.entrySet()) {
+                        String string = entry.getKey();
+                        collectedLocations.put(string, new ArrayList<>());
+                        JsonArray locationArray = collectedLocationsObject.getAsJsonArray(string);
+                        for (JsonElement jsonElement : locationArray) {
+                            collectedLocations.get(string).add(jsonElement.getAsString());
+                        }
+                    }
+                }
+
+                public HashMap<String, List<String>> getCollectedLocations() {
+                    return collectedLocations;
+                }
+
+                public HashMap<String, Long> getCollectedEggs() {
+                    return collectedEggs;
+                }
+            }
+
+            public HashMap<String, Integer> getEmployees() {
+                return employees;
+            }
+
+            public int getChocolateLevel() {
+                return chocolateLevel;
+            }
+
+            public long getChocolate() {
+                return chocolate;
+            }
+
+            public int getChocolateMultiplierUpgrades() {
+                return chocolateMultiplierUpgrades;
+            }
+
+            public int getClickUpgrades() {
+                return clickUpgrades;
+            }
+
+            public int getRabbitBarnCapacityLevel() {
+                return rabbitBarnCapacityLevel;
+            }
+
+            public int getRabbitRarityUpgrades() {
+                return rabbitRarityUpgrades;
+            }
+
+            public int getRefinedDarkCacaoTruffles() {
+                return refinedDarkCacaoTruffles;
+            }
+
+            public int getSupremeChocolateBars() {
+                return supremeChocolateBars;
+            }
+
+            public long getChocolateSincePrestige() {
+                return chocolateSincePrestige;
+            }
+
+            public long getLastViewedChocolateFactory() {
+                return lastViewedChocolateFactory;
+            }
+
+            public long getTotalChocolate() {
+                return totalChocolate;
+            }
+
+            public Rabbits getRabbits() {
+                return rabbits;
+            }
+
+            public Shop getShop() {
+                return shop;
+            }
+
+            public String getRabbitFilter() {
+                return rabbitFilter;
+            }
+
+            public String getRabbitSort() {
+                return rabbitSort;
+            }
+
+            public TimeTower getTimeTower() {
+                return timeTower;
+            }
+        }
+    }
+
+    public class GlacitePlayerData {
+        private final List<String> fossilsDonated;
+        private final double fossilDust;
+        private final HashMap<String, Integer> corpsesLooted;
+        private final int mineshaftsEntered;
+
+        public GlacitePlayerData(JsonObject object) {
+            this.fossilsDonated = new ArrayList<>();
+            JsonArray fossilsDonatedArray = object.getAsJsonArray("fossils_donated");
+            for (JsonElement jsonElement : fossilsDonatedArray) {
+                fossilsDonated.add(jsonElement.getAsString());
+            }
+            this.corpsesLooted = new HashMap<>();
+            JsonObject corpsesLootedObject = object.getAsJsonObject("corpses_looted");
+            for (Map.Entry<String, JsonElement> entry : corpsesLootedObject.entrySet()) {
+                String string = entry.getKey();
+                corpsesLooted.put(string, corpsesLootedObject.get(string).getAsInt());
+            }
+            this.fossilDust = object.getAsJsonPrimitive("fossil_dust").getAsDouble();
+            this.mineshaftsEntered = object.getAsJsonPrimitive("mineshafts_entered").getAsInt();
+        }
+
+        public double getFossilDust() {
+            return fossilDust;
+        }
+
+        public HashMap<String, Integer> getCorpsesLooted() {
+            return corpsesLooted;
+        }
+
+        public int getMineshaftsEntered() {
+            return mineshaftsEntered;
+        }
+
+        public List<String> getFossilsDonated() {
+            return fossilsDonated;
+        }
+    }
+
+    public class TempStatBuff {
+        private final int stat;
+        private final String key;
+        private final int amount;
+        private final long expireAt;
+
+        public TempStatBuff(JsonObject object) {
+            this.stat = object.get("stat").getAsInt();
+            this.key = object.get("key").getAsString();
+            this.amount = object.get("amount").getAsInt();
+            this.expireAt = object.get("expire_at").getAsLong();
+        }
+
+        public int getAmount() {
+            return amount;
+        }
+
+        public int getStat() {
+            return stat;
+        }
+
+        public long getExpireAt() {
+            return expireAt;
+        }
+
+        public String getKey() {
+            return key;
+        }
+    }
+
+    public UUID getProfileUUID(UUID playerUUID) {
+        JsonObject activeProfile = getActiveProfile(playerUUID);
+        SkyblockProfile profile = new SkyblockProfile(activeProfile);
+        return profile.getProfileID();
     }
 }
