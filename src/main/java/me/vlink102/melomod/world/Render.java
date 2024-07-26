@@ -1,6 +1,9 @@
 package me.vlink102.melomod.world;
 
+import me.vlink102.melomod.config.MeloConfiguration;
 import me.vlink102.melomod.mixin.SkyblockUtil;
+import net.minecraft.block.*;
+import net.minecraft.block.material.Material;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.EntityPlayerSP;
@@ -8,6 +11,7 @@ import net.minecraft.client.multiplayer.WorldClient;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.Blocks;
+import net.minecraft.item.EnumDyeColor;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.AxisAlignedBB;
 import net.minecraft.util.BlockPos;
@@ -16,7 +20,149 @@ import net.minecraftforge.client.event.DrawBlockHighlightEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import org.lwjgl.util.vector.Vector3f;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class Render {
+    private static final float reach = (float) Math.sqrt(40.5);
+    private static final float blocksInReach = 4.5f;
+
+    public static boolean isDwarven(BlockPos pos) {
+        if (Minecraft.getMinecraft().theWorld.isAirBlock(pos)) return false;
+        IBlockState state = Minecraft.getMinecraft().theWorld.getBlockState(pos);
+        Block block = state.getBlock();
+        if (block == Blocks.stone) {
+            if (state.getValue(BlockStone.VARIANT) == BlockStone.EnumType.DIORITE_SMOOTH) return true;
+        }
+        if (block == Blocks.gold_block) return true;
+        if (block instanceof BlockOre) return true;
+        if (block == Blocks.stained_hardened_clay) {
+            if (block.getMetaFromState(state) == 9) return true; // CYAN TERRACOTTA
+
+        }
+        if (block == Blocks.wool) {
+            if (state.getValue(BlockColored.COLOR) == EnumDyeColor.LIGHT_BLUE) return true;
+            if (state.getValue(BlockColored.COLOR) == EnumDyeColor.GRAY) return true;
+        }
+        if (block == Blocks.prismarine) {
+            if (state.getValue(BlockPrismarine.VARIANT) == BlockPrismarine.EnumType.DARK) return true;
+            if (state.getValue(BlockPrismarine.VARIANT) == BlockPrismarine.EnumType.ROUGH) return true;
+            if (state.getValue(BlockPrismarine.VARIANT) == BlockPrismarine.EnumType.BRICKS) return true;
+        }
+
+        return false;
+    }
+
+    public static boolean isCrystalHollows(BlockPos pos) {
+        if (Minecraft.getMinecraft().theWorld.isAirBlock(pos)) return false;
+        IBlockState state = Minecraft.getMinecraft().theWorld.getBlockState(pos);
+        Block block = state.getBlock();
+        if (block == Blocks.prismarine) return true;
+        if (block == Blocks.wool) {
+            if (state.getValue(BlockColored.COLOR) == EnumDyeColor.LIGHT_BLUE) return true;
+        }
+        if (block == Blocks.gold_block) return true;
+        if (block == Blocks.iron_block) return true;
+        if (block == Blocks.diamond_block) return true;
+        if (block == Blocks.coal_block) return true;
+        if (block == Blocks.lapis_block) return true;
+        if (block == Blocks.emerald_block) return true;
+        if (block == Blocks.stained_glass) {
+            if (state.getValue(BlockStainedGlass.COLOR) == EnumDyeColor.ORANGE) return true;
+            if (state.getValue(BlockStainedGlass.COLOR) == EnumDyeColor.YELLOW) return true;
+            if (state.getValue(BlockStainedGlass.COLOR) == EnumDyeColor.BLUE) return true;
+            if (state.getValue(BlockStainedGlass.COLOR) == EnumDyeColor.PURPLE) return true;
+            if (state.getValue(BlockStainedGlass.COLOR) == EnumDyeColor.MAGENTA) return true;
+            if (state.getValue(BlockStainedGlass.COLOR) == EnumDyeColor.RED) return true;
+            if (state.getValue(BlockStainedGlass.COLOR) == EnumDyeColor.GREEN) return true;
+        }
+        if (block == Blocks.stained_glass_pane) {
+            if (state.getValue(BlockStainedGlassPane.COLOR) == EnumDyeColor.ORANGE) return true;
+            if (state.getValue(BlockStainedGlassPane.COLOR) == EnumDyeColor.YELLOW) return true;
+            if (state.getValue(BlockStainedGlassPane.COLOR) == EnumDyeColor.BLUE) return true;
+            if (state.getValue(BlockStainedGlassPane.COLOR) == EnumDyeColor.PURPLE) return true;
+            if (state.getValue(BlockStainedGlassPane.COLOR) == EnumDyeColor.MAGENTA) return true;
+            if (state.getValue(BlockStainedGlassPane.COLOR) == EnumDyeColor.RED) return true;
+            if (state.getValue(BlockStainedGlassPane.COLOR) == EnumDyeColor.GREEN) return true;
+        }
+        return false;
+    }
+
+    public static boolean isMatch(int config, BlockPos pos) {
+        switch (config) {
+            case 0:
+                return isDwarven(pos);
+            case 1:
+                return isCrystalHollows(pos);
+            case 2:
+                switch (SkyblockUtil.getPlayerLocation()) {
+                    case DWARVEN_MINES:
+                        return isDwarven(pos);
+                    case CRYSTAL_HOLLOWS:
+                        return isCrystalHollows(pos);
+                }
+        }
+        return false;
+    }
+
+    public static List<BlockPos> getAllInReach(DrawBlockHighlightEvent event, EntityPlayer player) {
+        BlockPos playerPos = player.getPosition();
+        BlockPos corner = new BlockPos(playerPos).add(reach, reach, reach);
+        BlockPos corner2 = new BlockPos(playerPos).add(-reach, -reach, -reach);
+        Iterable<BlockPos> blocks = BlockPos.getAllInBox(corner, corner2);
+        List<BlockPos> toReturn = new ArrayList<>();
+        for (BlockPos block : blocks) {
+            if (Minecraft.getMinecraft().theWorld.isAirBlock(block)) {
+                continue;
+            }
+            Block worldBlock = Minecraft.getMinecraft().theWorld.getBlockState(block).getBlock();
+            if (isMatch(MeloConfiguration.miningHighlightType, block)) {
+                if (intersectsWith(
+                        event,
+                        getMin(worldBlock),
+                        getMax(worldBlock),
+                        event.player)) {
+                    toReturn.add(block);
+                }
+            }
+        }
+        return toReturn;
+    }
+
+    public static BlockPos getMin(Block block) {
+        return new BlockPos(block.getBlockBoundsMinX(), block.getBlockBoundsMinY(), block.getBlockBoundsMinZ());
+    }
+    public static BlockPos getMax(Block block) {
+        return new BlockPos(block.getBlockBoundsMaxX(), block.getBlockBoundsMaxY(), block.getBlockBoundsMaxZ());
+    }
+
+    public static boolean intersectsWith(DrawBlockHighlightEvent event, BlockPos a, BlockPos b, EntityPlayer player) {
+        float dmin = 0;
+
+        Vec3 center = player.getPositionEyes(event.partialTicks);
+        Vec3 bmin = new Vec3(a);
+        Vec3 bmax = new Vec3(b);
+
+        if (center.xCoord < bmin.xCoord) {
+            dmin += (float) Math.pow(center.xCoord - bmin.xCoord, 2);
+        } else if (center.xCoord > bmax.xCoord) {
+            dmin += (float) Math.pow(center.xCoord - bmax.xCoord, 2);
+        }
+
+        if (center.yCoord < bmin.yCoord) {
+            dmin += (float) Math.pow(center.yCoord - bmin.yCoord, 2);
+        } else if (center.yCoord > bmax.yCoord) {
+            dmin += (float) Math.pow(center.yCoord - bmax.yCoord, 2);
+        }
+
+        if (center.zCoord < bmin.zCoord) {
+            dmin += (float) Math.pow(center.zCoord - bmin.zCoord, 2);
+        } else if (center.zCoord > bmax.zCoord) {
+            dmin += (float) Math.pow(center.zCoord - bmax.zCoord, 2);
+        }
+
+        return dmin <= Math.pow(blocksInReach, 2);
+    }
 
     @SubscribeEvent
     public void onDrawBlockHighlight(DrawBlockHighlightEvent event) {
@@ -28,18 +174,17 @@ public class Render {
         SkyblockUtil.ItemType type =SkyblockUtil.ItemType.parseFromItemStack(held);
         if (type == null) return;
         if (type == SkyblockUtil.ItemType.DRILL || type == SkyblockUtil.ItemType.GAUNTLET || type == SkyblockUtil.ItemType.PICKAXE) {
-            RaycastResult result = raycast(Minecraft.getMinecraft().thePlayer, 1f, 4, 0.1f);
+            RaycastResult result = raycast(Minecraft.getMinecraft().thePlayer, 1f, 4.5f, 0.1f);
+
+
             if (result != null) {
-                AxisAlignedBB box = result.state.getBlock().getSelectedBoundingBox(
+                List<BlockPos> blockPosList = getAllInReach(event, player);;
+                Block block = result.state.getBlock();
+                AxisAlignedBB box = block.getSelectedBoundingBox(
                         Minecraft.getMinecraft().theWorld,
                         result.pos
                 );
                 AxisAlignedBB bb = box.expand(0.01D, 0.01D, 0.01D).offset(-d0, -d1, -d2);
-                RenderUtils.drawFilledBoundingBox(
-                        bb,
-                        1f,
-                        "00:70:156:8:96"
-                );
                 GlStateManager.disableDepth();
                 RenderUtils.drawOutlineBoundingBox(
                         bb,
@@ -48,9 +193,50 @@ public class Render {
                 );
                 GlStateManager.enableDepth();
 
+                for (BlockPos pos : blockPosList) {
+                    Block block1 = Minecraft.getMinecraft().theWorld.getBlockState(pos).getBlock();
+                    RenderUtils.drawFilledBoundingBox(
+                            block1.getSelectedBoundingBox(Minecraft.getMinecraft().theWorld, pos).expand(0.001D, 0.001D, 0.001D).offset(-d0, -d1, -d2),
+                            1f, "00:70:156:8:96"
+                    );
+                }
                 GlStateManager.depthMask(true);
                 GlStateManager.enableTexture2D();
                 GlStateManager.disableBlend();
+                /*
+                switch (MeloConfiguration.miningHighlightType) {
+                    case 0:
+                        // Mithril
+
+                        break;
+                    case 1:
+                        // Gemstones
+                        break;
+                    case 2:
+                        // Auto
+                        SkyblockUtil.Location location = SkyblockUtil.getPlayerLocation();
+                        if (location == SkyblockUtil.Location.CRYSTAL_HOLLOWS) {
+                            if (block == Blocks.stained_glass_pane || block == Blocks.stained_glass) {
+                                /*
+
+
+                                RenderUtils.drawFilledBoundingBox(
+                                        bb,
+                                        1f,
+                                        "00:70:156:8:96"
+                                );
+
+
+
+
+                            }
+                        }
+                        break;
+                }
+
+                                 */
+
+
             }
         }
     }

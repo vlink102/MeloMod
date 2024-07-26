@@ -1,14 +1,24 @@
 package me.vlink102.melomod.mixin;
 
 import cc.polyfrost.oneconfig.utils.hypixel.HypixelUtils;
+import com.google.common.collect.ImmutableMap;
 import com.google.gson.*;
 import me.vlink102.melomod.MeloMod;
 import me.vlink102.melomod.events.InternalLocraw;
 import me.vlink102.melomod.world.ItemResolutionQuery;
+import net.minecraft.block.Block;
+import net.minecraft.block.material.Material;
+import net.minecraft.block.material.MaterialTransparent;
+import net.minecraft.block.properties.IProperty;
+import net.minecraft.block.state.IBlockState;
+import net.minecraft.client.Minecraft;
+import net.minecraft.item.EnumDyeColor;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTBase;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
+import net.minecraft.util.BlockPos;
+import net.minecraftforge.client.model.obj.OBJModel;
 import net.minecraftforge.common.util.Constants;
 
 import java.io.BufferedReader;
@@ -77,6 +87,45 @@ public class SkyblockUtil {
 
             return null;
         }
+    }
+
+    public enum Gemstone {
+        AMBER(EnumDyeColor.ORANGE),
+        TOPAZ(EnumDyeColor.YELLOW),
+        SAPPHIRE(EnumDyeColor.LIGHT_BLUE),
+        AMETHYST(EnumDyeColor.PURPLE),
+        JASPER(EnumDyeColor.MAGENTA),
+        RUBY(EnumDyeColor.RED),
+        JADE(EnumDyeColor.LIME),
+        OPAL(EnumDyeColor.WHITE),
+        AQUAMARINE(EnumDyeColor.BLUE),
+        CITRINE(EnumDyeColor.BROWN),
+        ONYX(EnumDyeColor.BLACK),
+        PERIDOT(EnumDyeColor.GREEN);
+        private final EnumDyeColor blockType;
+
+
+        Gemstone(EnumDyeColor blockType) {
+            this.blockType = blockType;
+        }
+
+        public EnumDyeColor getBlockType() {
+            return blockType;
+        }
+
+        public static Gemstone getFromBlock(BlockPos block) {
+            IBlockState state = Minecraft.getMinecraft().theWorld.getBlockState(block);
+            ImmutableMap<IProperty, Comparable> map = state.getProperties();
+            for (Map.Entry<IProperty, Comparable> iPropertyComparableEntry : map.entrySet()) {
+                for (Gemstone value : Gemstone.values()) {
+                    if (iPropertyComparableEntry.getValue().toString().equalsIgnoreCase(value.blockType.getName())) {
+                        return value;
+                    }
+                }
+            }
+            return null;
+        }
+
     }
 
     public static Location getPlayerLocation() {
