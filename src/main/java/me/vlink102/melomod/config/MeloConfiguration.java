@@ -1,7 +1,6 @@
 package me.vlink102.melomod.config;
 
 import cc.polyfrost.oneconfig.config.annotations.*;
-import me.vlink102.melomod.hud.MeloHUD;
 import me.vlink102.melomod.MeloMod;
 import cc.polyfrost.oneconfig.config.Config;
 import cc.polyfrost.oneconfig.config.data.Mod;
@@ -13,10 +12,6 @@ import cc.polyfrost.oneconfig.config.data.OptionSize;
  * See <a href="https://docs.polyfrost.cc/oneconfig/config/adding-options">this link</a> for more config Options
  */
 public class MeloConfiguration extends Config {
-    @HUD(
-            name = "MeloMod HUD"
-    )
-    public MeloHUD hud = new MeloHUD();
 
     @Text(
             name = "API Key",

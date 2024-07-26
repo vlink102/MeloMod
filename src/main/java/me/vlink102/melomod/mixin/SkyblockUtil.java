@@ -6,13 +6,16 @@ import me.vlink102.melomod.MeloMod;
 import me.vlink102.melomod.config.MeloConfiguration;
 import me.vlink102.melomod.events.ChatEvent;
 import me.vlink102.melomod.events.InternalLocraw;
+import me.vlink102.melomod.util.ApiUtil;
 import net.minecraft.block.properties.IProperty;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.init.Items;
 import net.minecraft.item.EnumDyeColor;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.*;
+import net.minecraft.potion.Potion;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.BlockPos;
 import net.minecraft.util.ChatComponentText;
@@ -27,9 +30,7 @@ import java.net.MalformedURLException;
 import java.net.ProtocolException;
 import java.net.URL;
 import java.util.*;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 
 public class SkyblockUtil {
     private final MeloMod meloMod;
@@ -171,46 +172,9 @@ public class SkyblockUtil {
         }
     }
 
-    public static JsonObject getGuild(String player) {
-        try {
-            UUID uuid = MinecraftServer.getServer().getPlayerProfileCache().getGameProfileForUsername(player).getId();
-            URL url = new URL("https://api.hypixel.net/v2/guild?player=" + uuid);
-            HttpURLConnection con = (HttpURLConnection)  url.openConnection();
-
-            con.setRequestMethod("GET");
-            con.setRequestProperty("Content-Type", "application/json");
-            con.setRequestProperty("API-Key", MeloConfiguration.apiKey);
-
-            con.setConnectTimeout(5000);
-            con.setReadTimeout(5000);
-            int status = con.getResponseCode();
-
-            if (status == 200) {
-                BufferedReader in = new BufferedReader(
-                        new InputStreamReader(con.getInputStream())
-                );
-                String inputLine;
-                StringBuffer content = new StringBuffer();
-                while ((inputLine = in.readLine()) != null) {
-                    content.append(inputLine);
-                }
-                in.close();
-                con.disconnect();
-                String contentString = content.toString();
-                JsonObject toReturn = new JsonParser().parse(contentString).getAsJsonObject();
-                if (getAsBoolean("success", toReturn)) {
-                    return toReturn.getAsJsonObject("session");
-                }
-            }
-
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-        return null;
-    }
 
     public static class Guild {
-        private final String guildID;
+        //private final String guildID;
         private final String name;
         private final String nameLower;
         private final Integer coins;
@@ -229,9 +193,9 @@ public class SkyblockUtil {
         private final HashMap<String, Integer> guildExpByGameType;
 
         public Guild(JsonObject object) {
-            this.guildID = getAsString("_id", object);
+            //this.guildID = getAsString("_id", object);
             this.name = getAsString("name", object);
-            this.nameLower = getAsString("name", object);
+            this.nameLower = getAsString("name_lower", object);
             this.coins = getAsInteger("coins", object);
             this.coinsEver = getAsInteger("coinsEver", object);
             this.created = getAsLong("created", object);
@@ -323,7 +287,7 @@ public class SkyblockUtil {
         }
 
         public String getGuildID() {
-            return guildID;
+            return "???";// TODO
         }
 
         public String getNameLower() {
@@ -438,46 +402,9 @@ public class SkyblockUtil {
         }
     }
 
-    public static JsonObject getSession(String player) {
-        //UUID uuid = EntityPlayer.getOfflineUUID(player);
-        try {
-            UUID uuid = MinecraftServer.getServer().getPlayerProfileCache().getGameProfileForUsername(player).getId();
-            URL url = new URL("https://api.hypixel.net/v2/status?uuid=" + uuid);
-            HttpURLConnection con = (HttpURLConnection)  url.openConnection();
-
-            con.setRequestMethod("GET");
-            con.setRequestProperty("Content-Type", "application/json");
-            con.setRequestProperty("API-Key", MeloConfiguration.apiKey);
-
-            con.setConnectTimeout(5000);
-            con.setReadTimeout(5000);
-            int status = con.getResponseCode();
-
-            if (status == 200) {
-                BufferedReader in = new BufferedReader(
-                        new InputStreamReader(con.getInputStream())
-                );
-                String inputLine;
-                StringBuffer content = new StringBuffer();
-                while ((inputLine = in.readLine()) != null) {
-                    content.append(inputLine);
-                }
-                in.close();
-                con.disconnect();
-                String contentString = content.toString();
-                JsonObject toReturn = new JsonParser().parse(contentString).getAsJsonObject();
-                if (getAsBoolean("success", toReturn)) {
-                    return toReturn.getAsJsonObject("session");
-                }
-            }
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-
-        return null;
-    }
 
     public static JsonObject getAsJsonObject(String key, JsonObject parent) {
+        if (parent == null) return null;
         if (parent.has(key)) {
             if (!parent.get(key).isJsonNull() && parent.get(key) != null && parent.get(key).isJsonObject()) {
                 return parent.getAsJsonObject(key);
@@ -487,6 +414,7 @@ public class SkyblockUtil {
     }
 
     public static JsonArray getAsJsonArray(String key, JsonObject parent) {
+        if (parent == null) return null;
         if (parent.has(key)) {
             if (!parent.get(key).isJsonNull() && parent.get(key) != null && parent.get(key).isJsonArray()) {
                 return parent.getAsJsonArray(key);
@@ -496,6 +424,7 @@ public class SkyblockUtil {
     }
 
     public static Boolean getAsBoolean(String key, JsonObject parent) {
+        if (parent == null) return null;
         if (parent.has(key)) {
             if (!parent.get(key).isJsonNull() && parent.get(key) != null && parent.get(key).isJsonPrimitive()) {
                 if (parent.getAsJsonPrimitive(key).isBoolean()) {
@@ -507,6 +436,7 @@ public class SkyblockUtil {
     }
 
     public static String getAsString(String key, JsonObject parent) {
+        if (parent == null) return null;
         if (parent.has(key)) {
             if (!parent.get(key).isJsonNull() && parent.get(key) != null && parent.get(key).isJsonPrimitive()) {
                 if (parent.getAsJsonPrimitive(key).isString()) {
@@ -518,6 +448,7 @@ public class SkyblockUtil {
     }
 
     public static Integer getAsInteger(String key, JsonObject parent) {
+        if (parent == null) return null;
         if (parent.has(key)) {
             if (!parent.get(key).isJsonNull() && parent.get(key) != null && parent.get(key).isJsonPrimitive()) {
                 if (parent.getAsJsonPrimitive(key).isNumber()) {
@@ -529,6 +460,7 @@ public class SkyblockUtil {
     }
 
     public static Float getAsFloat(String key, JsonObject parent) {
+        if (parent == null) return null;
         if (parent.has(key)) {
             if (!parent.get(key).isJsonNull() && parent.get(key) != null && parent.get(key).isJsonPrimitive()) {
                 if (parent.getAsJsonPrimitive(key).isNumber()) {
@@ -540,6 +472,7 @@ public class SkyblockUtil {
     }
 
     public static Double getAsDouble(String key, JsonObject parent) {
+        if (parent == null) return null;
         if (parent.has(key)) {
             if (!parent.get(key).isJsonNull() && parent.get(key) != null && parent.get(key).isJsonPrimitive()) {
                 if (parent.getAsJsonPrimitive(key).isNumber()) {
@@ -551,6 +484,7 @@ public class SkyblockUtil {
     }
 
     public static Long getAsLong(String key, JsonObject parent) {
+        if (parent == null) return null;
         if (parent.has(key)) {
             if (!parent.get(key).isJsonNull() && parent.get(key) != null && parent.get(key).isJsonPrimitive()) {
                 if (parent.getAsJsonPrimitive(key).isNumber()) {
@@ -626,7 +560,7 @@ public class SkyblockUtil {
 
         public ProfileMember getProfileMember(UUID uuid) {
             for (ProfileMember member : members) {
-                if (uuid.equals(member.playerID)) {
+                if (member.getPlayerID().equals(uuid)) {
                     return member;
                 }
             }
@@ -940,22 +874,20 @@ public class SkyblockUtil {
         }
     }
 
-    public static List<String> getLore(ItemStack stack) {
-        if (stack == null) return null;
-        NBTTagCompound tag = stack.getTagCompound();
-        if (!tag.hasKey("display")) {
-            return null;
+    public static List<String> getLore(ItemStack is) {
+        return getLore(is.getTagCompound());
+    }
+
+    public static List<String> getLore(NBTTagCompound tagCompound) {
+        if (tagCompound == null) {
+            return Collections.emptyList();
         }
-        NBTTagCompound display = tag.getCompoundTag("display");
-        if (!display.hasKey("Lore")) {
-            return null;
+        NBTTagList tagList = tagCompound.getCompoundTag("display").getTagList("Lore", 8);
+        List<String> list = new ArrayList<>();
+        for (int i = 0; i < tagList.tagCount(); i++) {
+            list.add(tagList.getStringTagAt(i));
         }
-        NBTTagList lore = display.getTagList("Lore", Constants.NBT.TAG_STRING);
-        List<String> loreList = new ArrayList<>();
-        for (int i = 0; i < lore.tagCount(); i++) {
-            loreList.add(lore.get(i).toString());
-        }
-        return loreList;
+        return list;
     }
 
     public class Bestiary {
@@ -3141,74 +3073,55 @@ public class SkyblockUtil {
         return fromString(uuid.substring(0, 8) + "-" + uuid.substring(8, 12) + "-" + uuid.substring(12,16) + "-" + uuid.substring(16, 20) + "-" + uuid.substring(20));
     }
 
-    public static JsonObject getCurrentProfile(UUID uuid) {
-        JsonObject player = getPlayerProfiles(uuid);
-        JsonArray profiles = getAsJsonArray("profiles", player);
-        for (JsonElement profile : profiles) {
-            JsonObject profileObj = profile.getAsJsonObject();
-            if (profileObj.get("selected").getAsBoolean()) {
-                JsonObject members = getAsJsonObject("members", profileObj);
-                for (Map.Entry<String, JsonElement> entry : members.entrySet()) {
-                    String s = entry.getKey();
-                    if (fixMalformed(s).equals(uuid)) {
-                        JsonObject member = members.get(s).getAsJsonObject();
-                        return member;
+        /*
+    public JsonObject getCurrentProfile(UUID uuid) {
+        return meloMod.getPlayerProfile().getProfileMember(uuid);
+        try {
+            CompletableFuture<JsonObject> player = meloMod.getPlayerProfile();
+            JsonObject object = player.get();
+
+            JsonArray profiles = getAsJsonArray("profiles", object);
+            for (JsonElement profile : profiles) {
+                JsonObject profileObj = profile.getAsJsonObject();
+                if (profileObj.get("selected").getAsBoolean()) {
+                    JsonObject members = getAsJsonObject("members", profileObj);
+                    for (Map.Entry<String, JsonElement> entry : members.entrySet()) {
+                        String s = entry.getKey();
+                        if (fixMalformed(s).equals(uuid)) {
+                            JsonObject member = members.get(s).getAsJsonObject();
+                            return member;
+                        }
                     }
                 }
             }
-        }
-        Minecraft.getMinecraft().thePlayer.addChatMessage(new ChatComponentText("§cERROR: Null profile (Have you added a valid API Key?)"));
-        return null;
-    }
-
-    public static JsonObject getPlayerProfiles(UUID player) {
-        try {
-            URL url = new URL("https://api.hypixel.net/v2/skyblock/profiles?uuid=" + player);
-            HttpURLConnection con = (HttpURLConnection) url.openConnection();
-            con.setRequestMethod("GET");
-            con.setRequestProperty("Content-Type", "application/json");
-            con.setRequestProperty("API-Key", MeloConfiguration.apiKey);
-
-            con.setConnectTimeout(5000);
-            con.setReadTimeout(5000);
-            int status = con.getResponseCode();
-
-            if (status == 200) {
-                BufferedReader in = new BufferedReader(
-                        new InputStreamReader(con.getInputStream())
-                );
-                String inputLine;
-                StringBuffer content = new StringBuffer();
-                while ((inputLine = in.readLine()) != null) {
-                    content.append(inputLine);
-                }
-                in.close();
-                con.disconnect();
-                String contentString = content.toString();
-                JsonObject toReturn = new JsonParser().parse(contentString).getAsJsonObject();
-                if (toReturn.get("success").getAsBoolean()) {
-                    System.out.println("successful return");
-                    return toReturn;
-                }
-            }
-
-            Minecraft.getMinecraft().thePlayer.addChatMessage(new ChatComponentText("§cERROR: Null profiles (Have you added a valid API Key?)"));
+            Minecraft.getMinecraft().thePlayer.addChatMessage(new ChatComponentText("§cERROR: Null profile (Have you added a valid API Key?)"));
             return null;
-        } catch (IOException e) {
+        } catch (InterruptedException | ExecutionException e) {
             throw new RuntimeException(e);
         }
 
     }
 
-    public void generateCurrentProfile(UUID playerUUID) {
-        meloMod.setPlayerProfile(new ProfileMember(playerUUID, getCurrentProfile(playerUUID)));
-        HashMap<String, Integer> kills = meloMod.getPlayerProfile().getBestiary().getKills();
+         */
+
+
+    public synchronized void requestUpdate(boolean force) {
+        meloMod.apiUtil
+                    .newHypixelApiRequest("skyblock/profiles")
+                    .queryArgument("uuid", Minecraft.getMinecraft().thePlayer.getUniqueID().toString().replace("-", ""))
+                    .requestJson()
+                    .thenAccept(this::updateInformation);
+
+    }
+
+    public void updateInformation(JsonObject object) {
+        System.out.println(object);
+        meloMod.setPlayerProfile(new SkyblockProfile(object));
+        HashMap<String, Integer> kills = meloMod.getPlayerProfile().getProfileMember(Minecraft.getMinecraft().thePlayer.getUniqueID()).getBestiary().getKills();
         for (Map.Entry<String, Integer> entry : kills.entrySet()) {
             String string = entry.getKey();
             ChatEvent.seaCreatureSession.put(ChatEvent.SeaCreature.convertBestiaryMob(string), entry.getValue());
         }
-        System.out.println(ChatEvent.seaCreatureSession);
-
     }
 
 }

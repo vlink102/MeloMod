@@ -1,11 +1,11 @@
 package me.vlink102.melomod;
 
+import cc.polyfrost.oneconfig.libs.checker.units.qual.A;
 import cc.polyfrost.oneconfig.utils.hypixel.HypixelUtils;
 import cc.polyfrost.oneconfig.utils.hypixel.LocrawUtil;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.mojang.authlib.yggdrasil.request.JoinMinecraftServerRequest;
-import me.vlink102.melomod.command.ReloadAPICommand;
 import me.vlink102.melomod.config.MeloConfiguration;
 import me.vlink102.melomod.command.MeloCommand;
 import cc.polyfrost.oneconfig.events.event.InitializationEvent;
@@ -13,6 +13,7 @@ import me.vlink102.melomod.events.ChatEvent;
 import me.vlink102.melomod.events.InternalLocraw;
 import me.vlink102.melomod.mixin.PlayerObjectUtil;
 import me.vlink102.melomod.mixin.SkyblockUtil;
+import me.vlink102.melomod.util.ApiUtil;
 import me.vlink102.melomod.world.Render;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.common.Mod;
@@ -77,16 +78,17 @@ public class MeloMod {
     public static ChatEvent chatEvent = null;
     public static LocrawUtil locrawUtil;
 
-    private SkyblockUtil.ProfileMember playerProfile = null;
+    private SkyblockUtil.SkyblockProfile skyblockProfile = null;
     public SkyblockUtil skyblockUtil;
+    public ApiUtil apiUtil;
 
-    public void setPlayerProfile(SkyblockUtil.ProfileMember playerProfile) {
-        this.playerProfile = playerProfile;
+    public void setPlayerProfile(SkyblockUtil.SkyblockProfile skyblockProfile) {
+        this.skyblockProfile = skyblockProfile;
     }
 
 
-    public SkyblockUtil.ProfileMember getPlayerProfile() {
-        return playerProfile;
+    public SkyblockUtil.SkyblockProfile getPlayerProfile() {
+        return skyblockProfile;
     }
 
     public SkyblockUtil getSkyblockUtil() {
@@ -99,6 +101,7 @@ public class MeloMod {
         config = new MeloConfiguration();
         gson = new Gson();
         skyblockUtil = new SkyblockUtil(this);
+        apiUtil = new ApiUtil();
         CommandManager.INSTANCE.registerCommand(new MeloCommand(this));
         PlayerObjectUtil objectUtil = new PlayerObjectUtil(this);
         locrawUtil = new LocrawUtil();

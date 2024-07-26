@@ -101,6 +101,7 @@ val devenvMod: Configuration by configurations.creating {
 dependencies {
     minecraft("com.mojang:minecraft:1.8.9")
     mappings("de.oceanlabs.mcp:mcp_stable:22-1.8.9")
+    //implementation("org.asynchttpclient:async-http-client:3.0.0.Beta3")
     //implementation("net.hypixel:HypixelAPI:3.0.0")
     //compileOnly("net.hypixel:hypixel-api-transport-reactor:4.1")
     // Adds the OneConfig library, so we can develop with it.
@@ -132,7 +133,7 @@ tasks {
             if (project.platform.mcMinor == 17)
                 16
             else
-                8 // For all previous versions, we **need** java 8 (for Forge support).
+                11 // For all previous versions, we **need** java 8 (for Forge support).
         }
         val compatLevel = "JAVA_${java}"
         inputs.property("java", java)

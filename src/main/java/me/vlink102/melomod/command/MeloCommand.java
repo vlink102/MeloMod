@@ -24,7 +24,7 @@ public class MeloCommand {
 
     @SubCommand(description = "Reload the mod and refresh Hypixel API")
     private void reloadAPI() {
-        mod.getSkyblockUtil().generateCurrentProfile(Minecraft.getMinecraft().thePlayer.getUniqueID());
+        mod.skyblockUtil.requestUpdate(false);
     }
 
     @Main

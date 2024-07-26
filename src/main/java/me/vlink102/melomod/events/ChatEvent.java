@@ -2,13 +2,10 @@ package me.vlink102.melomod.events;
 
 import cc.polyfrost.oneconfig.events.EventManager;
 import cc.polyfrost.oneconfig.events.event.ChatReceiveEvent;
+import cc.polyfrost.oneconfig.events.event.ChatSendEvent;
 import cc.polyfrost.oneconfig.libs.eventbus.Subscribe;
-import cc.polyfrost.oneconfig.utils.hypixel.HypixelUtils;
-import cc.polyfrost.oneconfig.utils.hypixel.LocrawInfo;
-import cc.polyfrost.oneconfig.utils.hypixel.LocrawUtil;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import io.netty.util.internal.StringUtil;
 import me.vlink102.melomod.MeloMod;
 import me.vlink102.melomod.config.ChatConfig;
 import me.vlink102.melomod.mixin.SkyblockUtil;
@@ -20,8 +17,6 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.IChatComponent;
 import org.apache.commons.lang3.text.WordUtils;
-import org.lwjgl.Sys;
-
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -29,45 +24,41 @@ import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.UUID;
-import java.util.concurrent.ThreadLocalRandom;
+import java.util.*;
+import java.util.concurrent.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class ChatEvent {
 
-
-    public static String getChessMove(String fen) {
-        try {
-            URL url = new URL("https://chess-api.com/v1");
-            HttpURLConnection con = (HttpURLConnection)url.openConnection();
-            con.setRequestMethod("POST");
-            con.setRequestProperty("Content-Type", "application/json");
-            con.setRequestProperty("Accept", "application/json");
-            con.setDoOutput(true);
-            String jsonInputString = "{\"fen\": \"" + fen + "\", \"depth\": 10}";
-            try(OutputStream os = con.getOutputStream()) {
-                byte[] input = jsonInputString.getBytes(StandardCharsets.UTF_8);
-                os.write(input, 0, input.length);
-            }
-
-            try(BufferedReader br = new BufferedReader(
-                    new InputStreamReader(con.getInputStream(), StandardCharsets.UTF_8))) {
-                StringBuilder response = new StringBuilder();
-                String responseLine;
-                while ((responseLine = br.readLine()) != null) {
-                    response.append(responseLine.trim());
+    public CompletableFuture<Void> getChessMove(String fen) {
+        return CompletableFuture.runAsync(() -> {
+            try {
+                URL url = new URL("https://chess-api.com/v1");
+                HttpURLConnection con = (HttpURLConnection)url.openConnection();
+                con.setRequestMethod("POST");
+                con.setRequestProperty("Content-Type", "application/json");
+                con.setRequestProperty("Accept", "application/json");
+                con.setDoOutput(true);
+                String jsonInputString = "{\"fen\": \"" + fen + "\", \"depth\": 10}";
+                try(OutputStream os = con.getOutputStream()) {
+                    byte[] input = jsonInputString.getBytes(StandardCharsets.UTF_8);
+                    os.write(input, 0, input.length);
                 }
-                JsonObject object = new JsonParser().parse(response.toString()).getAsJsonObject();
-                return object.get("text").getAsString();
+                try(BufferedReader br = new BufferedReader(
+                        new InputStreamReader(con.getInputStream(), StandardCharsets.UTF_8))) {
+                    StringBuilder response = new StringBuilder();
+                    String responseLine;
+                    while ((responseLine = br.readLine()) != null) {
+                        response.append(responseLine.trim());
+                    }
+                    JsonObject object = new JsonParser().parse(response.toString()).getAsJsonObject();
+                    Minecraft.getMinecraft().thePlayer.sendChatMessage("/pc »»» " + object.get("text").getAsString() + " «««");
+                }
+            } catch (IOException e) {
+                throw new RuntimeException(e);
             }
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-
+        });
     }
     private final MeloMod mod;
 
@@ -246,6 +237,12 @@ public class ChatEvent {
         }
     }
 
+    public static void sendLater(String string) {
+        ScheduledExecutorService executorService = new ScheduledThreadPoolExecutor(1);
+        executorService.schedule(() -> Minecraft.getMinecraft().thePlayer.sendChatMessage(string), 200, TimeUnit.MILLISECONDS);
+    }
+
+
     @Subscribe
     public void onChatEvent(ChatReceiveEvent event) {
         IChatComponent message = event.message;
@@ -266,7 +263,13 @@ public class ChatEvent {
                 String[] args = chatMessage.split("-chess ");
                 if (args.length > 1) {
                     String fen = args[1];
-                    Minecraft.getMinecraft().thePlayer.sendChatMessage("/pc »»» " + getChessMove(fen) + " «««");
+                    try {
+                        getChessMove(fen).get();
+                    } catch (InterruptedException e) {
+                        throw new RuntimeException(e);
+                    } catch (ExecutionException e) {
+                        throw new RuntimeException(e);
+                    }
                     return;
                 }
             }
@@ -282,20 +285,22 @@ public class ChatEvent {
             String regex = "Party > (\\[.*?] )?(.*?):";
             Pattern pattern = Pattern.compile(regex);
             Matcher matcher = pattern.matcher(stripped);
-            String playerName = "?";
+            String playerName;
             if (matcher.find()) {
                 playerName = matcher.group(2);
+            } else {
+                playerName = "?";
             }
             if (ChatConfig.gay) {
                 if (chatMessage.equalsIgnoreCase("-gay")) {
-                    Minecraft.getMinecraft().thePlayer.sendChatMessage("/pc »»» " + playerName + " is " + random.nextInt(0, 101) + "% gay. «««");
+                    sendLater("/pc »»» " + playerName + " is " + random.nextInt(0, 101) + "% gay. «««");
                 }
                 if (ChatConfig.runOthers) {
                     if (chatMessage.startsWith("-gay ")) {
                         String[] args = chatMessage.split(" ");
                         if (args.length > 1) {
                             String gay = args[1];
-                            Minecraft.getMinecraft().thePlayer.sendChatMessage("/pc »»» " + gay + " is " + random.nextInt(0, 101) + "% gay. «««");
+                            sendLater("/pc »»» " + gay + " is " + random.nextInt(0, 101) + "% gay. «««");
                         }
                     }
                 }
@@ -303,14 +308,14 @@ public class ChatEvent {
 
             if (ChatConfig.racist) {
                 if (chatMessage.equalsIgnoreCase("-racist")) {
-                    Minecraft.getMinecraft().thePlayer.sendChatMessage("/pc »»» " + playerName + " is " + random.nextInt(0, 101) + "% racist. «««");
+                    sendLater("/pc »»» " + playerName + " is " + random.nextInt(0, 101) + "% racist. «««");
                 }
                 if (ChatConfig.runOthers) {
                     if (chatMessage.startsWith("-racist ")) {
                         String[] args = chatMessage.split(" ");
                         if (args.length > 1) {
                             String racist = args[1];
-                            Minecraft.getMinecraft().thePlayer.sendChatMessage("/pc »»» " + racist + " is " + random.nextInt(0, 101) + "% racist. «««");
+                            sendLater("/pc »»» " + racist + " is " + random.nextInt(0, 101) + "% racist. «««");
                         }
                     }
                 }
@@ -318,35 +323,37 @@ public class ChatEvent {
 
             if (ChatConfig.pray) {
                 if (chatMessage.equalsIgnoreCase("-pray")) {
-                    Minecraft.getMinecraft().thePlayer.sendChatMessage("/pc »»» " + playerName + " prayed to RNGesus! (+" + random.nextInt(0, 501) + "% ✯ Magic Find) «««");
+                    sendLater("/pc »»» " + playerName + " prayed to RNGesus! (+" + random.nextInt(0, 501) + "% ✯ Magic Find) «««");
                 }
             }
             if (ChatConfig.diceRoll) {
                 if (chatMessage.equalsIgnoreCase("-dice")) {
                     int roll = random.nextInt(1, 7);
-                    Minecraft.getMinecraft().thePlayer.sendChatMessage("/pc »»» " + playerName + " rolled a " + roll + "! " + getDice(roll) + " «««");
+                    sendLater("/pc »»» " + playerName + " rolled a " + roll + "! " + getDice(roll) + " «««");
                 }
             }
             if (ChatConfig.doubleDiceRoll) {
                 if (chatMessage.equalsIgnoreCase("-dice2")) {
                     int roll = random.nextInt(1, 7);
                     int roll2 = random.nextInt(1, 7);
-                    Minecraft.getMinecraft().thePlayer.sendChatMessage("/pc »»» " + playerName + " rolled a " + roll + " and a " + roll2 + "! Total: " + (roll+roll2) + "! " + getDice(roll) + getDice(roll2) + " «««");
+                    sendLater("/pc »»» " + playerName + " rolled a " + roll + " and a " + roll2 + "! Total: " + (roll+roll2) + "! " + getDice(roll) + getDice(roll2) + " «««");
                 }
             }
 
             if (ChatConfig.guild) {
                 if (chatMessage.equalsIgnoreCase("-guild")) {
-                    SkyblockUtil.Guild guild = new SkyblockUtil.Guild(SkyblockUtil.getGuild(playerName));
-                    Minecraft.getMinecraft().thePlayer.sendChatMessage("/pc ✿ Guild: [" + guild.getTag() + "] " + guild.getName() + " (" + guild.getGuildID() + ") ✿");
+                    JsonObject guildObj = MeloMod.internalLocraw.getGuildInformation(fromName(playerName));
+                    SkyblockUtil.Guild guild = new SkyblockUtil.Guild(guildObj);
+                    sendLater("/pc ✿ Guild: [" + guild.getTag() + "] " + guild.getName() + " (" + guild.getGuildID() + ") ✿");
                 }
                 if (ChatConfig.runOthers) {
                     if (chatMessage.startsWith("-guild ")) {
                         String[] args = chatMessage.split(" ");
                         if (args.length > 1) {
                             String player = args[1];
-                            SkyblockUtil.Guild guild = new SkyblockUtil.Guild(SkyblockUtil.getGuild(player));
-                            Minecraft.getMinecraft().thePlayer.sendChatMessage("/pc ✿ «" + player + "» Guild: [" + guild.getTag() + "] " + guild.getName() + " (" + guild.getGuildID() + ") ✿");
+                            JsonObject guildObj = MeloMod.internalLocraw.getGuildInformation(fromName(player));
+                            SkyblockUtil.Guild guild = new SkyblockUtil.Guild(guildObj);
+                            sendLater("/pc ✿ «" + playerName + "» Guild: [" + guild.getTag() + "] " + guild.getName() + " (" + guild.getGuildID() + ") ✿");
                         }
                     }
                 }
@@ -363,8 +370,8 @@ public class ChatEvent {
                         if (args.length > 1) {
                             String playerToLocate = args[1];
                             if (playerToLocate.contains(" ")) return;
-                            JsonObject session = SkyblockUtil.getSession(playerToLocate);
-                            if (!session.get("online").getAsBoolean()) {
+                            JsonObject jsonObject = mod.internalLocraw.getPlayerStatus(fromName(playerToLocate));
+                            if (!jsonObject.get("online").getAsBoolean()) {
                                 Minecraft.getMinecraft().thePlayer.sendChatMessage("/pc ◇ " + playerName + " is not currently online! ◇");
                             } else {
                                 boolean onCurrent = false;
@@ -375,8 +382,9 @@ public class ChatEvent {
                                     }
                                 }
 
-                                Minecraft.getMinecraft().thePlayer.sendChatMessage("/pc ◇ «" + playerToLocate + "» Server: " + (onCurrent ? InternalLocraw.getServerID() : "Unknown") + " ◇ Game: " + WordUtils.capitalizeFully(session.get("gameType").getAsString().replaceAll("_", " ")) + " ⚑ Mode: " + WordUtils.capitalizeFully(session.get("mode").getAsString().replaceAll("_", " ")) + " ◇");
+                                Minecraft.getMinecraft().thePlayer.sendChatMessage("/pc ◇ «" + playerToLocate + "» Server: " + (onCurrent ? InternalLocraw.getServerID() : "Unknown") + " ◇ Game: " + WordUtils.capitalizeFully(jsonObject.get("gameType").getAsString().replaceAll("_", " ")) + " ⚑ Mode: " + WordUtils.capitalizeFully(jsonObject.get("mode").getAsString().replaceAll("_", " ")) + " ◇");
                             }
+
                         }
                     }
                 }
@@ -384,7 +392,74 @@ public class ChatEvent {
         }
     }
 
+    public static UUID fromName(String name) {
+        return MinecraftServer.getServer().getPlayerProfileCache().getGameProfileForUsername(name).getId();
+    }
 
+/*
+    public void getGuild(String playerName) {
+        AsyncHttpClient client = asyncHttpClient();
+        ListenableFuture<Response> whenResponse = client.prepareGet("https://api.hypixel.net/v2/guild?player=" + uuid)
+                .addHeader("API-Key", MeloConfiguration.apiKey)
+                .setHeader("Accept", "application/json")
+                .setHeader("Content-Type", "application/json")
+                .execute();
+        Runnable callback = () -> {
+            try {
+                Response response = whenResponse.get();
+                JsonObject object = new JsonParser().parse(response.getResponseBody()).getAsJsonObject();
+                SkyblockUtil.Guild guild = new SkyblockUtil.Guild(object.get("guild").getAsJsonObject());
+                if (!playerName.equals(Minecraft.getMinecraft().thePlayer.getName())) {
+                    queue.add("/pc ✿ «" + playerName + "» Guild: [" + guild.getTag() + "] " + guild.getName() + " (" + guild.getGuildID() + ") ✿");
+                } else {
+                    queue.add("/pc ✿ Guild: [" + guild.getTag() + "] " + guild.getName() + " (" + guild.getGuildID() + ") ✿");
+                }
+            } catch (InterruptedException | ExecutionException e) {
+                throw new RuntimeException(e);
+            }
+        };
+        Executor executor = Executors.newSingleThreadExecutor();
+        whenResponse.addListener(callback, executor);
+    }
+
+    /*
+    public CompletableFuture<Void> getGuild(String playerName) {
+        return CompletableFuture.runAsync(() -> {
+            try {
+                URL url = new URL();
+                HttpURLConnection con = (HttpURLConnection)  url.openConnection();
+
+                con.setRequestMethod("GET");
+                con.setRequestProperty("Content-Type", "application/json");
+                con.setRequestProperty("API-Key", MeloConfiguration.apiKey);
+                int status = con.getResponseCode();
+
+
+
+
+                try(BufferedReader br = new BufferedReader(
+                        new InputStreamReader(con.getInputStream(), StandardCharsets.UTF_8))) {
+                    StringBuilder response = new StringBuilder();
+                    String responseLine;
+                    while ((responseLine = br.readLine()) != null) {
+                        response.append(responseLine.trim());
+                    }
+                    JsonObject object = new JsonParser().parse(response.toString()).getAsJsonObject();
+                    SkyblockUtil.Guild guild = new SkyblockUtil.Guild(object.getAsJsonObject("session"));
+                    if (!playerName.equals(Minecraft.getMinecraft().thePlayer.getName())) {
+                        queue.add("/pc ✿ «" + playerName + "» Guild: [" + guild.getTag() + "] " + guild.getName() + " (" + guild.getGuildID() + ") ✿");
+                    } else {
+                        queue.add("/pc ✿ Guild: [" + guild.getTag() + "] " + guild.getName() + " (" + guild.getGuildID() + ") ✿");
+                    }
+                }
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        });
+    }
+
+
+     */
     private static final char[] dice = {'⚀', '⚁', '⚂', '⚃', '⚄', '⚅'};
     public static String getDice(int roll) {
         return String.valueOf(dice[roll - 1]);
