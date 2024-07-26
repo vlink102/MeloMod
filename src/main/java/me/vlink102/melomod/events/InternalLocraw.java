@@ -7,9 +7,12 @@ import cc.polyfrost.oneconfig.utils.hypixel.HypixelUtils;
 import cc.polyfrost.oneconfig.utils.hypixel.LocrawInfo;
 import cc.polyfrost.oneconfig.utils.hypixel.LocrawUtil;
 import me.vlink102.melomod.MeloMod;
+import me.vlink102.melomod.mixin.SkyblockUtil;
 import net.minecraft.client.Minecraft;
 import net.minecraft.util.BlockPos;
 import net.minecraft.world.EnumSkyBlock;
+
+import java.util.Objects;
 
 public class InternalLocraw {
     private final MeloMod mod;
@@ -47,11 +50,14 @@ public class InternalLocraw {
         EventManager.INSTANCE.register(this);
     }
 
+    private static volatile SkyblockUtil.Location gameMode;
+
+    public static SkyblockUtil.Location getLocation() {
+        return gameMode;
+    }
+
     @Subscribe
     private void onServerTransfer(LocrawEvent event) {
-        if (!HypixelUtils.INSTANCE.isHypixel()) return;
-        if (Minecraft.getMinecraft().thePlayer == null) return;
-        LocrawInfo info = event.info;
-        System.out.println("GameMode: " + info.getGameMode());
+        gameMode = SkyblockUtil.Location.parseFromLocraw(event.info.getGameMode());
     }
 }

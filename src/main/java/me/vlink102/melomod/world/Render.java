@@ -1,9 +1,9 @@
 package me.vlink102.melomod.world;
 
 import me.vlink102.melomod.config.MeloConfiguration;
+import me.vlink102.melomod.events.InternalLocraw;
 import me.vlink102.melomod.mixin.SkyblockUtil;
 import net.minecraft.block.*;
-import net.minecraft.block.material.Material;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.EntityPlayerSP;
@@ -73,20 +73,20 @@ public class Render {
         if (block == Blocks.stained_glass) {
             if (state.getValue(BlockStainedGlass.COLOR) == EnumDyeColor.ORANGE) return true;
             if (state.getValue(BlockStainedGlass.COLOR) == EnumDyeColor.YELLOW) return true;
-            if (state.getValue(BlockStainedGlass.COLOR) == EnumDyeColor.BLUE) return true;
+            if (state.getValue(BlockStainedGlass.COLOR) == EnumDyeColor.LIGHT_BLUE) return true;
             if (state.getValue(BlockStainedGlass.COLOR) == EnumDyeColor.PURPLE) return true;
             if (state.getValue(BlockStainedGlass.COLOR) == EnumDyeColor.MAGENTA) return true;
             if (state.getValue(BlockStainedGlass.COLOR) == EnumDyeColor.RED) return true;
-            if (state.getValue(BlockStainedGlass.COLOR) == EnumDyeColor.GREEN) return true;
+            if (state.getValue(BlockStainedGlass.COLOR) == EnumDyeColor.LIME) return true;
         }
         if (block == Blocks.stained_glass_pane) {
             if (state.getValue(BlockStainedGlassPane.COLOR) == EnumDyeColor.ORANGE) return true;
             if (state.getValue(BlockStainedGlassPane.COLOR) == EnumDyeColor.YELLOW) return true;
-            if (state.getValue(BlockStainedGlassPane.COLOR) == EnumDyeColor.BLUE) return true;
+            if (state.getValue(BlockStainedGlassPane.COLOR) == EnumDyeColor.LIGHT_BLUE) return true;
             if (state.getValue(BlockStainedGlassPane.COLOR) == EnumDyeColor.PURPLE) return true;
+            if (state.getValue(BlockStainedGlassPane.COLOR) == EnumDyeColor.LIME) return true;
             if (state.getValue(BlockStainedGlassPane.COLOR) == EnumDyeColor.MAGENTA) return true;
             if (state.getValue(BlockStainedGlassPane.COLOR) == EnumDyeColor.RED) return true;
-            if (state.getValue(BlockStainedGlassPane.COLOR) == EnumDyeColor.GREEN) return true;
         }
         return false;
     }
@@ -167,6 +167,10 @@ public class Render {
         return dmin <= Math.pow(blocksInReach, 2);
     }
 
+    public double distance(Vec3 v0, Vec3 v1) {
+        return Math.sqrt((v1.xCoord - v0.xCoord) + (v1.yCoord - v0.yCoord) + (v1.zCoord - v0.zCoord));
+    }
+
     @SubscribeEvent
     public void onDrawBlockHighlight(DrawBlockHighlightEvent event) {
         ItemStack held = Minecraft.getMinecraft().thePlayer.getHeldItem();
@@ -177,20 +181,22 @@ public class Render {
         SkyblockUtil.ItemType type =SkyblockUtil.ItemType.parseFromItemStack(held);
         if (type == null) return;
         if (type == SkyblockUtil.ItemType.DRILL || type == SkyblockUtil.ItemType.GAUNTLET || type == SkyblockUtil.ItemType.PICKAXE) {
-            if (event.target.typeOfHit != MovingObjectPosition.MovingObjectType.BLOCK) {
+            if (event.target.typeOfHit == MovingObjectPosition.MovingObjectType.BLOCK) {
                 GlStateManager.enableBlend();
                 GlStateManager.tryBlendFuncSeparate(770, 771, 1, 0);
                 GlStateManager.color(0.0F, 0.0F, 0.0F, 0.4F);
                 GlStateManager.disableTexture2D();
                 GlStateManager.depthMask(false);
+                GlStateManager.disableDepth();
                 if (isMatch(MeloConfiguration.miningHighlightType, event.target.getBlockPos())) {
+
                     HashSet<BlockPos> candidatesOld = new HashSet<>();
                     LinkedList<BlockPos> candidates = new LinkedList<>();
                     LinkedList<BlockPos> candidatesNew = new LinkedList<>();
                     candidatesNew.add(event.target.getBlockPos());
 
                     int blocks = 0;
-                    int max = 125;
+                    int max = 100;
 
                     while (blocks < max) {
                         if (candidatesNew.isEmpty()) {
@@ -214,8 +220,11 @@ public class Render {
                                     for (int z = -1; z <= 1; z++) {
                                         if (x != 0 || y != 0 || z != 0) {
                                             BlockPos posNew = candidate.add(x, y, z);
+
                                             if (!candidatesOld.contains(posNew) && !candidates.contains(posNew) && !candidatesNew.contains(posNew)) {
-                                                if (isMatch(MeloConfiguration.miningHighlightType, posNew)) {
+                                                double minimal = MathUtils.getMinimalDistance(player.getPositionEyes(event.partialTicks), Minecraft.getMinecraft().theWorld.getBlockState(posNew).getBlock(), posNew);
+
+                                                if (isMatch(MeloConfiguration.miningHighlightType, posNew) && minimal <= 4.5f) {
                                                     candidatesNew.add(posNew);
                                                 }
                                             }
@@ -225,11 +234,23 @@ public class Render {
                             }
                             block.setBlockBoundsBasedOnState(Minecraft.getMinecraft().theWorld, candidate);
 
-                            RenderUtils.drawFilledBoundingBox(block.getSelectedBoundingBox(Minecraft.getMinecraft().theWorld, candidate).expand(0.001D, 0.001D, 0.001D).offset(-d0, -d1, -d2),
-                                    random ? 0.5f : 1f, "00:50:64:224:208");
+                            if (block == Blocks.stone && Minecraft.getMinecraft().theWorld.getBlockState(candidate).getValue(BlockStone.VARIANT) == BlockStone.EnumType.DIORITE_SMOOTH) {
+                                RenderUtils.drawFilledBoundingBox(block.getSelectedBoundingBox(Minecraft.getMinecraft().theWorld, candidate)
+                                                .expand(0.001D, 0.001D, 0.001D)
+                                                .offset(-d0, -d1, -d2),
+                                        random ? 0.5f : 1f, "100:50:255:255:255");
+                            } else {
+                                RenderUtils.drawOutlineBoundingBox(block.getSelectedBoundingBox(Minecraft.getMinecraft().theWorld, candidate)
+                                                .expand(0.001D, 0.001D, 0.001D)
+                                                .offset(-d0, -d1, -d2),
+                                        random ? 0.5f : 1f, "100:50:0:255:0");
+                            }
+
+
                         }
                     }
                 }
+                GlStateManager.enableDepth();
                 GlStateManager.depthMask(true);
                 GlStateManager.enableTexture2D();
                 GlStateManager.disableBlend();

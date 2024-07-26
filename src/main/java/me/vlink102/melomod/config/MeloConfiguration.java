@@ -11,6 +11,12 @@ import cc.polyfrost.oneconfig.config.data.Mod;
 import cc.polyfrost.oneconfig.config.data.ModType;
 import cc.polyfrost.oneconfig.config.data.OptionSize;
 
+import java.awt.*;
+import java.io.File;
+import java.nio.file.Path;
+
+import static com.google.common.io.Resources.getResource;
+
 /**
  * The main Config entrypoint that extends the Config type and inits the config options.
  * See <a href="https://docs.polyfrost.cc/oneconfig/config/adding-options">this link</a> for more config Options
@@ -44,7 +50,7 @@ public class MeloConfiguration extends Config {
     public static int miningHighlightType = 2; // Default option (in this case "Option 2")
 
     public MeloConfiguration() {
-        super(new Mod(MeloMod.NAME, ModType.SKYBLOCK), MeloMod.MODID + ".json");
+        super(new Mod(MeloMod.NAME, ModType.SKYBLOCK, "/703ab98cf301a4df30ecb2185ac1c7f8.png"), MeloMod.MODID + ".json");
         initialize();
     }
 }

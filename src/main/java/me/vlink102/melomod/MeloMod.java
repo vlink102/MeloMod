@@ -1,5 +1,7 @@
 package me.vlink102.melomod;
 
+import cc.polyfrost.oneconfig.utils.hypixel.HypixelUtils;
+import cc.polyfrost.oneconfig.utils.hypixel.LocrawUtil;
 import com.google.gson.Gson;
 import me.vlink102.melomod.config.MeloConfiguration;
 import me.vlink102.melomod.command.MeloCommand;
@@ -69,6 +71,7 @@ public class MeloMod {
     public static Gson gson;
 
     public static InternalLocraw internalLocraw = null;
+    public static LocrawUtil locrawUtil;
 
     // Register the config and commands.
     @Mod.EventHandler
@@ -77,8 +80,10 @@ public class MeloMod {
         gson = new Gson();
         CommandManager.INSTANCE.registerCommand(new MeloCommand());
         PlayerObjectUtil objectUtil = new PlayerObjectUtil(this);
+        locrawUtil = new LocrawUtil();
         internalLocraw = new InternalLocraw(this);
         Render render = new Render();
         MinecraftForge.EVENT_BUS.register(render);
+        //MinecraftForge.EVENT_BUS.register(internalLocraw);
     }
 }

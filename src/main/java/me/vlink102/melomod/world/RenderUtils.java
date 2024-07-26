@@ -221,7 +221,7 @@ public class RenderUtils {
     }
 
     public static void drawOutlineBoundingBox(AxisAlignedBB p_181561_0_, float alpha, String special) {
-        Color c = new Color(SpecialColour.specialToChromaRGB(special), true);
+        Color c = new Color(0, 255, 0, 255/2);
         float newAlpha = c.getAlpha() / 255f * alpha;
         if (newAlpha > 1) newAlpha = 1;
         GlStateManager.color(c.getRed() / 255f, c.getGreen() / 255f, c.getBlue() / 255f, newAlpha);

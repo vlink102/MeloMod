@@ -1,6 +1,7 @@
 package me.vlink102.melomod.mixin;
 
 import cc.polyfrost.oneconfig.utils.hypixel.HypixelUtils;
+import cc.polyfrost.oneconfig.utils.hypixel.LocrawUtil;
 import com.google.common.collect.ImmutableMap;
 import com.google.gson.*;
 import me.vlink102.melomod.MeloMod;
@@ -75,7 +76,6 @@ public class SkyblockUtil {
         public static ItemType parseFromItemStack(ItemStack stack) {
             if (stack == null) return null;
             List<String> lore = getLore(stack);
-            System.out.println(lore);
             for (String s : lore) {
                 if (s.matches(".*?(COMMON|UNCOMMON|RARE|EPIC|LEGENDARY|MYTHIC|DIVINE|SPECIAL|VERY SPECIAL|ADMIN)\\s(BELT|BRACELET|CLOAK|GLOVES|NECKLACE|SWORD|LONGSWORD|BOW|SHORTBOW|FISHING ROD|FISHING WEAPON|PICKAXE|DRILL|AXE|GAUNTLET|SHOVEL|HOE|WAND|HELMET|CHESTPLATE|LEGGINGS|BOOTS|ACCESSORY|HATCESSORY|POWER STONE|REFORGE STONE|VACUUM|DEPLOYABLE).*?")) {
                     for (ItemType value : ItemType.values()) {
@@ -131,7 +131,7 @@ public class SkyblockUtil {
     }
 
     public static Location getPlayerLocation() {
-        return Location.parseFromLocraw(HypixelUtils.INSTANCE.getLocrawInfo().getGameMode());
+        return InternalLocraw.getLocation();
     }
 
     public enum Location {
