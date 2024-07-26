@@ -71,7 +71,7 @@ public class InternalLocraw {
         gameMode = SkyblockUtil.Location.parseFromLocraw(event.info.getGameMode());
         serverID = event.info.getServerId();
 
-        if (mod.playerProfile == null) {
+        if (mod.getPlayerProfile() == null) {
             mod.getSkyblockUtil().generateCurrentProfile(Minecraft.getMinecraft().thePlayer.getUniqueID());
         }
     }

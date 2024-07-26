@@ -270,6 +270,7 @@ public class ChatEvent {
                     return;
                 }
             }
+
             if (chatMessage.startsWith("-eval ")) {
                 String[] args = chatMessage.split("-eval ");
                 if (args.length > 1) {

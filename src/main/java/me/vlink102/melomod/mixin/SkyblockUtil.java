@@ -15,6 +15,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.*;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.BlockPos;
+import net.minecraft.util.ChatComponentText;
 import net.minecraftforge.common.util.Constants;
 import scala.math.BigInt;
 
@@ -3156,6 +3157,7 @@ public class SkyblockUtil {
                 }
             }
         }
+        Minecraft.getMinecraft().thePlayer.addChatMessage(new ChatComponentText("§cERROR: Null profile (Have you added a valid API Key?)"));
         return null;
     }
 
@@ -3190,7 +3192,7 @@ public class SkyblockUtil {
                 }
             }
 
-            System.out.println("yea");
+            Minecraft.getMinecraft().thePlayer.addChatMessage(new ChatComponentText("§cERROR: Null profiles (Have you added a valid API Key?)"));
             return null;
         } catch (IOException e) {
             throw new RuntimeException(e);
@@ -3199,8 +3201,8 @@ public class SkyblockUtil {
     }
 
     public void generateCurrentProfile(UUID playerUUID) {
-        meloMod.playerProfile = new ProfileMember(playerUUID, getCurrentProfile(playerUUID));
-        HashMap<String, Integer> kills = meloMod.playerProfile.getBestiary().getKills();
+        meloMod.setPlayerProfile(new ProfileMember(playerUUID, getCurrentProfile(playerUUID)));
+        HashMap<String, Integer> kills = meloMod.getPlayerProfile().getBestiary().getKills();
         for (Map.Entry<String, Integer> entry : kills.entrySet()) {
             String string = entry.getKey();
             ChatEvent.seaCreatureSession.put(ChatEvent.SeaCreature.convertBestiaryMob(string), entry.getValue());

@@ -62,7 +62,7 @@ public class ChatConfig extends SubConfig {
     public static boolean fishingChat = true;
 
     public ChatConfig() {
-        super("Mining Helper", MeloMod.MODID + "/" + "chat" + ".json");
+        super("Chat", MeloMod.MODID + "/" + "chat" + ".json");
         initialize();
     }
 }

@@ -5,6 +5,7 @@ import cc.polyfrost.oneconfig.utils.hypixel.LocrawUtil;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.mojang.authlib.yggdrasil.request.JoinMinecraftServerRequest;
+import me.vlink102.melomod.command.ReloadAPICommand;
 import me.vlink102.melomod.config.MeloConfiguration;
 import me.vlink102.melomod.command.MeloCommand;
 import cc.polyfrost.oneconfig.events.event.InitializationEvent;
@@ -76,11 +77,16 @@ public class MeloMod {
     public static ChatEvent chatEvent = null;
     public static LocrawUtil locrawUtil;
 
-    public SkyblockUtil.ProfileMember playerProfile = null;
+    private SkyblockUtil.ProfileMember playerProfile = null;
     public SkyblockUtil skyblockUtil;
 
     public void setPlayerProfile(SkyblockUtil.ProfileMember playerProfile) {
         this.playerProfile = playerProfile;
+    }
+
+
+    public SkyblockUtil.ProfileMember getPlayerProfile() {
+        return playerProfile;
     }
 
     public SkyblockUtil getSkyblockUtil() {
@@ -93,7 +99,7 @@ public class MeloMod {
         config = new MeloConfiguration();
         gson = new Gson();
         skyblockUtil = new SkyblockUtil(this);
-        CommandManager.INSTANCE.registerCommand(new MeloCommand());
+        CommandManager.INSTANCE.registerCommand(new MeloCommand(this));
         PlayerObjectUtil objectUtil = new PlayerObjectUtil(this);
         locrawUtil = new LocrawUtil();
         internalLocraw = new InternalLocraw(this);
