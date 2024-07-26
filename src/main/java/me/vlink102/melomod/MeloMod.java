@@ -1,5 +1,6 @@
 package me.vlink102.melomod;
 
+import com.google.gson.Gson;
 import me.vlink102.melomod.config.MeloConfiguration;
 import me.vlink102.melomod.command.MeloCommand;
 import cc.polyfrost.oneconfig.events.event.InitializationEvent;
@@ -65,7 +66,7 @@ public class MeloMod {
     @Mod.Instance(MODID)
     public static MeloMod INSTANCE; // Adds the instance of the mod, so we can access other variables.
     public static MeloConfiguration config;
-
+    public static Gson gson;
 
     public static InternalLocraw internalLocraw = null;
 
@@ -73,6 +74,7 @@ public class MeloMod {
     @Mod.EventHandler
     public void onInit(FMLInitializationEvent event) {
         config = new MeloConfiguration();
+        gson = new Gson();
         CommandManager.INSTANCE.registerCommand(new MeloCommand());
         PlayerObjectUtil objectUtil = new PlayerObjectUtil(this);
         internalLocraw = new InternalLocraw(this);

@@ -15,12 +15,15 @@ import net.minecraft.item.EnumDyeColor;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.AxisAlignedBB;
 import net.minecraft.util.BlockPos;
+import net.minecraft.util.MovingObjectPosition;
 import net.minecraft.util.Vec3;
 import net.minecraftforge.client.event.DrawBlockHighlightEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import org.lwjgl.util.vector.Vector3f;
 
 import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
 
 public class Render {
@@ -174,8 +177,79 @@ public class Render {
         SkyblockUtil.ItemType type =SkyblockUtil.ItemType.parseFromItemStack(held);
         if (type == null) return;
         if (type == SkyblockUtil.ItemType.DRILL || type == SkyblockUtil.ItemType.GAUNTLET || type == SkyblockUtil.ItemType.PICKAXE) {
-            RaycastResult result = raycast(Minecraft.getMinecraft().thePlayer, 1f, 4.5f, 0.1f);
+            if (event.target.typeOfHit != MovingObjectPosition.MovingObjectType.BLOCK) {
+                GlStateManager.enableBlend();
+                GlStateManager.tryBlendFuncSeparate(770, 771, 1, 0);
+                GlStateManager.color(0.0F, 0.0F, 0.0F, 0.4F);
+                GlStateManager.disableTexture2D();
+                GlStateManager.depthMask(false);
+                if (isMatch(MeloConfiguration.miningHighlightType, event.target.getBlockPos())) {
+                    HashSet<BlockPos> candidatesOld = new HashSet<>();
+                    LinkedList<BlockPos> candidates = new LinkedList<>();
+                    LinkedList<BlockPos> candidatesNew = new LinkedList<>();
+                    candidatesNew.add(event.target.getBlockPos());
 
+                    int blocks = 0;
+                    int max = 125;
+
+                    while (blocks < max) {
+                        if (candidatesNew.isEmpty()) {
+                            break;
+                        }
+
+                        candidates.addAll(candidatesNew);
+                        candidatesNew.clear();
+
+                        blocks += candidates.size();
+                        boolean random = blocks > max;
+
+                        while (!candidates.isEmpty()) {
+                            BlockPos candidate = candidates.pop();
+                            Block block = Minecraft.getMinecraft().theWorld.getBlockState(candidate).getBlock();
+
+                            candidatesOld.add(candidate);
+
+                            for (int x = -1; x <= 1; x++) {
+                                for (int y = -1; y <= 1; y++) {
+                                    for (int z = -1; z <= 1; z++) {
+                                        if (x != 0 || y != 0 || z != 0) {
+                                            BlockPos posNew = candidate.add(x, y, z);
+                                            if (!candidatesOld.contains(posNew) && !candidates.contains(posNew) && !candidatesNew.contains(posNew)) {
+                                                if (isMatch(MeloConfiguration.miningHighlightType, posNew)) {
+                                                    candidatesNew.add(posNew);
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                            block.setBlockBoundsBasedOnState(Minecraft.getMinecraft().theWorld, candidate);
+
+                            RenderUtils.drawFilledBoundingBox(block.getSelectedBoundingBox(Minecraft.getMinecraft().theWorld, candidate).expand(0.001D, 0.001D, 0.001D).offset(-d0, -d1, -d2),
+                                    random ? 0.5f : 1f, "00:50:64:224:208");
+                        }
+                    }
+                }
+                GlStateManager.depthMask(true);
+                GlStateManager.enableTexture2D();
+                GlStateManager.disableBlend();
+            }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+            /*
+            RaycastResult result = raycast(Minecraft.getMinecraft().thePlayer, 1f, 4.5f, 0.1f);
 
             if (result != null) {
                 List<BlockPos> blockPosList = getAllInReach(event, player);;
@@ -234,10 +308,10 @@ public class Render {
                         break;
                 }
 
-                                 */
 
 
-            }
+
+            }*/
         }
     }
 

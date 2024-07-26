@@ -1,8 +1,28 @@
 package me.vlink102.melomod.world;
 
+import com.google.gson.Gson;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParseException;
+import me.vlink102.melomod.MeloMod;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.Gui;
+import net.minecraft.client.gui.inventory.GuiChest;
+import net.minecraft.init.Items;
+import net.minecraft.inventory.ContainerChest;
+import net.minecraft.inventory.IInventory;
+import net.minecraft.item.Item;
+import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NBTTagCompound;
+
+import javax.annotation.Nullable;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Locale;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 public class ItemResolutionQuery {
 
-    /*
     private static final Pattern ENCHANTED_BOOK_NAME_PATTERN = Pattern.compile("^((?:§.)+)([^§]+) ([IVXL]+)$");
     private static final String EXTRA_ATTRIBUTES = "ExtraAttributes";
     private static final List<String> PET_RARITIES = Arrays.asList(
@@ -13,16 +33,11 @@ public class ItemResolutionQuery {
             "LEGENDARY",
             "MYTHIC"
     );
-    private final NEUManager manager;
     private NBTTagCompound compound;
     private Item itemType;
     private int stackSize = -1;
     private Gui guiContext;
     private String knownInternalName;
-
-    public ItemResolutionQuery(NEUManager manager) {
-        this.manager = manager;
-    }
 
     public ItemResolutionQuery withItemNBT(NBTTagCompound compound) {
         this.compound = compound;
@@ -50,6 +65,35 @@ public class ItemResolutionQuery {
     public ItemResolutionQuery withKnownInternalName(String knownInternalName) {
         this.knownInternalName = knownInternalName;
         return this;
+    }
+
+    private String resolveContextualName() {
+        if (!(guiContext instanceof GuiChest)) {
+            return null;
+        }
+        GuiChest chest = (GuiChest) guiContext;
+        ContainerChest inventorySlots = (ContainerChest) chest.inventorySlots;
+        String guiName = inventorySlots.getLowerChestInventory().getDisplayName().getUnformattedText();
+        boolean isOnBazaar = isBazaar(inventorySlots.getLowerChestInventory());
+        String displayName = ItemUtils.getDisplayName(compound);
+        if (displayName == null) return null;
+        if (itemType == Items.enchanted_book && isOnBazaar && compound != null) {
+            return resolveEnchantmentByName(displayName);
+        }
+        if (displayName.endsWith("Enchanted Book") && guiName.startsWith("Superpairs")) {
+            for (String loreLine : ItemUtils.getLore(compound)) {
+                String enchantmentIdCandidate = resolveEnchantmentByName(loreLine);
+                if (enchantmentIdCandidate != null) return enchantmentIdCandidate;
+            }
+            return null;
+        }
+        /*
+        if (guiName.equals("Catacombs RNG Meter")) {
+            return resolveItemInCatacombsRngMeter();
+        }
+
+         */
+        return null;
     }
 
     @Nullable
@@ -81,28 +125,6 @@ public class ItemResolutionQuery {
         return resolvedName;
     }
 
-    @Nullable
-    public JsonObject resolveToItemListJson() {
-        String internalName = resolveInternalName();
-        if (internalName == null) {
-            return null;
-        }
-        return manager.getItemInformation().get(internalName);
-    }
-
-    @Nullable
-    public ItemStack resolveToItemStack() {
-        JsonObject jsonObject = resolveToItemListJson();
-        if (jsonObject == null) return null;
-        return manager.jsonToStack(jsonObject);
-    }
-
-    @Nullable
-    public ItemStack resolveToItemStack(boolean useReplacements) {
-        JsonObject jsonObject = resolveToItemListJson();
-        if (jsonObject == null) return null;
-        return manager.jsonToStack(jsonObject, false, useReplacements);
-    }
 
     // <editor-fold desc="Resolution Helpers">
     private boolean isBazaar(IInventory chest) {
@@ -118,62 +140,8 @@ public class ItemResolutionQuery {
         return lore.contains("§7To Bazaar");
     }
 
-    private String resolveContextualName() {
-        if (!(guiContext instanceof GuiChest)) {
-            return null;
-        }
-        GuiChest chest = (GuiChest) guiContext;
-        ContainerChest inventorySlots = (ContainerChest) chest.inventorySlots;
-        String guiName = inventorySlots.getLowerChestInventory().getDisplayName().getUnformattedText();
-        boolean isOnBazaar = isBazaar(inventorySlots.getLowerChestInventory());
-        String displayName = ItemUtils.getDisplayName(compound);
-        if (displayName == null) return null;
-        if (itemType == Items.enchanted_book && isOnBazaar && compound != null) {
-            return resolveEnchantmentByName(displayName);
-        }
-        if (displayName.endsWith("Enchanted Book") && guiName.startsWith("Superpairs")) {
-            for (String loreLine : ItemUtils.getLore(compound)) {
-                String enchantmentIdCandidate = resolveEnchantmentByName(loreLine);
-                if (enchantmentIdCandidate != null) return enchantmentIdCandidate;
-            }
-            return null;
-        }
-        if (guiName.equals("Catacombs RNG Meter")) {
-            return resolveItemInCatacombsRngMeter();
-        }
-        return null;
-    }
 
-    private String resolveItemInCatacombsRngMeter() {
-        List<String> lore = ItemUtils.getLore(compound);
-        if (lore.size() > 16) {
-            String s = lore.get(15);
-            if (s.equals("§7Selected Drop")) {
-                String displayName = lore.get(16);
-                return getInternalNameByDisplayName(displayName);
-            }
-        }
 
-        return null;
-    }
-
-    private String getInternalNameByDisplayName(String displayName) {
-        String cleanDisplayName = StringUtils.cleanColour(displayName);
-        for (Map.Entry<String, JsonObject> entry : NotEnoughUpdates.INSTANCE.manager
-                .getItemInformation()
-                .entrySet()) {
-
-            JsonObject object = entry.getValue();
-            if (object.has("displayname")) {
-                String name = object.get("displayname").getAsString();
-                if (StringUtils.cleanColour(name).equals(cleanDisplayName)) {
-                    return entry.getKey();
-                }
-            }
-        }
-
-        return null;
-    }
 
     private String resolveEnchantmentByName(String name) {
         Matcher matcher = ENCHANTED_BOOK_NAME_PATTERN.matcher(name);
@@ -212,7 +180,7 @@ public class ItemResolutionQuery {
         String petInfo = getExtraAttributes().getString("petInfo");
         if (petInfo == null || petInfo.isEmpty()) return null;
         try {
-            JsonObject petInfoObject = manager.gson.fromJson(petInfo, JsonObject.class);
+            JsonObject petInfoObject = MeloMod.gson.fromJson(petInfo, JsonObject.class);
             String petId = petInfoObject.get("type").getAsString();
             String petTier = petInfoObject.get("tier").getAsString();
             int rarityIndex = PET_RARITIES.indexOf(petTier);
@@ -237,5 +205,4 @@ public class ItemResolutionQuery {
     }
 
     // </editor-fold>
-*/
 }
