@@ -1,4 +1,4 @@
-package me.vlink102.melomod.world;
+package me.vlink102.melomod.util;
 
 public class LerpingFloat {
     private int timeSpent;

@@ -25,6 +25,7 @@ import java.util.Random;
 import static org.lwjgl.opengl.GL11.*;
 
 public class GLUtils {
+    /*
     private static final Random random = new Random();
 
     private static final Tessellator tessellator = Tessellator.getInstance();
@@ -42,9 +43,6 @@ public class GLUtils {
         GL11.glScissor((int) (x * scaleFactor), (int) (Minecraft.getMinecraft().displayHeight - (y1 * scaleFactor)), (int) ((x1 - x) * scaleFactor), (int) ((y1 - y) * scaleFactor));
     }
 
-    /**
-     * @return The scale factor used by the play's screen gui scale
-     */
     public static int getScaleFactor() {
 
         int scaleFactor = 1;
@@ -67,49 +65,26 @@ public class GLUtils {
 
     }
 
-    /**
-     * @return Mouse X cord.
-     */
     public static int getMouseX() {
 
         return (Mouse.getX() * getScreenWidth() / Minecraft.getMinecraft().displayWidth);
     }
 
-    /**
-     * @return Mouse Y cord.
-     */
     public static int getMouseY() {
 
         return (getScreenHeight() - Mouse.getY() * getScreenHeight() / Minecraft.getMinecraft().displayWidth - 1);
     }
 
-    /**
-     * @return Screen width with gui scale.
-     */
     public static int getScreenWidth() {
 
         return Minecraft.getMinecraft().displayWidth / getScaleFactor();
     }
 
-    /**
-     * @return Screen height with gui scale.
-     */
     public static int getScreenHeight() {
 
         return Minecraft.getMinecraft().displayHeight / getScaleFactor();
     }
 
-    /**
-     * Checks if the mouse is hovering over a given item
-     *
-     * @param x
-     * @param y
-     * @param width
-     * @param height
-     * @param mouseX
-     * @param mouseY
-     * @return
-     */
     public static boolean isHovered(int x, int y, int width, int height, int mouseX, int mouseY) {
 
         return (mouseX >= x) && (mouseX <= x + width) && (mouseY >= y) && (mouseY < y + height);
@@ -130,24 +105,12 @@ public class GLUtils {
         return textureID;
     }
 
-    /**
-     * @param filter determines how the texture will interpolate when scaling up / down. <br>
-     *               GL_LINEAR - smoothest <br> GL_NEAREST - most accurate <br>
-     * @param wrap   determines how the UV coordinates outside of the 0.0F ~ 1.0F range will be handled. <br>
-     *               GL_CLAMP_TO_EDGE - samples edge color <br> GL_REPEAT - repeats the texture <br>
-     */
     public static int applyTexture(int texId, File file, int filter, int wrap) throws IOException {
 
         applyTexture(texId, ImageIO.read(file), filter, wrap);
         return texId;
     }
 
-    /**
-     * @param filter determines how the texture will interpolate when scaling up / down. <br>
-     *               GL_LINEAR - smoothest <br> GL_NEAREST - most accurate <br>
-     * @param wrap   determines how the UV coordinates outside of the 0.0F ~ 1.0F range will be handled. <br>
-     *               GL_CLAMP_TO_EDGE - samples edge color <br> GL_REPEAT - repeats the texture <br>
-     */
     public static int applyTexture(int texId, BufferedImage image, int filter, int wrap) {
 
         int[] pixels = new int[image.getWidth() * image.getHeight()];
@@ -170,12 +133,7 @@ public class GLUtils {
         return texId;
     }
 
-    /**
-     * @param filter determines how the texture will interpolate when scaling up / down. <br>
-     *               GL_LINEAR - smoothest <br> GL_NEAREST - most accurate <br>
-     * @param wrap   determines how the UV coordinates outside of the 0.0F ~ 1.0F range will be handled. <br>
-     *               GL_CLAMP_TO_EDGE - samples edge color <br> GL_REPEAT - repeats the texture <br>
-     */
+
     public static int applyTexture(int texId, int width, int height, ByteBuffer pixels, int filter, int wrap) {
 
         glBindTexture(GL_TEXTURE_2D, texId);
@@ -189,9 +147,6 @@ public class GLUtils {
         return texId;
     }
 
-    /**
-     * Cleans ups the arrays on close
-     */
     public static void cleanup() {
 
         GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, 0);
@@ -207,9 +162,6 @@ public class GLUtils {
 
     }
 
-    /**
-     * Rect
-     */
 
 
     public static void drawBorderRect(float x, float y, float x1, float y1, float borderSize) {
@@ -301,9 +253,6 @@ public class GLUtils {
     }
 
 
-    /**
-     * Colors
-     */
 
     public static void glColor(float red, float green, float blue, float alpha) {
 
@@ -336,4 +285,5 @@ public class GLUtils {
 
         return getRandomColor(1000, 0.6f);
     }
+    */
 }

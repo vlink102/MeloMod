@@ -1,8 +1,9 @@
 package me.vlink102.melomod.world;
 
-import me.vlink102.melomod.config.MeloConfiguration;
-import me.vlink102.melomod.events.InternalLocraw;
+import me.vlink102.melomod.config.MiningHelper;
 import me.vlink102.melomod.mixin.SkyblockUtil;
+import me.vlink102.melomod.util.MathUtils;
+import me.vlink102.melomod.util.SpecialColour;
 import net.minecraft.block.*;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.Minecraft;
@@ -13,7 +14,6 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.Blocks;
 import net.minecraft.item.EnumDyeColor;
 import net.minecraft.item.ItemStack;
-import net.minecraft.util.AxisAlignedBB;
 import net.minecraft.util.BlockPos;
 import net.minecraft.util.MovingObjectPosition;
 import net.minecraft.util.Vec3;
@@ -119,7 +119,7 @@ public class Render {
                 continue;
             }
             Block worldBlock = Minecraft.getMinecraft().theWorld.getBlockState(block).getBlock();
-            if (isMatch(MeloConfiguration.miningHighlightType, block)) {
+            if (isMatch(MiningHelper.miningHighlightType, block)) {
                 if (intersectsWith(
                         event,
                         getMin(worldBlock),
@@ -180,15 +180,18 @@ public class Render {
         double d2 = player.lastTickPosZ + (player.posZ - player.lastTickPosZ) * (double) event.partialTicks;
         SkyblockUtil.ItemType type =SkyblockUtil.ItemType.parseFromItemStack(held);
         if (type == null) return;
-        if (type == SkyblockUtil.ItemType.DRILL || type == SkyblockUtil.ItemType.GAUNTLET || type == SkyblockUtil.ItemType.PICKAXE) {
-            if (event.target.typeOfHit == MovingObjectPosition.MovingObjectType.BLOCK) {
+        if (event.target.typeOfHit == MovingObjectPosition.MovingObjectType.BLOCK) {
+            if (type == SkyblockUtil.ItemType.DRILL || type == SkyblockUtil.ItemType.GAUNTLET || type == SkyblockUtil.ItemType.PICKAXE) {
+                if (!MiningHelper.enableHighlights) return;
                 GlStateManager.enableBlend();
                 GlStateManager.tryBlendFuncSeparate(770, 771, 1, 0);
                 GlStateManager.color(0.0F, 0.0F, 0.0F, 0.4F);
                 GlStateManager.disableTexture2D();
                 GlStateManager.depthMask(false);
-                GlStateManager.disableDepth();
-                if (isMatch(MeloConfiguration.miningHighlightType, event.target.getBlockPos())) {
+                if (!MiningHelper.renderDepth) {
+                    GlStateManager.disableDepth();
+                }
+                if (isMatch(MiningHelper.miningHighlightType, event.target.getBlockPos())) {
 
                     HashSet<BlockPos> candidatesOld = new HashSet<>();
                     LinkedList<BlockPos> candidates = new LinkedList<>();
@@ -196,7 +199,7 @@ public class Render {
                     candidatesNew.add(event.target.getBlockPos());
 
                     int blocks = 0;
-                    int max = 100;
+                    int max = MiningHelper.renderAmount;
 
                     while (blocks < max) {
                         if (candidatesNew.isEmpty()) {
@@ -224,7 +227,7 @@ public class Render {
                                             if (!candidatesOld.contains(posNew) && !candidates.contains(posNew) && !candidatesNew.contains(posNew)) {
                                                 double minimal = MathUtils.getMinimalDistance(player.getPositionEyes(event.partialTicks), Minecraft.getMinecraft().theWorld.getBlockState(posNew).getBlock(), posNew);
 
-                                                if (isMatch(MeloConfiguration.miningHighlightType, posNew) && minimal <= 4.5f) {
+                                                if (isMatch(MiningHelper.miningHighlightType, posNew) && minimal <= MiningHelper.blockReach) {
                                                     candidatesNew.add(posNew);
                                                 }
                                             }
@@ -235,40 +238,70 @@ public class Render {
                             block.setBlockBoundsBasedOnState(Minecraft.getMinecraft().theWorld, candidate);
 
                             if (block == Blocks.stone && Minecraft.getMinecraft().theWorld.getBlockState(candidate).getValue(BlockStone.VARIANT) == BlockStone.EnumType.DIORITE_SMOOTH) {
-                                RenderUtils.drawFilledBoundingBox(block.getSelectedBoundingBox(Minecraft.getMinecraft().theWorld, candidate)
-                                                .expand(0.001D, 0.001D, 0.001D)
-                                                .offset(-d0, -d1, -d2),
-                                        random ? 0.5f : 1f, "100:50:255:255:255");
+                                if (MiningHelper.titaniumRenderType == 0) {
+
+                                    RenderUtils.drawOutlineBoundingBox(block.getSelectedBoundingBox(Minecraft.getMinecraft().theWorld, candidate)
+                                                    .expand(0.001D, 0.001D, 0.001D)
+                                                    .offset(-d0, -d1, -d2),
+                                            random ? 0.5f : 1f, SpecialColour.special(
+                                                    MiningHelper.titaniumHighlightColor.getDataBit(),
+                                                    MiningHelper.titaniumHighlightColor.getAlpha(),
+                                                    MiningHelper.titaniumHighlightColor.getRed(),
+                                                    MiningHelper.titaniumHighlightColor.getGreen(),
+                                                    MiningHelper.titaniumHighlightColor.getBlue())
+                                    );
+                                } else if (MiningHelper.titaniumRenderType == 1) {
+                                    RenderUtils.drawFilledBoundingBox(block.getSelectedBoundingBox(Minecraft.getMinecraft().theWorld, candidate)
+                                                    .expand(0.001D, 0.001D, 0.001D)
+                                                    .offset(-d0, -d1, -d2),
+                                            random ? 0.5f : 1f, SpecialColour.special(
+                                                    MiningHelper.titaniumHighlightColor.getDataBit(),
+                                                    MiningHelper.titaniumHighlightColor.getAlpha(),
+                                                    MiningHelper.titaniumHighlightColor.getRed(),
+                                                    MiningHelper.titaniumHighlightColor.getGreen(),
+                                                    MiningHelper.titaniumHighlightColor.getBlue())
+                                    );
+                                }
+
                             } else {
-                                RenderUtils.drawOutlineBoundingBox(block.getSelectedBoundingBox(Minecraft.getMinecraft().theWorld, candidate)
-                                                .expand(0.001D, 0.001D, 0.001D)
-                                                .offset(-d0, -d1, -d2),
-                                        random ? 0.5f : 1f, "100:50:0:255:0");
+                                if (MiningHelper.defaultRenderType == 0) {
+                                    RenderUtils.drawOutlineBoundingBox(block.getSelectedBoundingBox(Minecraft.getMinecraft().theWorld, candidate)
+                                                    .expand(0.001D, 0.001D, 0.001D)
+                                                    .offset(-d0, -d1, -d2),
+                                            random ? 0.5f : 1f, SpecialColour.special(
+                                                    MiningHelper.miningHighlightColor.getDataBit(),
+                                                    MiningHelper.miningHighlightColor.getAlpha(),
+                                                    MiningHelper.miningHighlightColor.getRed(),
+                                                    MiningHelper.miningHighlightColor.getGreen(),
+                                                    MiningHelper.miningHighlightColor.getBlue())
+                                    );
+                                } else if (MiningHelper.defaultRenderType == 1) {
+
+                                    RenderUtils.drawFilledBoundingBox(block.getSelectedBoundingBox(Minecraft.getMinecraft().theWorld, candidate)
+                                                    .expand(0.001D, 0.001D, 0.001D)
+                                                    .offset(-d0, -d1, -d2),
+                                            random ? 0.5f : 1f, SpecialColour.special(
+                                                    MiningHelper.miningHighlightColor.getDataBit(),
+                                                    MiningHelper.miningHighlightColor.getAlpha(),
+                                                    MiningHelper.miningHighlightColor.getRed(),
+                                                    MiningHelper.miningHighlightColor.getGreen(),
+                                                    MiningHelper.miningHighlightColor.getBlue())
+                                    );
+                                }
+
                             }
 
 
                         }
                     }
                 }
-                GlStateManager.enableDepth();
+                if (!MiningHelper.renderDepth) {
+                    GlStateManager.enableDepth();
+                }
                 GlStateManager.depthMask(true);
                 GlStateManager.enableTexture2D();
                 GlStateManager.disableBlend();
             }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
             /*
             RaycastResult result = raycast(Minecraft.getMinecraft().thePlayer, 1f, 4.5f, 0.1f);
 

@@ -1,34 +1,32 @@
 package me.vlink102.melomod.world;
 
+import me.vlink102.melomod.config.MeloConfiguration;
+import me.vlink102.melomod.util.SpecialColour;
 import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.EntityPlayerSP;
-import net.minecraft.client.gui.FontRenderer;
-import net.minecraft.client.gui.Gui;
-import net.minecraft.client.gui.ScaledResolution;
 import net.minecraft.client.renderer.*;
 import net.minecraft.client.renderer.block.model.BakedQuad;
 import net.minecraft.client.renderer.texture.TextureUtil;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.client.resources.model.IBakedModel;
-import net.minecraft.entity.Entity;
 import net.minecraft.util.*;
 import org.lwjgl.opengl.GL11;
-import org.lwjgl.opengl.GL14;
-import org.lwjgl.util.vector.Vector3f;
 
 import java.awt.*;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 
 public class RenderUtils {
 
 
-    public static void drawFilledBoundingBox(AxisAlignedBB p_181561_0_, float alpha, String special) {
-        Color c = new Color(SpecialColour.specialToChromaRGB(special), true);
+    public static void drawFilledBoundingBox(AxisAlignedBB p_181561_0_, float alpha, String special) {Color c;
+        if (MeloConfiguration.enableChromaHighlighting) {
+            c = new Color(SpecialColour.specialToChromaRGB(special), true);
+        } else {
+            c = new Color(SpecialColour.specialToSimpleRGB(special));
+        }
 
         GlStateManager.enableBlend();
         GlStateManager.tryBlendFuncSeparate(770, 771, 1, 0);
@@ -163,13 +161,13 @@ public class RenderUtils {
         }
     }
 
-    public static void drawFilledBoundingBoxSide(
-            AxisAlignedBB p_181561_0_,
-            EnumFacing facing,
-            float alpha,
-            String special
-    ) {
-        Color c = new Color(SpecialColour.specialToChromaRGB(special), true);
+    public static void drawFilledBoundingBoxSide(AxisAlignedBB p_181561_0_, EnumFacing facing, float alpha, String special) {
+        Color c;
+        if (MeloConfiguration.enableChromaHighlighting) {
+            c = new Color(SpecialColour.specialToChromaRGB(special), true);
+        } else {
+            c = new Color(SpecialColour.specialToSimpleRGB(special));
+        }
         GlStateManager.color(c.getRed() / 255f, c.getGreen() / 255f, c.getBlue() / 255f, c.getAlpha() / 255f * alpha);
 
         GlStateManager.enableBlend();
@@ -221,7 +219,13 @@ public class RenderUtils {
     }
 
     public static void drawOutlineBoundingBox(AxisAlignedBB p_181561_0_, float alpha, String special) {
-        Color c = new Color(0, 255, 0, 255/2);
+        Color c;
+        if (MeloConfiguration.enableChromaHighlighting) {
+            c = new Color(SpecialColour.specialToChromaRGB(special), true);
+        } else {
+            c = new Color(SpecialColour.specialToSimpleRGB(special));
+        }
+
         float newAlpha = c.getAlpha() / 255f * alpha;
         if (newAlpha > 1) newAlpha = 1;
         GlStateManager.color(c.getRed() / 255f, c.getGreen() / 255f, c.getBlue() / 255f, newAlpha);

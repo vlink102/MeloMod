@@ -1,21 +1,12 @@
 package me.vlink102.melomod.config;
 
+import cc.polyfrost.oneconfig.config.annotations.*;
 import me.vlink102.melomod.hud.MeloHUD;
 import me.vlink102.melomod.MeloMod;
 import cc.polyfrost.oneconfig.config.Config;
-import cc.polyfrost.oneconfig.config.annotations.Dropdown;
-import cc.polyfrost.oneconfig.config.annotations.HUD;
-import cc.polyfrost.oneconfig.config.annotations.Slider;
-import cc.polyfrost.oneconfig.config.annotations.Switch;
 import cc.polyfrost.oneconfig.config.data.Mod;
 import cc.polyfrost.oneconfig.config.data.ModType;
 import cc.polyfrost.oneconfig.config.data.OptionSize;
-
-import java.awt.*;
-import java.io.File;
-import java.nio.file.Path;
-
-import static com.google.common.io.Resources.getResource;
 
 /**
  * The main Config entrypoint that extends the Config type and inits the config options.
@@ -27,11 +18,19 @@ public class MeloConfiguration extends Config {
     )
     public MeloHUD hud = new MeloHUD();
 
-    @Switch(
-            name = "Enable Coordinates",
-            size = OptionSize.SINGLE // Optional
+    @Text(
+            name = "API Key",
+            description = "API Key obtained from https://developer.hypixel.net/ (Required to use some chat commands)"
     )
-    public static boolean enableCoords = true; // The default value for the boolean Switch.
+    public static String apiKey = "";
+
+    @SubConfig
+    public static MiningHelper miningHelper = new MiningHelper();
+
+    @SubConfig
+    public static ChatConfig chatConfig = new ChatConfig();
+
+     // The default value for the boolean Switch.
 
     /*
     @Slider(
@@ -43,11 +42,12 @@ public class MeloConfiguration extends Config {
 
      */
 
-    @Dropdown(
-            name = "Mining Highlight Type", // Name of the Dropdown
-            options = {"Mithril", "Gemstones", "Auto"} // Options available.
+     // Default option (in this case "Option 2")
+
+    @Switch(
+            name = "Enable Chroma Highlighting"
     )
-    public static int miningHighlightType = 2; // Default option (in this case "Option 2")
+    public static boolean enableChromaHighlighting = false;
 
     public MeloConfiguration() {
         super(new Mod(MeloMod.NAME, ModType.SKYBLOCK, "/703ab98cf301a4df30ecb2185ac1c7f8.png"), MeloMod.MODID + ".json");

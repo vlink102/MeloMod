@@ -16,6 +16,7 @@ import java.awt.*;
 import static org.lwjgl.opengl.GL11.*;
 
 public class DarkForgeRenderUtils {
+    /*
     private static final AxisAlignedBB DEFAULT_AABB = new AxisAlignedBB(0, 0, 0, 1, 1, 1);
 
     public static void drawESP(final AxisAlignedBB bb, final double r, final double g, final double b) {
@@ -438,4 +439,6 @@ public class DarkForgeRenderUtils {
         glEnable(GL11.GL_TEXTURE_2D);
         GL11.glDisable(GL11.GL_LINE_SMOOTH);
     }
+
+     */
 }

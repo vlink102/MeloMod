@@ -1,6 +1,5 @@
-package me.vlink102.melomod.world;
+package me.vlink102.melomod.util;
 
-import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
 import me.vlink102.melomod.MeloMod;

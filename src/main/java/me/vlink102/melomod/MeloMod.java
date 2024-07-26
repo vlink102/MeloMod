@@ -3,11 +3,15 @@ package me.vlink102.melomod;
 import cc.polyfrost.oneconfig.utils.hypixel.HypixelUtils;
 import cc.polyfrost.oneconfig.utils.hypixel.LocrawUtil;
 import com.google.gson.Gson;
+import com.google.gson.JsonObject;
+import com.mojang.authlib.yggdrasil.request.JoinMinecraftServerRequest;
 import me.vlink102.melomod.config.MeloConfiguration;
 import me.vlink102.melomod.command.MeloCommand;
 import cc.polyfrost.oneconfig.events.event.InitializationEvent;
+import me.vlink102.melomod.events.ChatEvent;
 import me.vlink102.melomod.events.InternalLocraw;
 import me.vlink102.melomod.mixin.PlayerObjectUtil;
+import me.vlink102.melomod.mixin.SkyblockUtil;
 import me.vlink102.melomod.world.Render;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.common.Mod;
@@ -24,8 +28,6 @@ import java.util.UUID;
  */
 @Mod(modid = MeloMod.MODID, name = MeloMod.NAME, version = MeloMod.VERSION)
 public class MeloMod {
-
-    public static final String API_KEY = "ab720b01-ee6c-4a2b-9a88-d3314fe73151";
 
     public enum MinecraftColors {
         BLACK('0'),
@@ -71,17 +73,31 @@ public class MeloMod {
     public static Gson gson;
 
     public static InternalLocraw internalLocraw = null;
+    public static ChatEvent chatEvent = null;
     public static LocrawUtil locrawUtil;
+
+    public SkyblockUtil.ProfileMember playerProfile = null;
+    public SkyblockUtil skyblockUtil;
+
+    public void setPlayerProfile(SkyblockUtil.ProfileMember playerProfile) {
+        this.playerProfile = playerProfile;
+    }
+
+    public SkyblockUtil getSkyblockUtil() {
+        return skyblockUtil;
+    }
 
     // Register the config and commands.
     @Mod.EventHandler
     public void onInit(FMLInitializationEvent event) {
         config = new MeloConfiguration();
         gson = new Gson();
+        skyblockUtil = new SkyblockUtil(this);
         CommandManager.INSTANCE.registerCommand(new MeloCommand());
         PlayerObjectUtil objectUtil = new PlayerObjectUtil(this);
         locrawUtil = new LocrawUtil();
         internalLocraw = new InternalLocraw(this);
+        chatEvent = new ChatEvent(this);
         Render render = new Render();
         MinecraftForge.EVENT_BUS.register(render);
         //MinecraftForge.EVENT_BUS.register(internalLocraw);

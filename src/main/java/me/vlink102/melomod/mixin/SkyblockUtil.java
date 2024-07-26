@@ -1,36 +1,34 @@
 package me.vlink102.melomod.mixin;
 
-import cc.polyfrost.oneconfig.utils.hypixel.HypixelUtils;
-import cc.polyfrost.oneconfig.utils.hypixel.LocrawUtil;
 import com.google.common.collect.ImmutableMap;
 import com.google.gson.*;
 import me.vlink102.melomod.MeloMod;
+import me.vlink102.melomod.config.MeloConfiguration;
+import me.vlink102.melomod.events.ChatEvent;
 import me.vlink102.melomod.events.InternalLocraw;
-import me.vlink102.melomod.world.ItemResolutionQuery;
-import net.minecraft.block.Block;
-import net.minecraft.block.material.Material;
-import net.minecraft.block.material.MaterialTransparent;
 import net.minecraft.block.properties.IProperty;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.Minecraft;
-import net.minecraft.init.Blocks;
-import net.minecraft.init.Items;
+import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.EnumDyeColor;
-import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.*;
+import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.BlockPos;
-import net.minecraft.util.ResourceLocation;
-import net.minecraftforge.client.model.obj.OBJModel;
 import net.minecraftforge.common.util.Constants;
+import scala.math.BigInt;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.math.BigInteger;
 import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
+import java.net.ProtocolException;
 import java.net.URL;
 import java.util.*;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 public class SkyblockUtil {
     private final MeloMod meloMod;
@@ -172,13 +170,15 @@ public class SkyblockUtil {
         }
     }
 
-    public JsonArray getPlayerProfiles(UUID player) {
+    public static JsonObject getGuild(String player) {
         try {
-            URL url = new URL("https://api.hypixel.net/v2/skyblock/profiles?uuid=" + player);
-            HttpURLConnection con = (HttpURLConnection) url.openConnection();
+            UUID uuid = MinecraftServer.getServer().getPlayerProfileCache().getGameProfileForUsername(player).getId();
+            URL url = new URL("https://api.hypixel.net/v2/guild?player=" + uuid);
+            HttpURLConnection con = (HttpURLConnection)  url.openConnection();
+
             con.setRequestMethod("GET");
             con.setRequestProperty("Content-Type", "application/json");
-            con.setRequestProperty("API-Key", MeloMod.API_KEY);
+            con.setRequestProperty("API-Key", MeloConfiguration.apiKey);
 
             con.setConnectTimeout(5000);
             con.setReadTimeout(5000);
@@ -197,29 +197,370 @@ public class SkyblockUtil {
                 con.disconnect();
                 String contentString = content.toString();
                 JsonObject toReturn = new JsonParser().parse(contentString).getAsJsonObject();
-                if (toReturn.get("success").getAsBoolean()) {
-                    return toReturn.getAsJsonArray("profiles");
+                if (getAsBoolean("success", toReturn)) {
+                    return toReturn.getAsJsonObject("session");
                 }
             }
 
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        return null;
+    }
 
-            return null;
+    public static class Guild {
+        private final String guildID;
+        private final String name;
+        private final String nameLower;
+        private final Integer coins;
+        private final Integer coinsEver;
+        private final Long created;
+        private final List<GuildMember> members;
+        private final List<GuildRank> ranks;
+        private final GuildAchievements guildAchievements;
+        private final List<String> preferredGames;
+        private final Boolean publiclyListed;
+        private final Long exp;
+        private final Integer chatMute;
+        private final String tag;
+        private final String tagColor;
+        private final String description;
+        private final HashMap<String, Integer> guildExpByGameType;
+
+        public Guild(JsonObject object) {
+            this.guildID = getAsString("_id", object);
+            this.name = getAsString("name", object);
+            this.nameLower = getAsString("name", object);
+            this.coins = getAsInteger("coins", object);
+            this.coinsEver = getAsInteger("coinsEver", object);
+            this.created = getAsLong("created", object);
+            this.members = new ArrayList<>();
+            JsonArray membersArray = getAsJsonArray("members", object);
+            for (JsonElement member : membersArray) {
+                members.add(new GuildMember(member.getAsJsonObject()));
+            }
+            this.ranks = new ArrayList<>();
+            JsonArray ranksArray = getAsJsonArray("ranks", object);
+            for (JsonElement rank : ranksArray) {
+                ranks.add(new GuildRank(rank.getAsJsonObject()));
+            }
+            this.guildAchievements = new GuildAchievements(getAsJsonObject("achievements", object));
+            this.preferredGames = new ArrayList<>();
+            JsonArray preferredGamesArray = getAsJsonArray("preferredGames", object);
+            for (JsonElement preferredGame : preferredGamesArray) {
+                preferredGames.add(preferredGame.getAsString());
+            }
+            this.publiclyListed = getAsBoolean("publiclyListed", object);
+            this.exp = getAsLong("exp", object);
+            this.chatMute = getAsInteger("chatMute", object);
+            this.tag = getAsString("tag", object);
+            this.tagColor = getAsString("tagColor", object);
+            this.description = getAsString("description", object);
+            this.guildExpByGameType = new HashMap<>();
+            JsonObject guildExpObject = getAsJsonObject("guildExpByGameType", object);
+            for (Map.Entry<String, JsonElement> entry : guildExpObject.entrySet()) {
+                String string = entry.getKey();
+                guildExpByGameType.put(string, entry.getValue().getAsInt());
+            }
+
+        }
+
+        public String getTag() {
+            return tag;
+        }
+
+        public String getName() {
+            return name;
+        }
+
+        public Long getCreated() {
+            return created;
+        }
+
+        public String getDescription() {
+            return description;
+        }
+
+        public Boolean getPubliclyListed() {
+            return publiclyListed;
+        }
+
+        public GuildAchievements getGuildAchievements() {
+            return guildAchievements;
+        }
+
+        public HashMap<String, Integer> getGuildExpByGameType() {
+            return guildExpByGameType;
+        }
+
+        public Integer getChatMute() {
+            return chatMute;
+        }
+
+        public Integer getCoins() {
+            return coins;
+        }
+
+        public Integer getCoinsEver() {
+            return coinsEver;
+        }
+
+        public List<GuildMember> getMembers() {
+            return members;
+        }
+
+        public List<GuildRank> getRanks() {
+            return ranks;
+        }
+
+        public List<String> getPreferredGames() {
+            return preferredGames;
+        }
+
+        public Long getExp() {
+            return exp;
+        }
+
+        public String getGuildID() {
+            return guildID;
+        }
+
+        public String getNameLower() {
+            return nameLower;
+        }
+
+        public String getTagColor() {
+            return tagColor;
+        }
+
+        public static class GuildAchievements {
+            private final Integer onlinePlayers;
+            private final Integer experienceKings;
+            private final Integer winners;
+
+            public GuildAchievements(JsonObject object) {
+                this.onlinePlayers = getAsInteger("ONLINE_PLAYERS", object);
+                this.experienceKings = getAsInteger("EXPERIENCE_KINGS", object);
+                this.winners = getAsInteger("WINNERS", object);
+            }
+
+            public Integer getExperienceKings() {
+                return experienceKings;
+            }
+
+            public Integer getOnlinePlayers() {
+                return onlinePlayers;
+            }
+
+            public Integer getWinners() {
+                return winners;
+            }
+        }
+
+        public static class GuildRank {
+            private final String name;
+            private final Boolean isDefault;
+            private final String tag;
+            private final Long created;
+            private final Integer priority;
+
+            public GuildRank(JsonObject object) {
+                this.name = getAsString("name", object);
+                this.isDefault = getAsBoolean("default", object);
+                this.tag = getAsString("tag", object);
+                this.created = getAsLong("created", object);
+                this.priority = getAsInteger("priority", object);
+            }
+
+            public String getName() {
+                return name;
+            }
+
+            public Boolean getDefault() {
+                return isDefault;
+            }
+
+            public String getTag() {
+                return tag;
+            }
+
+            public Long getCreated() {
+                return created;
+            }
+
+            public Integer getPriority() {
+                return priority;
+            }
+        }
+
+        public static class GuildMember {
+            private final UUID uuid;
+            private final String rank;
+            private final Long joined;
+            private final Integer questParticipation;
+            private final HashMap<String, Integer> expHistory;
+
+            public GuildMember(JsonObject object) {
+                this.uuid = fromString(getAsString("uuid", object));
+                this.rank = getAsString("rank", object);
+                this.joined = getAsLong("joined", object);
+                this.questParticipation = getAsInteger("questParticipation", object);
+                this.expHistory = new HashMap<>();
+                JsonObject expHistoryObject = getAsJsonObject("expHistory", object);
+                for (String s : expHistory.keySet()) {
+                    expHistory.put(s, getAsInteger(s, expHistoryObject));
+                }
+            }
+            public UUID getUUID() {
+                return uuid;
+            }
+
+            public String getRank() {
+                return rank;
+            }
+
+            public Long getJoined() {
+                return joined;
+            }
+
+            public Integer getQuestParticipation() {
+                return questParticipation;
+            }
+
+            public UUID getUuid() {
+                return uuid;
+            }
+
+            public HashMap<String, Integer> getExpHistory() {
+                return expHistory;
+            }
+        }
+    }
+
+    public static JsonObject getSession(String player) {
+        //UUID uuid = EntityPlayer.getOfflineUUID(player);
+        try {
+            UUID uuid = MinecraftServer.getServer().getPlayerProfileCache().getGameProfileForUsername(player).getId();
+            URL url = new URL("https://api.hypixel.net/v2/status?uuid=" + uuid);
+            HttpURLConnection con = (HttpURLConnection)  url.openConnection();
+
+            con.setRequestMethod("GET");
+            con.setRequestProperty("Content-Type", "application/json");
+            con.setRequestProperty("API-Key", MeloConfiguration.apiKey);
+
+            con.setConnectTimeout(5000);
+            con.setReadTimeout(5000);
+            int status = con.getResponseCode();
+
+            if (status == 200) {
+                BufferedReader in = new BufferedReader(
+                        new InputStreamReader(con.getInputStream())
+                );
+                String inputLine;
+                StringBuffer content = new StringBuffer();
+                while ((inputLine = in.readLine()) != null) {
+                    content.append(inputLine);
+                }
+                in.close();
+                con.disconnect();
+                String contentString = content.toString();
+                JsonObject toReturn = new JsonParser().parse(contentString).getAsJsonObject();
+                if (getAsBoolean("success", toReturn)) {
+                    return toReturn.getAsJsonObject("session");
+                }
+            }
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
 
+        return null;
     }
 
-    public JsonObject getActiveProfile(UUID player) {
-        JsonArray profiles = getPlayerProfiles(player);
-        for (JsonElement profile : profiles) {
-            JsonObject profileObj = profile.getAsJsonObject();
-            if (profileObj.get("selected").getAsBoolean()) {
-                return profileObj;
+    public static JsonObject getAsJsonObject(String key, JsonObject parent) {
+        if (parent.has(key)) {
+            if (!parent.get(key).isJsonNull() && parent.get(key) != null && parent.get(key).isJsonObject()) {
+                return parent.getAsJsonObject(key);
+            }
+        }
+        return new JsonObject();
+    }
+
+    public static JsonArray getAsJsonArray(String key, JsonObject parent) {
+        if (parent.has(key)) {
+            if (!parent.get(key).isJsonNull() && parent.get(key) != null && parent.get(key).isJsonArray()) {
+                return parent.getAsJsonArray(key);
+            }
+        }
+        return new JsonArray();
+    }
+
+    public static Boolean getAsBoolean(String key, JsonObject parent) {
+        if (parent.has(key)) {
+            if (!parent.get(key).isJsonNull() && parent.get(key) != null && parent.get(key).isJsonPrimitive()) {
+                if (parent.getAsJsonPrimitive(key).isBoolean()) {
+                    return parent.get(key).getAsBoolean();
+                }
             }
         }
         return null;
     }
+
+    public static String getAsString(String key, JsonObject parent) {
+        if (parent.has(key)) {
+            if (!parent.get(key).isJsonNull() && parent.get(key) != null && parent.get(key).isJsonPrimitive()) {
+                if (parent.getAsJsonPrimitive(key).isString()) {
+                    return parent.get(key).getAsString();
+                }
+            }
+        }
+        return null;
+    }
+
+    public static Integer getAsInteger(String key, JsonObject parent) {
+        if (parent.has(key)) {
+            if (!parent.get(key).isJsonNull() && parent.get(key) != null && parent.get(key).isJsonPrimitive()) {
+                if (parent.getAsJsonPrimitive(key).isNumber()) {
+                    return parent.get(key).getAsInt();
+                }
+            }
+        }
+        return null;
+    }
+
+    public static Float getAsFloat(String key, JsonObject parent) {
+        if (parent.has(key)) {
+            if (!parent.get(key).isJsonNull() && parent.get(key) != null && parent.get(key).isJsonPrimitive()) {
+                if (parent.getAsJsonPrimitive(key).isNumber()) {
+                    return parent.get(key).getAsFloat();
+                }
+            }
+        }
+        return null;
+    }
+
+    public static Double getAsDouble(String key, JsonObject parent) {
+        if (parent.has(key)) {
+            if (!parent.get(key).isJsonNull() && parent.get(key) != null && parent.get(key).isJsonPrimitive()) {
+                if (parent.getAsJsonPrimitive(key).isNumber()) {
+                    return parent.get(key).getAsDouble();
+                }
+            }
+        }
+        return null;
+    }
+
+    public static Long getAsLong(String key, JsonObject parent) {
+        if (parent.has(key)) {
+            if (!parent.get(key).isJsonNull() && parent.get(key) != null && parent.get(key).isJsonPrimitive()) {
+                if (parent.getAsJsonPrimitive(key).isNumber()) {
+                    return parent.get(key).getAsLong();
+                }
+            }
+        }
+        return null;
+    }
+
+
 
     public class SkyblockProfile {
         private final UUID profileID;
@@ -242,10 +583,10 @@ public class SkyblockUtil {
         }
 
         public SkyblockProfile(JsonObject profileObject) {
-            this.profileID = UUID.fromString(profileObject.get("profile_id").getAsString());
-            JsonObject communityUpgrades = profileObject.get("community_upgrades").getAsJsonObject();
-            JsonArray upgradeStates = communityUpgrades.get("upgrade_states").getAsJsonArray();
-            JsonArray currentlyUpgrading = communityUpgrades.get("currently_upgrading").getAsJsonArray();
+            this.profileID = fromString(getAsString("profile_id", profileObject));
+            JsonObject communityUpgrades = getAsJsonObject("community_upgrades", profileObject);
+            JsonArray upgradeStates = getAsJsonArray("upgrade_states", communityUpgrades);
+            JsonArray currentlyUpgrading = getAsJsonArray("currently_upgrading", communityUpgrades);
             List<CommunityUpgrade> upgrades = new ArrayList<>();
             for (JsonElement upgradeState : upgradeStates) {
                 upgrades.add(new CommunityUpgrade(upgradeState.getAsJsonObject()));
@@ -254,16 +595,16 @@ public class SkyblockUtil {
                 upgrades.add(new CommunityUpgrade(jsonElement.getAsJsonObject()));
             }
             this.communityUpgrades = upgrades;
-            this.createdAt = profileObject.get("created_at").getAsLong();
+            this.createdAt = getAsLong("created_at", profileObject);
             this.members = new ArrayList<>();
-            JsonObject membersObject = profileObject.get("members").getAsJsonObject();
+            JsonObject membersObject = getAsJsonObject("members", profileObject);
             for (Map.Entry<String, JsonElement> entry : membersObject.entrySet()) {
                 String string = entry.getKey();
-                members.add(new ProfileMember(UUID.fromString(string), membersObject.get(string).getAsJsonObject()));
+                members.add(new ProfileMember(fromString(string), getAsJsonObject(string, membersObject)));
             }
-            this.selected = profileObject.get("selected").getAsBoolean();
-            this.cuteName = profileObject.get("cute_name").getAsString();
-            this.gamemode = Gamemode.parseFromJSON(profileObject.get("game_mode").getAsString());
+            this.selected = getAsBoolean("selected", profileObject);
+            this.cuteName = getAsString("cute_name", profileObject);
+            this.gamemode = Gamemode.parseFromJSON(getAsString("game_mode", profileObject));
         }
 
         public Boolean getSelected() {
@@ -282,6 +623,15 @@ public class SkyblockUtil {
             return members;
         }
 
+        public ProfileMember getProfileMember(UUID uuid) {
+            for (ProfileMember member : members) {
+                if (uuid.equals(member.playerID)) {
+                    return member;
+                }
+            }
+            return null;
+        }
+
         public Long getCreatedAt() {
             return createdAt;
         }
@@ -294,6 +644,7 @@ public class SkyblockUtil {
             return profileID;
         }
     }
+
 
     public enum Gamemode {
         NORMAL,
@@ -311,12 +662,12 @@ public class SkyblockUtil {
 
     public static class CommunityUpgrade {
         private final String upgradeName;
-        private final int tier;
-        private final long startedMS;
-        private final long claimedMS;
+        private final Integer tier;
+        private final Long startedMS;
+        private final Long claimedMS;
         private final UUID startedBy;
         private final UUID claimedBy;
-        private final boolean fastTracked;
+        private final Boolean fastTracked;
 
         @Deprecated
         public CommunityUpgrade(String upgradeName, int tier, long startedMS, long claimedMS, UUID startedBy, UUID claimedBy, boolean fastTracked) {
@@ -330,13 +681,13 @@ public class SkyblockUtil {
         }
 
         public CommunityUpgrade(JsonObject object) {
-            this.upgradeName = object.get("upgrade").getAsString();
-            this.tier = object.get("tier").getAsInt();
-            this.startedMS = object.get("started_ms").getAsLong();
-            this.claimedMS = object.get("claimed_ms").getAsLong();
-            this.claimedBy = UUID.fromString(object.get("claimed_by").getAsString());
-            this.fastTracked = object.get("fast_tracked").getAsBoolean();
-            this.startedBy = UUID.fromString(object.get("started_by").getAsString());
+            this.upgradeName = getAsString("upgrade", object);
+            this.tier = getAsInteger("tier", object);
+            this.startedMS = getAsLong("started_ms", object);
+            this.claimedMS = getAsLong("claimed_ms", object);
+            this.claimedBy = fromString(getAsString("claimed_by", object));
+            this.fastTracked = getAsBoolean("fast_tracked", object);
+            this.startedBy = fromString(getAsString("started_by", object));
         }
 
         public int getTier() {
@@ -369,7 +720,7 @@ public class SkyblockUtil {
     }
 
     public static class Banking {
-        private final double balance;
+        private final Double balance;
         private final List<Transaction> transactions;
 
         @Deprecated
@@ -379,8 +730,8 @@ public class SkyblockUtil {
         }
 
         public Banking(JsonObject object) {
-            this.balance = object.get("balance").getAsDouble();
-            JsonArray transactionArray = object.getAsJsonArray("transactions");
+            this.balance = getAsDouble("balance", object);
+            JsonArray transactionArray = getAsJsonArray("transactions", object);
             List<Transaction> transactions = new ArrayList<>();
             for (JsonElement jsonElement : transactionArray) {
                 JsonObject transaction = jsonElement.getAsJsonObject();
@@ -398,10 +749,10 @@ public class SkyblockUtil {
         }
 
         public static class Transaction {
-            private final long timestamp;
+            private final Long timestamp;
             private final Action action;
             private final String initiatorName;
-            private final double amount;
+            private final Double amount;
 
             public enum Action {
                 DEPOSIT,
@@ -415,7 +766,7 @@ public class SkyblockUtil {
             }
 
             @Deprecated
-            public Transaction(int timestamp, Action action, String initiatorName, double amount) {
+            public Transaction(Long timestamp, Action action, String initiatorName, Double amount) {
                 this.timestamp = timestamp;
                 this.action = action;
                 this.initiatorName = initiatorName;
@@ -423,10 +774,10 @@ public class SkyblockUtil {
             }
 
             public Transaction(JsonObject object) {
-                this.amount = object.get("amount").getAsDouble();
-                this.timestamp = object.get("timestamp").getAsLong();
-                this.action = Action.parseFromJSON(object.get("action").getAsString());
-                this.initiatorName = object.get("initiator_name").getAsString();
+                this.amount = getAsDouble("amount", object);
+                this.timestamp = getAsLong("timestamp", object);
+                this.action = Action.parseFromJSON(getAsString("action", object));
+                this.initiatorName = getAsString("initiator_name", object);
             }
 
             public long getTimestamp() {
@@ -461,21 +812,27 @@ public class SkyblockUtil {
         private final JacobsContest jacobsContest;
         private final Currencies currencies;
         private final Dungeons dungeons;
+        private final Bestiary bestiary;
 
         public ProfileMember(UUID playerID, JsonObject object) {
             this.playerID = playerID;
-            this.riftData = new RiftData(object.getAsJsonObject("rift"));
-            this.playerData = new PlayerData(object.get("player_data").getAsJsonObject());
-            this.glacitePlayerData = new GlacitePlayerData(object.get("glacite_player_data").getAsJsonObject());
-            this.events = new Events(object.get("events").getAsJsonObject());
-            this.gardenPlayerData = new GardenPlayerData(object.get("garden_player_data").getAsJsonObject());
-            this.petsData = new PetsData(object.get("pets_data").getAsJsonObject());
-            this.accessoryBagStorage = new AccessoryBagStorage(object.get("accessory_bag").getAsJsonObject());
-            this.levelling = new Levelling(object.get("levelling").getAsJsonObject());
-            this.itemData = new ItemData(object.get("item_data").getAsJsonObject());
-            this.jacobsContest = new JacobsContest(object.get("jacobs_contest").getAsJsonObject());
-            this.currencies = new Currencies(object.get("currencies").getAsJsonObject());
-            this.dungeons = new Dungeons(object.get("dungeons").getAsJsonObject());
+            this.riftData = new RiftData(getAsJsonObject("rift", object));
+            this.playerData = new PlayerData(getAsJsonObject("player_data", object));
+            this.glacitePlayerData = new GlacitePlayerData(getAsJsonObject("glacite_player_data", object));
+            this.events = new Events(getAsJsonObject("events", object));
+            this.gardenPlayerData = new GardenPlayerData(getAsJsonObject("garden_player_data", object));
+            this.petsData = new PetsData(getAsJsonObject("pets_data", object));
+            this.accessoryBagStorage = new AccessoryBagStorage(getAsJsonObject("accessory_bag", object));
+            this.levelling = new Levelling(getAsJsonObject("levelling", object));
+            this.itemData = new ItemData(getAsJsonObject("item_data", object));
+            this.jacobsContest = new JacobsContest(getAsJsonObject("jacobs_contest", object));
+            this.currencies = new Currencies(getAsJsonObject("currencies", object));
+            this.dungeons = new Dungeons(getAsJsonObject("dungeons", object));
+            this.bestiary = new Bestiary(getAsJsonObject("bestiary", object));
+        }
+
+        public Bestiary getBestiary() {
+            return bestiary;
         }
 
         public AccessoryBagStorage getAccessoryBagStorage() {
@@ -527,7 +884,7 @@ public class SkyblockUtil {
         }
 
         public class DeletionNotice {
-            private final int timestamp;
+            private final Integer timestamp;
 
             public DeletionNotice(int timestamp) {
                 this.timestamp = timestamp;
@@ -600,6 +957,39 @@ public class SkyblockUtil {
         return loreList;
     }
 
+    public class Bestiary {
+        private final Boolean migratedStats;
+        private final Boolean migration;
+        private final HashMap<String, Integer> kills;
+        // todo complete
+
+        public Bestiary(JsonObject object) {
+            this.migratedStats = getAsBoolean("migrated_stats", object);
+            this.migration = getAsBoolean("migration", object);
+            this.kills = new HashMap<>();
+            JsonObject killsObject = getAsJsonObject("kills", object);
+            for (Map.Entry<String, JsonElement> stringJsonElementEntry : killsObject.entrySet()) {
+                String string = stringJsonElementEntry.getKey();
+                if (Objects.equals(string, "last_killed_mob")) {
+                    continue;
+                }
+                kills.put(string, killsObject.get(string).getAsInt());
+            }
+        }
+
+        public HashMap<String, Integer> getKills() {
+            return kills;
+        }
+
+        public boolean isMigration() {
+            return migration;
+        }
+
+        public boolean isMigratedStats() {
+            return migratedStats;
+        }
+    }
+
     public class RiftData {
         private final List<String> lifetimePurchasedBoundaries;
         private final VillagePlaza villagePlaza;
@@ -618,27 +1008,27 @@ public class SkyblockUtil {
 
         public RiftData(JsonObject object) {
             this.lifetimePurchasedBoundaries = new ArrayList<>();
-            JsonArray lifetimePurchasedBoundariesArray = object.getAsJsonArray("lifetime_purchased_boundaries");
+            JsonArray lifetimePurchasedBoundariesArray = getAsJsonArray("lifetime_purchased_boundaries", object);
             for (JsonElement jsonElement : lifetimePurchasedBoundariesArray) {
                 lifetimePurchasedBoundaries.add(jsonElement.getAsString());
             }
-            this.villagePlaza = new VillagePlaza(object.getAsJsonObject("village_plaza"));
-            this.witherCage = new WitherCage(object.getAsJsonObject("wither_cage"));
-            this.blackLagoon = new BlackLagoon(object.getAsJsonObject("black_lagoon"));
-            this.deadCats = new DeadCats(object.getAsJsonObject("dead_cats"));
-            this.wizardTower = new WizardTower(object.getAsJsonObject("wizard_tower"));
-            this.enigma = new Enigma(object.getAsJsonObject("enigma"));
-            this.gallery = new Gallery(object.getAsJsonObject("gallery"));
-            this.westVillage = new WestVillage(object.getAsJsonObject("west_village"));
-            this.wyldWoods = new WyldWoods(object.getAsJsonObject("wyld_woods"));
-            this.castle = new Castle(object.getAsJsonObject("castle"));
-            this.access = new Access(object.getAsJsonObject("access"));
-            this.dreadfarm = new Dreadfarm(object.getAsJsonObject("dreadfarm"));
-            this.inventory = new Inventory(object.getAsJsonObject("inventory"));
+            this.villagePlaza = new VillagePlaza(getAsJsonObject("village_plaza", object));
+            this.witherCage = new WitherCage(getAsJsonObject("wither_cage", object));
+            this.blackLagoon = new BlackLagoon(getAsJsonObject("black_lagoon", object));
+            this.deadCats = new DeadCats(getAsJsonObject("dead_cats", object));
+            this.wizardTower = new WizardTower(getAsJsonObject("wizard_tower", object));
+            this.enigma = new Enigma(getAsJsonObject("enigma", object));
+            this.gallery = new Gallery(getAsJsonObject("gallery", object));
+            this.westVillage = new WestVillage(getAsJsonObject("west_village", object));
+            this.wyldWoods = new WyldWoods(getAsJsonObject("wyld_woods", object));
+            this.castle = new Castle(getAsJsonObject("castle", object));
+            this.access = new Access(getAsJsonObject("access", object));
+            this.dreadfarm = new Dreadfarm(getAsJsonObject("dreadfarm", object));
+            this.inventory = new Inventory(getAsJsonObject("inventory", object));
         }
 
         public class VillagePlaza {
-            private final boolean gotScammed;
+            private final Boolean gotScammed;
             private final Murder murder;
             private final BarryCenter barryCenter;
             private final Cowboy cowboy;
@@ -646,22 +1036,22 @@ public class SkyblockUtil {
             private final Seraphine seraphine;
 
             public VillagePlaza(JsonObject object) {
-                this.gotScammed = object.get("got_scammed").getAsBoolean();
-                this.murder = new Murder(object.getAsJsonObject("murder"));
-                this.barryCenter = new BarryCenter(object.getAsJsonObject("barry_center"));
-                this.cowboy = new Cowboy(object.getAsJsonObject("cowboy"));
-                this.lonely = new Lonely(object.getAsJsonObject("lonely"));
-                this.seraphine = new Seraphine(object.getAsJsonObject("seraphine"));
+                this.gotScammed = getAsBoolean("got_scammed", object);
+                this.murder = new Murder(getAsJsonObject("murder", object));
+                this.barryCenter = new BarryCenter(getAsJsonObject("barry_center", object));
+                this.cowboy = new Cowboy(getAsJsonObject("cowboy", object));
+                this.lonely = new Lonely(getAsJsonObject("lonely", object));
+                this.seraphine = new Seraphine(getAsJsonObject("seraphine", object));
             }
 
             public class Murder {
-                private final int stepIndex;
+                private final Integer stepIndex;
                 private final List<String> roomClues;
 
                 public Murder(JsonObject object) {
-                    this.stepIndex = object.get("step_index").getAsInt();
+                    this.stepIndex = getAsInteger("step_index", object);
                     this.roomClues = new ArrayList<>();
-                    JsonArray roomCluesArray = object.getAsJsonArray("room_clues");
+                    JsonArray roomCluesArray = getAsJsonArray("room_clues", object);
                     for (JsonElement jsonElement : roomCluesArray) {
                         roomClues.add(jsonElement.getAsString());
                     }
@@ -676,18 +1066,18 @@ public class SkyblockUtil {
                 }
             }
             public class BarryCenter {
-                private final boolean firstTalkToBarry;
+                private final Boolean firstTalkToBarry;
                 private final List<String> convinced;
-                private final boolean receivedReward;
+                private final Boolean receivedReward;
 
                 public BarryCenter(JsonObject object) {
-                    this.firstTalkToBarry = object.get("first_talk_to_barry").getAsBoolean();
+                    this.firstTalkToBarry = getAsBoolean("first_talk_to_barry", object);
                     this.convinced = new ArrayList<>();
-                    JsonArray convincedArray = object.getAsJsonArray("convinced");
+                    JsonArray convincedArray = getAsJsonArray("convinced", object);
                     for (JsonElement jsonElement : convincedArray) {
                         convinced.add(jsonElement.getAsString());
                     }
-                    this.receivedReward = object.get("received_reward").getAsBoolean();
+                    this.receivedReward = getAsBoolean("received_reward", object);
                 }
 
                 public boolean isFirstTalkToBarry() {
@@ -703,16 +1093,16 @@ public class SkyblockUtil {
                 }
             }
             public class Cowboy {
-                private final int stage;
-                private final int hayEaten;
+                private final Integer stage;
+                private final Integer hayEaten;
                 private final String rabbitName;
-                private final int exportedCarrots;
+                private final Integer exportedCarrots;
 
                 public Cowboy(JsonObject object) {
-                    this.stage = object.get("stage").getAsInt();
-                    this.hayEaten = object.get("hay_eaten").getAsInt();
-                    this.rabbitName = object.get("rabbit_name").getAsString();
-                    this.exportedCarrots = object.get("exported_carrots").getAsInt();
+                    this.stage = getAsInteger("stage", object);
+                    this.hayEaten = getAsInteger("hay_eaten", object);
+                    this.rabbitName = getAsString("rabbit_name", object);
+                    this.exportedCarrots = getAsInteger("exported_carrots", object);
                 }
 
                 public int getExportedCarrots() {
@@ -732,10 +1122,10 @@ public class SkyblockUtil {
                 }
             }
             public class Lonely {
-                private final int secondsSitting;
+                private final Integer secondsSitting;
 
                 public Lonely(JsonObject object) {
-                    this.secondsSitting = object.get("seconds_sitting").getAsInt();
+                    this.secondsSitting = getAsInteger("seconds_sitting", object);
                 }
 
                 public int getSecondsSitting() {
@@ -743,10 +1133,10 @@ public class SkyblockUtil {
                 }
             }
             public class Seraphine {
-                private final int stepIndex;
+                private final Integer stepIndex;
 
                 public Seraphine(JsonObject object) {
-                    this.stepIndex = object.get("step_index").getAsInt();
+                    this.stepIndex = getAsInteger("step_index", object);
                 }
                 public int getStepIndex() {
                     return stepIndex;
@@ -782,7 +1172,7 @@ public class SkyblockUtil {
 
             public WitherCage(JsonObject object) {
                 this.eyesKilled = new ArrayList<>();
-                JsonArray killedEyes = object.getAsJsonArray("killed_eyes");
+                JsonArray killedEyes = getAsJsonArray("killed_eyes", object);
                 for (JsonElement killedEye : killedEyes) {
                     eyesKilled.add(killedEye.getAsString());
                 }
@@ -793,16 +1183,16 @@ public class SkyblockUtil {
             }
         }
         public class BlackLagoon {
-            private final boolean talkedToEdwin;
-            private final boolean receivedSciencePaper;
-            private final int completedStep;
-            private final boolean deliveredSciencePaper;
+            private final Boolean talkedToEdwin;
+            private final Boolean receivedSciencePaper;
+            private final Integer completedStep;
+            private final Boolean deliveredSciencePaper;
 
             public BlackLagoon(JsonObject object) {
-                this.talkedToEdwin = object.get("talked_to_edwin").getAsBoolean();
-                this.receivedSciencePaper = object.get("received_science_paper").getAsBoolean();
-                this.completedStep = object.get("completed_step").getAsInt();
-                this.deliveredSciencePaper = object.get("delivered_science_paper").getAsBoolean();
+                this.talkedToEdwin = getAsBoolean("talked_to_edwin", object);
+                this.receivedSciencePaper = getAsBoolean("received_science_paper", object);
+                this.completedStep = getAsInteger("completed_step", object);
+                this.deliveredSciencePaper = getAsBoolean("delivered_science_paper", object);
             }
 
             public int getCompletedStep() {
@@ -822,22 +1212,22 @@ public class SkyblockUtil {
             }
         }
         public class DeadCats {
-            private final boolean talkedToJacquelle;
-            private final boolean pickedUpDetector;
+            private final Boolean talkedToJacquelle;
+            private final Boolean pickedUpDetector;
             private final List<String> foundCats;
-            private final boolean unlockedPet;
+            private final Boolean unlockedPet;
             private final Montezuma montezuma;
 
             public DeadCats(JsonObject object) {
-                this.talkedToJacquelle = object.get("talked_to_jacquelle").getAsBoolean();
-                this.pickedUpDetector = object.get("picked_up_detector").getAsBoolean();
+                this.talkedToJacquelle = getAsBoolean("talked_to_jacquelle", object);
+                this.pickedUpDetector = getAsBoolean("picked_up_detector", object);
                 this.foundCats = new ArrayList<>();
-                JsonArray foundCatsArray = object.getAsJsonArray("found_cats");
+                JsonArray foundCatsArray = getAsJsonArray("found_cats", object);
                 for (JsonElement foundCat : foundCatsArray) {
                     foundCats.add(foundCat.getAsString());
                 }
-                this.unlockedPet = object.get("unlocked_pet").getAsBoolean();
-                this.montezuma = new Montezuma(object.getAsJsonObject("montezuma"));
+                this.unlockedPet = getAsBoolean("unlocked_pet", object);
+                this.montezuma = new Montezuma(getAsJsonObject("montezuma", object));
             }
 
             public List<String> getFoundCats() {
@@ -861,27 +1251,27 @@ public class SkyblockUtil {
             }
 
             public class Montezuma {
-                private final UUID uuid; // ??
+                //private final UUID uuid; // ??
                 private final UUID uniqueID;
                 private final String type;
-                private final BigInteger exp;
-                private final boolean active;
+                private final Double exp;
+                private final Boolean active;
                 private final ItemRarity rarity;
                 //private final ItemStack heldItem;
-                private final int candyUsed;
+                private final Integer candyUsed;
                 //private final Skin skin;
 
                 public Montezuma(JsonObject object) {
-                    this.uuid = UUID.fromString(object.get("uuid").getAsString());
-                    this.type = object.get("type").getAsString();
-                    this.exp = object.get("exp").getAsBigInteger();
-                    this.active = object.get("active").getAsBoolean();
-                    this.candyUsed = object.get("candy_used").getAsInt();
-                    this.uniqueID = UUID.fromString(object.get("uniqueId").getAsString());
-                    this.rarity = ItemRarity.parseRarity(object.get("tier").getAsString());
+                    //this.uuid = fromString(getAsString("uuid", object));
+                    this.type = getAsString("type", object);
+                    this.exp = getAsDouble("exp", object);
+                    this.active = getAsBoolean("active", object);
+                    this.candyUsed = getAsInteger("candy_used", object);
+                    this.uniqueID = fromString(getAsString("uniqueId", object));
+                    this.rarity = ItemRarity.parseRarity(getAsString("tier", object));
                 }
 
-                public BigInteger getExp() {
+                public Double getExp() {
                     return exp;
                 }
 
@@ -897,10 +1287,6 @@ public class SkyblockUtil {
                     return type;
                 }
 
-                @Deprecated
-                public UUID getUuid() {
-                    return uuid;
-                }
 
                 public ItemRarity getRarity() {
                     return rarity;
@@ -912,12 +1298,12 @@ public class SkyblockUtil {
             }
         }
         public class WizardTower {
-            private final int wizardQuestStep;
-            private final int crumbsLaidOut;
+            private final Integer wizardQuestStep;
+            private final Integer crumbsLaidOut;
 
             public WizardTower(JsonObject object) {
-                this.wizardQuestStep = object.get("wizard_quest_step").getAsInt();
-                this.crumbsLaidOut = object.get("crumbs_laid_out").getAsInt();
+                this.wizardQuestStep = getAsInteger("wizard_quest_step", object);
+                this.crumbsLaidOut = getAsInteger("crumbs_laid_out", object);
             }
 
             public int getCrumbsLaidOut() {
@@ -929,15 +1315,15 @@ public class SkyblockUtil {
             }
         }
         public class Enigma {
-            private final boolean boughtCloak;
+            private final Boolean boughtCloak;
             private final List<String> foundSouls;
-            private final int claimedBonusIndex;
+            private final Integer claimedBonusIndex;
 
             public Enigma(JsonObject object) {
-                this.boughtCloak = object.get("bought_cloak").getAsBoolean();
-                this.claimedBonusIndex = object.get("claimed_bonus_index").getAsInt();
+                this.boughtCloak = getAsBoolean("bought_cloak", object);
+                this.claimedBonusIndex = getAsInteger("claimed_bonus_index", object);
                 this.foundSouls = new ArrayList<>();
-                JsonArray foundSoulsArray = object.getAsJsonArray("found_souls");
+                JsonArray foundSoulsArray = getAsJsonArray("found_souls", object);
                 for (JsonElement foundSoul : foundSoulsArray) {
                     foundSouls.add(foundSoul.getAsString());
                 }
@@ -955,19 +1341,19 @@ public class SkyblockUtil {
             }
         }
         public class Gallery {
-            private final int eliseStep;
+            private final Integer eliseStep;
             private final List<SecuredTrophy> securedTrophies;
             private final List<String> sentTrophyDialogues;
 
             public Gallery(JsonObject object) {
-                this.eliseStep = object.get("elise_step").getAsInt();
+                this.eliseStep = getAsInteger("elise_step", object);
                 this.securedTrophies = new ArrayList<>();
-                JsonArray securedTrophiesArray = object.getAsJsonArray("secured_trophies");
+                JsonArray securedTrophiesArray = getAsJsonArray("secured_trophies", object);
                 for (JsonElement securedTrophy : securedTrophiesArray) {
                     securedTrophies.add(new SecuredTrophy(securedTrophy.getAsJsonObject()));
                 }
                 this.sentTrophyDialogues = new ArrayList<>();
-                JsonArray sentTrophyDialoguesArray = object.getAsJsonArray("sent_trophy_dialogues");
+                JsonArray sentTrophyDialoguesArray = getAsJsonArray("sent_trophy_dialogues", object);
                 for (JsonElement jsonElement : sentTrophyDialoguesArray) {
                     sentTrophyDialogues.add(jsonElement.getAsString());
                 }
@@ -987,13 +1373,13 @@ public class SkyblockUtil {
 
             public class SecuredTrophy {
                 private final String type;
-                private final long timestamp;
-                private final int visits;
+                private final Long timestamp;
+                private final Integer visits;
 
                 public SecuredTrophy(JsonObject object) {
-                    this.type = object.get("type").getAsString();
-                    this.timestamp = object.get("timestamp").getAsLong();
-                    this.visits = object.get("visits").getAsInt();
+                    this.type = getAsString("type", object);
+                    this.timestamp = getAsLong("timestamp", object);
+                    this.visits = getAsInteger("visits", object);
                 }
 
                 public String getType() {
@@ -1016,10 +1402,10 @@ public class SkyblockUtil {
             private final Glyphs glyphs;
 
             public WestVillage(JsonObject object) {
-                this.mirrorVerse = new MirrorVerse(object.getAsJsonObject("mirrorverse"));
-                this.crazyKloon = new CrazyKloon(object.getAsJsonObject("crazy_kloon"));
-                this.katHouse = new KatHouse(object.getAsJsonObject("kat_house"));
-                this.glyphs = new Glyphs(object.getAsJsonObject("glyphs"));
+                this.mirrorVerse = new MirrorVerse(getAsJsonObject("mirrorverse", object));
+                this.crazyKloon = new CrazyKloon(getAsJsonObject("crazy_kloon", object));
+                this.katHouse = new KatHouse(getAsJsonObject("kat_house", object));
+                this.glyphs = new Glyphs(getAsJsonObject("glyphs", object));
             }
 
             public CrazyKloon getCrazyKloon() {
@@ -1040,20 +1426,20 @@ public class SkyblockUtil {
 
             public class MirrorVerse {
                 private final List<String> roomsVisited;
-                private final boolean upsideDownHard;
+                private final Boolean upsideDownHard;
                 private final List<String> claimedChestItems;
-                private final boolean claimedReward;
+                private final Boolean claimedReward;
 
                 public MirrorVerse(JsonObject object) {
                     this.roomsVisited = new ArrayList<>();
-                    this.upsideDownHard = object.get("upside_down_hard").getAsBoolean();
+                    this.upsideDownHard = getAsBoolean("upside_down_hard", object);
                     this.claimedChestItems = new ArrayList<>();
-                    this.claimedReward = object.get("claimed_reward").getAsBoolean();
-                    JsonArray visitedRoomsArray = object.getAsJsonArray("visited_rooms");
+                    this.claimedReward = getAsBoolean("claimed_reward", object);
+                    JsonArray visitedRoomsArray = getAsJsonArray("visited_rooms", object);
                     for (JsonElement visitedRoom : visitedRoomsArray) {
                         roomsVisited.add(visitedRoom.getAsString());
                     }
-                    JsonArray claimedChestItemsArray = object.getAsJsonArray("claimed_chest_items");
+                    JsonArray claimedChestItemsArray = getAsJsonArray("claimed_chest_items", object);
                     for (JsonElement claimedChestItem : claimedChestItemsArray) {
                         claimedChestItems.add(claimedChestItem.getAsString());
                     }
@@ -1077,24 +1463,24 @@ public class SkyblockUtil {
             }
             public class CrazyKloon {
                 private final HashMap<String, String> selectedColors;
-                private final boolean talked;
+                private final Boolean talked;
                 private final List<String> hackedTerminals;
-                private final boolean questComplete;
+                private final Boolean questComplete;
 
                 public CrazyKloon(JsonObject object) {
                     this.selectedColors = new HashMap<>();
-                    JsonObject selectedColorsMap = object.getAsJsonObject("selected_colors");
+                    JsonObject selectedColorsMap = getAsJsonObject("selected_colors", object);
                     for (Map.Entry<String, JsonElement> entry : selectedColorsMap.entrySet()) {
                         String string = entry.getKey();
-                        selectedColors.put(string, selectedColorsMap.get(string).getAsString());
+                        selectedColors.put(string, getAsString(string, selectedColorsMap));
                     }
-                    this.talked = object.get("talked").getAsBoolean();
+                    this.talked = getAsBoolean("talked", object);
                     this.hackedTerminals = new ArrayList<>();
-                    JsonArray hackedTerminalsArray = object.getAsJsonArray("hacked_terminals");
+                    JsonArray hackedTerminalsArray = getAsJsonArray("hacked_terminals", object);
                     for (JsonElement hackedTerminal : hackedTerminalsArray) {
                         hackedTerminals.add(hackedTerminal.getAsString());
                     }
-                    this.questComplete = object.get("quest_complete").getAsBoolean();
+                    this.questComplete = getAsBoolean("quest_complete", object);
                 }
 
                 public HashMap<String, String> getSelectedColors() {
@@ -1114,14 +1500,14 @@ public class SkyblockUtil {
                 }
             }
             public class KatHouse {
-                private final int binCollectedMosquito;
-                private final int binCollectedSilverfish;
-                private final int binCollectedSpider;
+                private final Integer binCollectedMosquito;
+                private final Integer binCollectedSilverfish;
+                private final Integer binCollectedSpider;
 
                 public KatHouse(JsonObject object) {
-                    this.binCollectedMosquito = object.get("bin_collected_mosquito").getAsInt();
-                    this.binCollectedSilverfish = object.get("bin_collected_silverfish").getAsInt();
-                    this.binCollectedSpider = object.get("bin_collected_spider").getAsInt();
+                    this.binCollectedMosquito = getAsInteger("bin_collected_mosquito", object);
+                    this.binCollectedSilverfish = getAsInteger("bin_collected_silverfish", object);
+                    this.binCollectedSpider = getAsInteger("bin_collected_spider", object);
                 }
 
                 public int getBinCollectedMosquito() {
@@ -1137,20 +1523,20 @@ public class SkyblockUtil {
                 }
             }
             public class Glyphs {
-                private final boolean claimedWand;
-                private final boolean currentGlyphDelivered;
-                private final boolean currentGlyphCompleted;
-                private final int currentGlyph;
-                private final boolean completed;
-                private final boolean claimedBracelet;
+                private final Boolean claimedWand;
+                private final Boolean currentGlyphDelivered;
+                private final Boolean currentGlyphCompleted;
+                private final Integer currentGlyph;
+                private final Boolean completed;
+                private final Boolean claimedBracelet;
 
                 public Glyphs(JsonObject object) {
-                    this.claimedWand = object.get("claimed_wand").getAsBoolean();
-                    this.currentGlyphDelivered = object.get("current_glyph_delivered").getAsBoolean();
-                    this.currentGlyphCompleted = object.get("current_glyph_completed").getAsBoolean();
-                    this.currentGlyph = object.get("current_glyph").getAsInt();
-                    this.completed = object.get("completed").getAsBoolean();
-                    this.claimedBracelet = object.get("claimed_bracelet").getAsBoolean();
+                    this.claimedWand = getAsBoolean("claimed_wand", object);
+                    this.currentGlyphDelivered = getAsBoolean("current_glyph_delivered", object);
+                    this.currentGlyphCompleted = getAsBoolean("current_glyph_completed", object);
+                    this.currentGlyph = getAsInteger("current_glyph", object);
+                    this.completed = getAsBoolean("completed", object);
+                    this.claimedBracelet = getAsBoolean("claimed_bracelet", object);
                 }
 
                 public boolean isClaimedBracelet() {
@@ -1180,23 +1566,23 @@ public class SkyblockUtil {
         }
         public class WyldWoods {
             private final List<String> talkedThreeBrothers;
-            private final boolean siriusStartedQA;
-            private final boolean siriusQAChainDone;
-            private final boolean siriusCompletedQA;
-            private final boolean siriusClaimedDoubloon;
-            private final int bughunter_step;
+            private final Boolean siriusStartedQA;
+            private final Boolean siriusQAChainDone;
+            private final Boolean siriusCompletedQA;
+            private final Boolean siriusClaimedDoubloon;
+            private final Integer bughunter_step;
 
             public WyldWoods(JsonObject object) {
                 this.talkedThreeBrothers = new ArrayList<>();
-                JsonArray talkedThreeBrothersArray = object.getAsJsonArray("talked_threebrothers");
+                JsonArray talkedThreeBrothersArray = getAsJsonArray("talked_threebrothers", object);
                 for (JsonElement jsonElement : talkedThreeBrothersArray) {
                     talkedThreeBrothers.add(jsonElement.getAsString());
                 }
-                this.siriusStartedQA = object.get("sirius_started_q_a").getAsBoolean();
-                this.siriusQAChainDone = object.get("sirius_q_a_chain_done").getAsBoolean();
-                this.siriusCompletedQA = object.get("sirius_completed_q_a").getAsBoolean();
-                this.siriusClaimedDoubloon = object.get("sirius_claimed_doubloon").getAsBoolean();
-                this.bughunter_step = object.get("bighunter_step").getAsInt();
+                this.siriusStartedQA = getAsBoolean("sirius_started_q_a", object);
+                this.siriusQAChainDone = getAsBoolean("sirius_q_a_chain_done", object);
+                this.siriusCompletedQA = getAsBoolean("sirius_completed_q_a", object);
+                this.siriusClaimedDoubloon = getAsBoolean("sirius_claimed_doubloon", object);
+                this.bughunter_step = getAsInteger("bighunter_step", object);
             }
 
             public int getBughunter_step() {
@@ -1224,14 +1610,14 @@ public class SkyblockUtil {
             }
         }
         public class Castle {
-            private final boolean unlockedPathwaySkip;
-            private final int fairyStep;
-            private final int grubberStacks;
+            private final Boolean unlockedPathwaySkip;
+            private final Integer fairyStep;
+            private final Integer grubberStacks;
 
             public Castle(JsonObject object) {
-                this.unlockedPathwaySkip = object.get("unlocked_pathway_skip").getAsBoolean();
-                this.fairyStep = object.get("fairy_step").getAsInt();
-                this.grubberStacks = object.get("grubber_stacks").getAsInt();
+                this.unlockedPathwaySkip = getAsBoolean("unlocked_pathway_skip", object);
+                this.fairyStep = getAsInteger("fairy_step", object);
+                this.grubberStacks = getAsInteger("grubber_stacks", object);
             }
 
             public int getFairyStep() {
@@ -1247,12 +1633,12 @@ public class SkyblockUtil {
             }
         }
         public class Access {
-            private final long lastFree;
-            private final boolean consumedPrism;
+            private final Long lastFree;
+            private final Boolean consumedPrism;
 
             public Access(JsonObject object) {
-                this.lastFree = object.get("last_free").getAsLong();
-                this.consumedPrism = object.get("consumed_prism").getAsBoolean();
+                this.lastFree = getAsLong("last_free", object);
+                this.consumedPrism = getAsBoolean("consumed_prism", object);
             }
 
             public long getLastFree() {
@@ -1265,13 +1651,13 @@ public class SkyblockUtil {
 
         }
         public class Dreadfarm {
-            private final int shaniaStage;
+            private final Integer shaniaStage;
             private final List<Long> caducousFeederUses;
 
             public Dreadfarm(JsonObject object) {
-                this.shaniaStage = object.get("shania_stage").getAsInt();
+                this.shaniaStage = getAsInteger("shania_stage", object);
                 this.caducousFeederUses = new ArrayList<>();
-                JsonArray caducousFeederUsesArray = object.getAsJsonArray("caducous_feeder_uses");
+                JsonArray caducousFeederUsesArray = getAsJsonArray("caducous_feeder_uses", object);
                 for (JsonElement jsonElement : caducousFeederUsesArray) {
                     caducousFeederUses.add(jsonElement.getAsLong());
                 }
@@ -1343,6 +1729,7 @@ public class SkyblockUtil {
         }
     }
 
+
     public class Inventory {
         private final EnderChestContents enderChestContents;
         private final InventoryContents inventoryContents;
@@ -1350,12 +1737,12 @@ public class SkyblockUtil {
         private final EquipmentContents equipmentContents;
 
         public class EnderChestContents {
-            private final int type;
+            private final Integer type;
             private final String data;
 
             public EnderChestContents(JsonObject object) {
-                this.type = object.get("type").getAsInt();
-                this.data = object.get("data").getAsString(); // TODO
+                this.type = getAsInteger("type", object);
+                this.data = getAsString("data", object); // TODO
             }
 
             public int getType() {
@@ -1368,12 +1755,12 @@ public class SkyblockUtil {
         }
         private final List<String> enderChestPageIcons;
         public class InventoryContents {
-            private final int type;
+            private final Integer type;
             private final String data;
 
             public InventoryContents(JsonObject object) {
-                this.type = object.get("type").getAsInt();
-                this.data = object.get("data").getAsString();// TODO
+                this.type = getAsInteger("type", object);
+                this.data = getAsString("data", object);// TODO
             }
 
             public String getData() {
@@ -1384,11 +1771,11 @@ public class SkyblockUtil {
             }
         }
         public class InventoryArmor {
-            private final int type;
+            private final Integer type;
             private final String data;
             public InventoryArmor(JsonObject object) {
-                this.type = object.get("type").getAsInt();
-                this.data = object.get("data").getAsString(); // TODO
+                this.type = getAsInteger("type", object);
+                this.data = getAsString("data", object); // TODO
             }
             public int getType() {
                 return type;
@@ -1398,11 +1785,11 @@ public class SkyblockUtil {
             }
         }
         public class EquipmentContents {
-            private final int type;
+            private final Integer type;
             private final String data;
             public EquipmentContents(JsonObject object) {
-                this.type = object.get("type").getAsInt();
-                this.data = object.get("data").getAsString(); // TODO
+                this.type = getAsInteger("type", object);
+                this.data = getAsString("data", object); // TODO
             }
             public int getType() {
                 return type;
@@ -1415,81 +1802,89 @@ public class SkyblockUtil {
 
         public Inventory(JsonObject object) {
             this.enderChestPageIcons = new ArrayList<>();
-            JsonArray enderChestPageIconsArray = object.getAsJsonArray("ender_chest_page_icons");
+            JsonArray enderChestPageIconsArray = getAsJsonArray("ender_chest_page_icons", object);
             for (JsonElement jsonElement : enderChestPageIconsArray) {
-                enderChestPageIcons.add(jsonElement.getAsString());
+                if (jsonElement.isJsonNull()) {
+                    enderChestPageIcons.add(null);
+                } else {
+                    if (jsonElement.isJsonPrimitive()) {
+                        if (jsonElement.getAsJsonPrimitive().isString()) {
+                            enderChestPageIcons.add(jsonElement.getAsString());
+                        }
+                    }
+                }
             }
-            this.enderChestContents = new EnderChestContents(object.getAsJsonObject("ender_chest_contents"));
-            this.inventoryContents = new InventoryContents(object.getAsJsonObject("inv_contents"));
-            this.inventoryArmor = new InventoryArmor(object.getAsJsonObject("inv_armor"));
-            this.equipmentContents = new EquipmentContents(object.getAsJsonObject("equipment_contents"));
+            this.enderChestContents = new EnderChestContents(getAsJsonObject("ender_chest_contents", object));
+            this.inventoryContents = new InventoryContents(getAsJsonObject("inv_contents", object));
+            this.inventoryArmor = new InventoryArmor(getAsJsonObject("inv_armor", object));
+            this.equipmentContents = new EquipmentContents(getAsJsonObject("equipment_contents", object));
         }
     }
 
     public class PlayerData {
         private final List<String> visitedZones;
-        private final long lastDeath;
+        private final Long lastDeath;
         private final HashMap<String, Integer> perks;
         //private final List<Effect> activeEffects; // TODO
         //private final List<Effect> pausedEffects; // TODO
-        private final int reaperPeppersEaten;
+        private final Integer reaperPeppersEaten;
         private final List<TempStatBuff> buffs;
-        private final int deathCount;
+        private final Integer deathCount;
         //private final List<Effect> disabledPotionEffects; // TODO
         private final List<String> achievementSpawnedIslandTypes;
         private final List<String> visitedModes;
         private final List<String> unlockedCollTiers;
         private final List<String> craftedGenerators;
-        private final int fishingTreasureCaught;
-        private final HashMap<String, BigInteger> experience;
+        private final Integer fishingTreasureCaught;
+        private final HashMap<String, Double> experience;
 
 
         public PlayerData(JsonObject object) {
             this.visitedZones = new ArrayList<>();
-            JsonArray visitedZonesArray = object.getAsJsonArray("visited_zones");
+            JsonArray visitedZonesArray = getAsJsonArray("visited_zones", object);
             for (JsonElement jsonElement : visitedZonesArray) {
                 visitedZones.add(jsonElement.getAsString());
             }
-            this.lastDeath = object.get("last_death").getAsLong();
+            this.lastDeath = getAsLong("last_death", object);
             this.perks = new HashMap<>();
-            JsonObject perksObject = object.getAsJsonObject("perks");
+            JsonObject perksObject = getAsJsonObject("perks", object);
             for (Map.Entry<String, JsonElement> entry : perksObject.entrySet()) {
                 String string = entry.getKey();
-                perks.put(string, perksObject.get(string).getAsInt());
+                perks.put(string, getAsInteger(string, perksObject));
             }
-            this.reaperPeppersEaten = object.get("reaper_peppers_eaten").getAsInt();
+            this.reaperPeppersEaten = getAsInteger("reaper_peppers_eaten", object);
             this.buffs = new ArrayList<>();
-            JsonArray buffsArray = object.getAsJsonArray("temp_stat_buffs");
+            JsonArray buffsArray = getAsJsonArray("temp_stat_buffs", object);
             for (JsonElement jsonElement : buffsArray) {
                 buffs.add(new TempStatBuff(jsonElement.getAsJsonObject()));
             }
-            this.deathCount = object.get("death_count").getAsInt();
+            this.deathCount = getAsInteger("death_count", object);
             this.achievementSpawnedIslandTypes = new ArrayList<>();
-            JsonArray achievementSpawnedIslandTypesArray = object.get("achievement_spawned_island_types").getAsJsonArray();
+            JsonArray achievementSpawnedIslandTypesArray = getAsJsonArray("achievement_spawned_island_types", object);
             for (JsonElement jsonElement : achievementSpawnedIslandTypesArray) {
                 achievementSpawnedIslandTypes.add(jsonElement.getAsString());
             }
             this.visitedModes = new ArrayList<>();
-            JsonArray visitedModesArray = object.get("visited_modes").getAsJsonArray();
+            JsonArray visitedModesArray = getAsJsonArray("visited_modes", object);
             for (JsonElement jsonElement : visitedModesArray) {
                 visitedModes.add(jsonElement.getAsString());
             }
             this.unlockedCollTiers = new ArrayList<>();
-            JsonArray unlockedCollTiersArray = object.get("unlocked_coll_tiers").getAsJsonArray();
+            JsonArray unlockedCollTiersArray = getAsJsonArray("unlocked_coll_tiers", object);
             for (JsonElement jsonElement : unlockedCollTiersArray) {
                 unlockedCollTiers.add(jsonElement.getAsString());
             }
             this.craftedGenerators = new ArrayList<>();
-            JsonArray craftedGeneratorsArray = object.get("crafted_generators").getAsJsonArray();
+            JsonArray craftedGeneratorsArray = getAsJsonArray("crafted_generators", object);
             for (JsonElement jsonElement : craftedGeneratorsArray) {
                 craftedGenerators.add(jsonElement.getAsString());
             }
-            this.fishingTreasureCaught = object.get("fishing_treasure_caught").getAsInt();
+            this.fishingTreasureCaught = getAsInteger("fishing_treasure_caught", object);
             this.experience = new HashMap<>();
-            JsonObject experienceObject = object.getAsJsonObject("experience");
+            JsonObject experienceObject = getAsJsonObject("experience", object);
             for (Map.Entry<String, JsonElement> entry : experienceObject.entrySet()) {
                 String string = entry.getKey();
-                experience.put(string, experienceObject.get(string).getAsBigInteger());
+                experience.put(string, getAsDouble(string, experienceObject));
             }
 
         }
@@ -1500,30 +1895,30 @@ public class SkyblockUtil {
     public class Dungeons {
         private final Catacombs catacombs;
         private final Catacombs masterCatacombs;
-        private final HashMap<String, BigInteger> playerClasses;
+        private final HashMap<String, Double> playerClasses;
         private final List<String> unlockedJournals;
         private final List<String> dungeonsBlahBlah;
 
         private final DailyRuns dailyRuns;
 
         public Dungeons(JsonObject object) {
-            JsonObject typeObject = object.getAsJsonObject("dungeon_types");
-            this.catacombs = new Catacombs(typeObject.get("catacombs").getAsJsonObject(), false);
-            this.masterCatacombs = new Catacombs(typeObject.get("master_catacombs").getAsJsonObject(), true);
+            JsonObject typeObject = getAsJsonObject("dungeon_types", object);
+            this.catacombs = new Catacombs(getAsJsonObject("catacombs", typeObject), false);
+            this.masterCatacombs = new Catacombs(getAsJsonObject("master_catacombs", typeObject), true);
             this.playerClasses = new HashMap<>();
-            JsonObject playerClassesObject = object.getAsJsonObject("player_classes");
+            JsonObject playerClassesObject = getAsJsonObject("player_classes", object);
             for (Map.Entry<String, JsonElement> entry  : playerClassesObject.entrySet()) {
                 String string = entry.getKey();
-                playerClasses.put(string, playerClassesObject.get(string).getAsBigInteger());
+                playerClasses.put(string, getAsDouble(string, playerClassesObject));
             }
             this.unlockedJournals = new ArrayList<>();
             this.dungeonsBlahBlah = new ArrayList<>();
-            this.dailyRuns = new DailyRuns(object.getAsJsonObject("daily_runs"));
-            JsonArray unlockedJournalsArray = object.getAsJsonObject("dungeon_journal").get("unlocked_journals").getAsJsonArray();
+            this.dailyRuns = new DailyRuns(getAsJsonObject("daily_runs", object));
+            JsonArray unlockedJournalsArray = getAsJsonArray("unlocked_journals", getAsJsonObject("dungeon_journal", object));
             for (JsonElement jsonElement : unlockedJournalsArray) {
                 unlockedJournals.add(jsonElement.getAsString());
             }
-            JsonArray dungeonsBlahBlahArray = object.getAsJsonArray("dungeons_blah_blah");
+            JsonArray dungeonsBlahBlahArray = getAsJsonArray("dungeons_blah_blah", object);
             for (JsonElement jsonElement : dungeonsBlahBlahArray) {
                 dungeonsBlahBlah.add(jsonElement.getAsString());
             }
@@ -1541,7 +1936,7 @@ public class SkyblockUtil {
             return dailyRuns;
         }
 
-        public HashMap<String, BigInteger> getPlayerClasses() {
+        public HashMap<String, Double> getPlayerClasses() {
             return playerClasses;
         }
 
@@ -1555,12 +1950,12 @@ public class SkyblockUtil {
         // TODO line 8991
 
         public class DailyRuns {
-            private final int currentDayStamp;
-            private final int completedRunsCount;
+            private final Integer currentDayStamp;
+            private final Integer completedRunsCount;
 
             public DailyRuns(JsonObject object) {
-                this.currentDayStamp = object.get("current_day_stamp").getAsInt();
-                this.completedRunsCount = object.get("completed_runs_count").getAsInt();
+                this.currentDayStamp = getAsInteger("current_day_stamp", object);
+                this.completedRunsCount = getAsInteger("completed_runs_count", object);
             }
 
             public int getCompletedRunsCount() {
@@ -1590,110 +1985,110 @@ public class SkyblockUtil {
             private final HashMap<String, Float> mostMobsKilled;
             private final HashMap<String, Float> timesPlayed;
             private final HashMap<String, Float> milestoneCompletions;
-            private final BigInteger experience;
+            private final Double experience;
             private final HashMap<String, List<BestRun>> bestRuns;
-            private final boolean master;
+            private final Boolean master;
 
             public Catacombs(JsonObject object, boolean master) {
                 this.mobsKilled = new HashMap<>();
-                JsonObject mobsKilledObject = object.getAsJsonObject("mobs_killed");
+                JsonObject mobsKilledObject = getAsJsonObject("mobs_killed", object);
                 for (Map.Entry<String, JsonElement> entry : mobsKilledObject.entrySet()) {
                     String string = entry.getKey();
-                    mobsKilled.put(string, mobsKilledObject.get(string).getAsFloat());
+                    mobsKilled.put(string, getAsFloat(string, mobsKilledObject));
                 }
                 this.fastestTimeS = new HashMap<>();
-                JsonObject fastestTimeSObject = object.getAsJsonObject("fastest_time_s");
+                JsonObject fastestTimeSObject = getAsJsonObject("fastest_time_s", object);
                 for (Map.Entry<String, JsonElement> entry : fastestTimeSObject.entrySet()) {
                     String string = entry.getKey();
-                    fastestTimeS.put(string, fastestTimeSObject.get(string).getAsFloat());
+                    fastestTimeS.put(string, getAsFloat(string, fastestTimeSObject));
                 }
                 this.mostDamageTank = new HashMap<>();
-                JsonObject mostDamageTankObject = object.getAsJsonObject("most_damage_tank");
+                JsonObject mostDamageTankObject = getAsJsonObject("most_damage_tank", object);
                 for (Map.Entry<String, JsonElement> entry : mostDamageTankObject.entrySet()) {
                     String string = entry.getKey();
-                    mostDamageTank.put(string, mostDamageTankObject.get(string).getAsFloat());
+                    mostDamageTank.put(string, getAsFloat(string, mostDamageTankObject));
                 }
                 this.fastestTime = new HashMap<>();
-                JsonObject fastestTimeObject = object.getAsJsonObject("fastest_time");
+                JsonObject fastestTimeObject = getAsJsonObject("fastest_time", object);
                 for (Map.Entry<String, JsonElement> entry : fastestTimeObject.entrySet()) {
                     String string = entry.getKey();
-                    fastestTime.put(string, fastestTimeObject.get(string).getAsFloat());
+                    fastestTime.put(string, getAsFloat(string, fastestTimeObject));
                 }
                 this.mostDamageMage = new HashMap<>();
-                JsonObject mostDamageMageObject = object.getAsJsonObject("most_damage_mage");
+                JsonObject mostDamageMageObject = getAsJsonObject("most_damage_mage", object);
                 for (Map.Entry<String, JsonElement> entry : mostDamageMageObject.entrySet()) {
                     String string = entry.getKey();
-                    mostDamageMage.put(string, mostDamageMageObject.get(string).getAsFloat());
+                    mostDamageMage.put(string, getAsFloat(string, mostDamageMageObject));
                 }
                 this.tierCompletions = new HashMap<>();
-                JsonObject tierCompletionsObject = object.getAsJsonObject("tier_completions");
+                JsonObject tierCompletionsObject = getAsJsonObject("tier_completions", object);
                 for (Map.Entry<String, JsonElement> entry : tierCompletionsObject.entrySet()) {
                     String string = entry.getKey();
-                    tierCompletions.put(string, tierCompletionsObject.get(string).getAsFloat());
+                    tierCompletions.put(string, getAsFloat(string, tierCompletionsObject));
                 }
                 this.mostDamageHealer = new HashMap<>();
-                JsonObject mostDamageHealerObject = object.getAsJsonObject("most_damage_healer");
+                JsonObject mostDamageHealerObject = getAsJsonObject("most_damage_healer", object);
                 for (Map.Entry<String, JsonElement> entry : mostDamageHealerObject.entrySet()) {
                     String string = entry.getKey();
-                    mostDamageHealer.put(string, mostDamageHealerObject.get(string).getAsFloat());
+                    mostDamageHealer.put(string, getAsFloat(string, mostDamageHealerObject));
                 }
                 this.mostDamageArcher = new HashMap<>();
-                JsonObject mostDamageArcherObject = object.getAsJsonObject("most_damage_archer");
+                JsonObject mostDamageArcherObject = getAsJsonObject("most_damage_archer", object);
                 for (Map.Entry<String, JsonElement> entry : mostDamageArcherObject.entrySet()) {
                     String string = entry.getKey();
-                    mostDamageArcher.put(string, mostDamageArcherObject.get(string).getAsFloat());
+                    mostDamageArcher.put(string, getAsFloat(string, mostDamageArcherObject));
                 }
                 this.watcherKills = new HashMap<>();
-                JsonObject watcherKillsObject = object.getAsJsonObject("watcher_kills");
+                JsonObject watcherKillsObject = getAsJsonObject("watcher_kills", object);
                 for (Map.Entry<String, JsonElement> entry : watcherKillsObject.entrySet()) {
                     String string = entry.getKey();
-                    watcherKills.put(string, watcherKillsObject.get(string).getAsFloat());
+                    watcherKills.put(string, getAsFloat(string, watcherKillsObject));
                 }
                 this.mostHealing = new HashMap<>();
-                JsonObject mostHealingObject = object.getAsJsonObject("most_healing");
+                JsonObject mostHealingObject = getAsJsonObject("most_healing", object);
                 for (Map.Entry<String, JsonElement> entry : mostHealingObject.entrySet()) {
                     String string = entry.getKey();
-                    mostHealing.put(string, mostHealingObject.get(string).getAsFloat());
+                    mostHealing.put(string, getAsFloat(string, mostHealingObject));
                 }
                 this.bestScore = new HashMap<>();
-                JsonObject bestScoreObject = object.getAsJsonObject("best_score");
+                JsonObject bestScoreObject = getAsJsonObject("best_score", object);
                 for (Map.Entry<String, JsonElement> entry : bestScoreObject.entrySet()) {
                     String string = entry.getKey();
-                    bestScore.put(string, bestScoreObject.get(string).getAsFloat());
+                    bestScore.put(string, getAsFloat(string, bestScoreObject));
                 }
                 this.mostDamageBerserk = new HashMap<>();
-                JsonObject mostDamageBerserkObject = object.getAsJsonObject("most_damage_berserk");
+                JsonObject mostDamageBerserkObject = getAsJsonObject("most_damage_berserk", object);
                 for (Map.Entry<String, JsonElement> entry : mostDamageBerserkObject.entrySet()) {
                     String string = entry.getKey();
-                    mostDamageBerserk.put(string, mostDamageBerserkObject.get(string).getAsFloat());
+                    mostDamageBerserk.put(string, getAsFloat(string, mostDamageBerserkObject));
                 }
                 this.fastestTimeSPlus = new HashMap<>();
-                JsonObject fastestTimeSPlusObject = object.getAsJsonObject("fastest_time_s_plus");
+                JsonObject fastestTimeSPlusObject = getAsJsonObject("fastest_time_s_plus", object);
                 for (Map.Entry<String, JsonElement> entry : fastestTimeSPlusObject.entrySet()) {
                     String string = entry.getKey();
-                    fastestTimeSPlus.put(string, fastestTimeSPlusObject.get(string).getAsFloat());
+                    fastestTimeSPlus.put(string, getAsFloat(string, fastestTimeSPlusObject));
                 }
                 this.mostMobsKilled = new HashMap<>();
-                JsonObject mostMobsKilledObject = object.getAsJsonObject("most_mobs_killed");
+                JsonObject mostMobsKilledObject = getAsJsonObject("most_mobs_killed", object);
                 for (Map.Entry<String, JsonElement> entry : mostMobsKilledObject.entrySet()) {
                     String string = entry.getKey();
-                    mostMobsKilled.put(string, mostMobsKilledObject.get(string).getAsFloat());
+                    mostMobsKilled.put(string, getAsFloat(string, mostMobsKilledObject));
                 }
                 this.timesPlayed = new HashMap<>();
-                JsonObject timesPlayedObject = object.getAsJsonObject("times_played");
+                JsonObject timesPlayedObject = getAsJsonObject("times_played", object);
                 for (Map.Entry<String, JsonElement> entry : timesPlayedObject.entrySet()) {
                     String string = entry.getKey();
-                    timesPlayed.put(string, timesPlayedObject.get(string).getAsFloat());
+                    timesPlayed.put(string, getAsFloat(string, timesPlayedObject));
                 }
                 this.milestoneCompletions = new HashMap<>();
-                JsonObject milestoneCompletionsObject = object.getAsJsonObject("milestone_completions");
+                JsonObject milestoneCompletionsObject = getAsJsonObject("milestone_completions", object);
                 for (Map.Entry<String, JsonElement> entry : milestoneCompletionsObject.entrySet()) {
                     String string = entry.getKey();
-                    milestoneCompletions.put(string, milestoneCompletionsObject.get(string).getAsFloat());
+                    milestoneCompletions.put(string, getAsFloat(string, milestoneCompletionsObject));
                 }
-                this.experience = object.get("experience").getAsBigInteger();
+                this.experience = getAsDouble("experience", object);
                 this.bestRuns = new HashMap<>();
-                JsonObject bestRunsObject = object.getAsJsonObject("best_runs");
+                JsonObject bestRunsObject = getAsJsonObject("best_runs", object);
                 for (Map.Entry<String, JsonElement> entry : bestRunsObject.entrySet()) {
                     String string = entry.getKey();
                     bestRuns.put(string, new ArrayList<>());
@@ -1705,7 +2100,7 @@ public class SkyblockUtil {
                 this.master = master;
             }
 
-            public BigInteger getExperience() {
+            public Double getExperience() {
                 return experience;
             }
 
@@ -1767,40 +2162,40 @@ public class SkyblockUtil {
             }
 
             public class BestRun {
-                private final long timeStamp;
-                private final int scoreExploration;
-                private final int scoreSpeed;
-                private final int scoreSkill;
-                private final int scoreBonus;
+                private final Long timeStamp;
+                private final Integer scoreExploration;
+                private final Integer scoreSpeed;
+                private final Integer scoreSkill;
+                private final Integer scoreBonus;
                 private final String dungeonClass;
                 private final List<String> teammates;
-                private final int elapsedTime;
-                private final double damageDealt;
-                private final int deaths;
-                private final int mobsKilled;
-                private final int secretsFound;
-                private final int damageMitigated;
-                private final int allyHealing;
+                private final Integer elapsedTime;
+                private final Double damageDealt;
+                private final Integer deaths;
+                private final Integer mobsKilled;
+                private final Integer secretsFound;
+                private final Integer damageMitigated;
+                private final Integer allyHealing;
 
                 public BestRun(JsonObject object) {
-                    this.timeStamp = object.get("time_stamp").getAsLong();
-                    this.scoreExploration = object.get("score_exploration").getAsInt();
-                    this.scoreSpeed = object.get("score_speed").getAsInt();
-                    this.scoreSkill = object.get("score_skill").getAsInt();
-                    this.scoreBonus = object.get("score_bonus").getAsInt();
-                    this.dungeonClass = object.get("dungeon_class").getAsString();
+                    this.timeStamp = getAsLong("time_stamp", object);
+                    this.scoreExploration = getAsInteger("score_exploration", object);
+                    this.scoreSpeed = getAsInteger("score_speed", object);
+                    this.scoreSkill = getAsInteger("score_skill", object);
+                    this.scoreBonus = getAsInteger("score_bonus", object);
+                    this.dungeonClass = getAsString("dungeon_class", object);
                     this.teammates = new ArrayList<>();
-                    JsonArray teammatesArray = object.getAsJsonArray("teammates");
+                    JsonArray teammatesArray = getAsJsonArray("teammates", object);
                     for (JsonElement jsonElement : teammatesArray) {
                         teammates.add(jsonElement.getAsString());
                     }
-                    this.elapsedTime = object.get("elapsed_time").getAsInt();
-                    this.damageDealt = object.get("damage_dealt").getAsDouble();
-                    this.deaths = object.get("deaths").getAsInt();
-                    this.mobsKilled = object.get("mobs_killed").getAsInt();
-                    this.secretsFound = object.get("secrets_found").getAsInt();
-                    this.damageMitigated = object.get("damage_mitigated").getAsInt();
-                    this.allyHealing = object.get("ally_healing").getAsInt();
+                    this.elapsedTime = getAsInteger("elapsed_time", object);
+                    this.damageDealt = getAsDouble("damage_dealt", object);
+                    this.deaths = getAsInteger("deaths", object);
+                    this.mobsKilled = getAsInteger("mobs_killed", object);
+                    this.secretsFound = getAsInteger("secrets_found", object);
+                    this.damageMitigated = getAsInteger("damage_mitigated", object);
+                    this.allyHealing = getAsInteger("ally_healing", object);
                 }
 
                 public double getDamageDealt() {
@@ -1863,18 +2258,18 @@ public class SkyblockUtil {
 
     }
     public class Currencies {
-        private final double coinPurse;
-        private final double motesPurse;
+        private final Double coinPurse;
+        private final Double motesPurse;
         private final HashMap<String, Integer> essence;
 
         public Currencies(JsonObject object) {
-            this.coinPurse = object.get("coin_purse").getAsDouble();
-            this.motesPurse = object.get("motes_purse").getAsDouble();
+            this.coinPurse = getAsDouble("coin_purse", object);
+            this.motesPurse = getAsDouble("motes_purse", object);
             this.essence = new HashMap<>();
-            JsonObject essenceObject = object.getAsJsonObject("essence");
+            JsonObject essenceObject = getAsJsonObject("essence", object);
             for (Map.Entry<String, JsonElement> entry : essenceObject.entrySet()) {
                 String string = entry.getKey();
-                essence.put(string, essenceObject.getAsJsonObject(string).get("current").getAsInt());
+                essence.put(string, getAsInteger("current", getAsJsonObject(string, essenceObject)));
             }
         }
 
@@ -1894,32 +2289,32 @@ public class SkyblockUtil {
         private final HashMap<String, Integer> medalsInv;
         private final HashMap<String, Integer> perks;
         private final List<JacobsContestData> jacobsContestDataList;
-        private final boolean talked;
+        private final Boolean talked;
         private final HashMap<String, List<String>> uniqueBrackets;
-        private final boolean migration;
+        private final Boolean migration;
         private final HashMap<String, Integer> personalBests;
 
         public JacobsContest(JsonObject object) {
             this.medalsInv = new HashMap<>();
-            JsonObject medalsInvObject = object.getAsJsonObject("medals_inv");
+            JsonObject medalsInvObject = getAsJsonObject("medals_inv", object);
             for (Map.Entry<String, JsonElement> entry: medalsInvObject.entrySet()) {
                 String string = entry.getKey();
-                medalsInv.put(string, medalsInvObject.get(string).getAsInt());
+                medalsInv.put(string, getAsInteger(string, medalsInvObject));
             }
             this.perks = new HashMap<>();
-            JsonObject perksObject = object.getAsJsonObject("perks");
+            JsonObject perksObject = getAsJsonObject("perks", object);
             for (Map.Entry<String, JsonElement> entry: perksObject.entrySet()) {
                 String string = entry.getKey();
-                perks.put(string, perksObject.get(string).getAsInt());
+                perks.put(string, getAsInteger(string, perksObject));
             }
             this.jacobsContestDataList = new ArrayList<>();
-            JsonArray jacobsContestDataListArray = object.getAsJsonArray("contests");
+            JsonArray jacobsContestDataListArray = getAsJsonArray("contests", object);
             for (JsonElement jsonElement : jacobsContestDataListArray) {
                 JsonObject contestObject = jsonElement.getAsJsonObject();
             }
-            this.talked = object.get("talked").getAsBoolean();
+            this.talked = getAsBoolean("talked", object);
             this.uniqueBrackets = new HashMap<>();
-            JsonObject uniqueBracketsObject = object.getAsJsonObject("unique_brackets");
+            JsonObject uniqueBracketsObject = getAsJsonObject("unique_brackets", object);
             for (Map.Entry<String, JsonElement> entry: uniqueBracketsObject.entrySet()) {
                 String string = entry.getKey();
                 uniqueBrackets.put(string, new ArrayList<>());
@@ -1928,12 +2323,12 @@ public class SkyblockUtil {
                     uniqueBrackets.get(string).add(jsonElement.getAsString());
                 }
             }
-            this.migration = object.get("migration").getAsBoolean();
+            this.migration = getAsBoolean("migration", object);
             this.personalBests = new HashMap<>();
-            JsonObject personalBestsObject = object.getAsJsonObject("personal_bests");
+            JsonObject personalBestsObject = getAsJsonObject("personal_bests", object);
             for (Map.Entry<String, JsonElement> entry : personalBestsObject.entrySet()) {
                 String string = entry.getKey();
-                personalBests.put(string, personalBestsObject.get(string).getAsInt());
+                personalBests.put(string, getAsInteger(string, personalBestsObject));
             }
         }
 
@@ -1966,18 +2361,18 @@ public class SkyblockUtil {
         }
 
         public class JacobsContestData {
-            private final int collected;
+            private final Integer collected;
             private final Boolean claimedRewards;
-            private final int claimedPosition;
+            private final Integer claimedPosition;
             private final String claimedMedal;
-            private final int claimedParticipants;
+            private final Integer claimedParticipants;
 
             public JacobsContestData(JsonObject object) {
-                this.collected = object.get("collected").getAsInt();
-                this.claimedParticipants = object.get("claimed_participants").getAsInt();
-                this.claimedMedal = object.get("claimed_medal").getAsString();
-                this.claimedPosition = object.get("claimed_position").getAsInt();
-                this.claimedRewards = object.get("claimed_rewards").getAsBoolean();
+                this.collected = getAsInteger("collected", object);
+                this.claimedParticipants = getAsInteger("claimed_participants", object);
+                this.claimedMedal = getAsString("claimed_medal", object);
+                this.claimedPosition = getAsInteger("claimed_position", object);
+                this.claimedRewards = getAsBoolean("claimed_rewards", object);
             }
 
             public Boolean getClaimedRewards() {
@@ -2002,11 +2397,11 @@ public class SkyblockUtil {
         }
     }
     public class ItemData {
-        private final int soulflow;
-        private final int favoriteArrow;
+        private final Integer soulflow;
+        private final Integer favoriteArrow;
         public ItemData(JsonObject object) {
-            this.soulflow = object.get("soulflow").getAsInt();
-            this.favoriteArrow = object.get("favorite_arrow").getAsInt();
+            this.soulflow = getAsInteger("soulflow", object);
+            this.favoriteArrow = getAsInteger("favorite_arrow", object);
         }
 
         public int getFavoriteArrow() {
@@ -2018,61 +2413,61 @@ public class SkyblockUtil {
         }
     }
     public class Levelling {
-        private final int experience;
+        private final Integer experience;
         private final HashMap<String, Integer> completions;
         private final List<String> completed;
-        private final boolean migratedCompletions;
+        private final Boolean migratedCompletions;
         private final List<String> completedTasks;
         private final String highestPetScore;
-        private final int miningFiestaOresMined;
-        private final int fishingFestivalSharksKilled;
-        private final boolean migrated;
-        private final boolean migratedCompletions2;
+        private final Integer miningFiestaOresMined;
+        private final Integer fishingFestivalSharksKilled;
+        private final Boolean migrated;
+        private final Boolean migratedCompletions2;
         private final List<String> lastViewedTasks;
-        private final boolean claimedTalisman;
+        private final Boolean claimedTalisman;
         private final String bopBonus;
-        private final boolean categoryExpanded;
+        private final Boolean categoryExpanded;
         private final List<String> emblemUnlocks;
         private final String taskSort;
 
         public Levelling(JsonObject object) {
-            this.experience = object.get("experience").getAsInt();
+            this.experience = getAsInteger("experience", object);
             this.completions = new HashMap<>();
-            JsonObject completionsObject = object.getAsJsonObject("completions");
+            JsonObject completionsObject = getAsJsonObject("completions", object);
             for (Map.Entry<String, JsonElement> entry : completionsObject.entrySet()) {
                 String string = entry.getKey();
-                completions.put(string, completionsObject.get(string).getAsInt());
+                completions.put(string, getAsInteger(string, completionsObject));
             }
             this.completed = new ArrayList<>();
-            JsonArray completedArray = object.getAsJsonArray("completed");
+            JsonArray completedArray = getAsJsonArray("completed", object);
             for (JsonElement jsonElement : completedArray) {
                 completed.add(jsonElement.getAsString());
             }
-            this.migratedCompletions = object.get("migrated_completions").getAsBoolean();
+            this.migratedCompletions = getAsBoolean("migrated_completions", object);
             this.completedTasks = new ArrayList<>();
-            JsonArray completedTasksArray = object.getAsJsonArray("completed_tasks");
+            JsonArray completedTasksArray = getAsJsonArray("completed_tasks", object);
             for (JsonElement jsonElement : completedTasksArray) {
                 completedTasks.add(jsonElement.getAsString());
             }
-            this.highestPetScore = object.get("highest_pet_score").getAsString();
-            this.miningFiestaOresMined = object.get("mining_fiesta_ores_mined").getAsInt();
-            this.fishingFestivalSharksKilled = object.get("fishing_festival_sharks_killed").getAsInt();
-            this.migrated = object.get("migrated").getAsBoolean();
-            this.migratedCompletions2 = object.get("migrated_completions2").getAsBoolean();
+            this.highestPetScore = getAsString("highest_pet_score", object);
+            this.miningFiestaOresMined = getAsInteger("mining_fiesta_ores_mined", object);
+            this.fishingFestivalSharksKilled = getAsInteger("fishing_festival_sharks_killed", object);
+            this.migrated = getAsBoolean("migrated", object);
+            this.migratedCompletions2 = getAsBoolean("migrated_completions2", object);
             this.lastViewedTasks = new ArrayList<>();
-            JsonArray lastViewedTasksArray = object.getAsJsonArray("last_viewed_tasks");
+            JsonArray lastViewedTasksArray = getAsJsonArray("last_viewed_tasks", object);
             for (JsonElement jsonElement : lastViewedTasksArray) {
                 lastViewedTasks.add(jsonElement.getAsString());
             }
-            this.claimedTalisman = object.get("claimed_talisman").getAsBoolean();
-            this.bopBonus = object.get("bop_bonus").getAsString();
-            this.categoryExpanded = object.get("category_expanded").getAsBoolean();
+            this.claimedTalisman = getAsBoolean("claimed_talisman", object);
+            this.bopBonus = getAsString("bop_bonus", object);
+            this.categoryExpanded = getAsBoolean("category_expanded", object);
             this.emblemUnlocks = new ArrayList<>();
-            JsonArray emblemUnlocksArray = object.getAsJsonArray("emblem_unlocks");
+            JsonArray emblemUnlocksArray = getAsJsonArray("emblem_unlocks", object);
             for (JsonElement jsonElement : emblemUnlocksArray) {
                 emblemUnlocks.add(jsonElement.getAsString());
             }
-            this.taskSort = object.get("task_sort").getAsString();
+            this.taskSort = getAsString("task_sort", object);
         }
 
         public HashMap<String, Integer> getCompletions() {
@@ -2143,19 +2538,19 @@ public class SkyblockUtil {
         private final Tuning tuning;
         private final String selectedPower;
         private final List<String> unlockedPowers;
-        private final int bagUpgradesPurchased;
-        private final int highestMagicalPower;
+        private final Integer bagUpgradesPurchased;
+        private final Integer highestMagicalPower;
 
         public AccessoryBagStorage(JsonObject object) {
-            this.tuning = new Tuning(object.getAsJsonObject("tuning"));
-            this.selectedPower = object.getAsJsonPrimitive("selected_power").getAsString();
-            this.bagUpgradesPurchased = object.getAsJsonPrimitive("bag_upgrades_purchased").getAsInt();
+            this.tuning = new Tuning(getAsJsonObject("tuning", object));
+            this.selectedPower = getAsString("selected_power", object);
+            this.bagUpgradesPurchased = getAsInteger("bag_upgrades_purchased", object);
             this.unlockedPowers = new ArrayList<>();
-            JsonArray unlockedPowersArray = object.getAsJsonArray("unlocked_powers");
+            JsonArray unlockedPowersArray = getAsJsonArray("unlocked_powers", object);
             for (JsonElement jsonElement : unlockedPowersArray) {
                 unlockedPowers.add(jsonElement.getAsString());
             }
-            this.highestMagicalPower = object.getAsJsonPrimitive("highest_magical_power").getAsInt();
+            this.highestMagicalPower = getAsInteger("highest_magical_power", object);
         }
 
         public int getBagUpgradesPurchased() {
@@ -2182,10 +2577,10 @@ public class SkyblockUtil {
             private final HashMap<String, Integer> slot0;
             public Tuning(JsonObject object) {
                 this.slot0 = new HashMap<>();
-                JsonObject slot0Object = object.getAsJsonObject("slot_0");
+                JsonObject slot0Object = getAsJsonObject("slot_0", object);
                 for (Map.Entry<String, JsonElement> entry : slot0Object.entrySet()) {
                     String string = entry.getKey();
-                    slot0.put(string, slot0Object.get(string).getAsInt());
+                    slot0.put(string, getAsInteger(string, slot0Object));
                 }
             }
 
@@ -2197,19 +2592,19 @@ public class SkyblockUtil {
     }
     public class PetsData {
         public class PetCare {
-            private final BigInteger coinsSpent;
+            private final Double coinsSpent;
             private final List<String> petTypesSacrificed;
 
             public PetCare(JsonObject object) {
-                this.coinsSpent = object.get("coins_spent").getAsBigInteger();
+                this.coinsSpent = getAsDouble("coins_spent", object);
                 this.petTypesSacrificed = new ArrayList<>();
-                JsonArray petTypesSacrificedArray = object.getAsJsonArray("pet_types_sacrificed");
+                JsonArray petTypesSacrificedArray = getAsJsonArray("pet_types_sacrificed", object);
                 for (JsonElement jsonElement : petTypesSacrificedArray) {
                     petTypesSacrificed.add(jsonElement.getAsString());
                 }
             }
 
-            public BigInteger getCoinsSpent() {
+            public Double getCoinsSpent() {
                 return coinsSpent;
             }
 
@@ -2218,20 +2613,20 @@ public class SkyblockUtil {
             }
         }
         public class AutoPet {
-            private final int rulesLimit;
+            private final Integer rulesLimit;
             private final List<AutoPetRule> autoPetRules;
-            private final boolean migrated;
-            private final boolean migrated2;
+            private final Boolean migrated;
+            private final Boolean migrated2;
 
             public AutoPet(JsonObject object) {
-                this.rulesLimit = object.get("rules_limit").getAsInt();
+                this.rulesLimit = getAsInteger("rules_limit", object);
                 this.autoPetRules = new ArrayList<>();
-                JsonArray autoPetRulesArray = object.getAsJsonArray("rules");
+                JsonArray autoPetRulesArray = getAsJsonArray("rules", object);
                 for (JsonElement jsonElement : autoPetRulesArray) {
                     autoPetRules.add(new AutoPetRule(jsonElement.getAsJsonObject()));
                 }
-                this.migrated = object.get("migrated").getAsBoolean();
-                this.migrated2 = object.get("migrated_2").getAsBoolean();
+                this.migrated = getAsBoolean("migrated", object);
+                this.migrated2 = getAsBoolean("migrated_2", object);
 
             }
 
@@ -2257,24 +2652,24 @@ public class SkyblockUtil {
                 private final String name;
                 private final UUID uniqueID;
                 private final List<AutoPetRuleException> autoPetRuleExceptions;
-                private final boolean disabled;
+                private final Boolean disabled;
                 private final HashMap<String, String> data;
                 public AutoPetRule(JsonObject object) {
-                    this.uuid = UUID.fromString(object.get("uuid").getAsString());
-                    this.id = object.get("id").getAsString();
-                    this.name = object.get("name").getAsString();
-                    this.uniqueID = UUID.fromString(object.get("uniqueId").getAsString());
+                    this.uuid = fromString(getAsString("uuid", object));
+                    this.id = getAsString("id", object);
+                    this.name = getAsString("name", object);
+                    this.uniqueID = fromString(getAsString("uniqueId", object));
                     this.autoPetRuleExceptions = new ArrayList<>();
-                    JsonArray autoPetRuleExceptionsArray = object.getAsJsonArray("exceptions");
+                    JsonArray autoPetRuleExceptionsArray = getAsJsonArray("exceptions", object);
                     for (JsonElement jsonElement : autoPetRuleExceptionsArray) {
                         autoPetRuleExceptions.add(new AutoPetRuleException(jsonElement.getAsJsonObject()));
                     }
-                    this.disabled = object.get("disabled").getAsBoolean();
+                    this.disabled = getAsBoolean("disabled", object);
                     this.data = new HashMap<>();
-                    JsonObject dataObject = object.getAsJsonObject("data");
+                    JsonObject dataObject = getAsJsonObject("data", object);
                     for (Map.Entry<String, JsonElement> entry : dataObject.entrySet()) {
                         String string = entry.getKey();
-                        data.put(string, dataObject.get(string).getAsString());
+                        data.put(string, getAsString(string, dataObject));
                     }
 
                 }
@@ -2312,12 +2707,12 @@ public class SkyblockUtil {
                     private final HashMap<String, String> data;
 
                     public AutoPetRuleException(JsonObject object) {
-                        this.id = object.get("id").getAsString();
+                        this.id = getAsString("id", object);
                         this.data = new HashMap<>();
-                        JsonObject dataObject = object.getAsJsonObject("data");
+                        JsonObject dataObject = getAsJsonObject("data", object);
                         for (Map.Entry<String, JsonElement> entry : dataObject.entrySet()) {
                             String string = entry.getKey();
-                            data.put(string, dataObject.get(string).getAsString());
+                            data.put(string, getAsString(string, dataObject));
                         }
                     }
 
@@ -2336,10 +2731,10 @@ public class SkyblockUtil {
         private final AutoPet autoPet;
 
         public PetsData(JsonObject object) {
-            this.petCare = new PetCare(object.getAsJsonObject("pet_care"));
-            this.autoPet = new AutoPet(object.getAsJsonObject("autopet"));
+            this.petCare = new PetCare(getAsJsonObject("pet_care", object));
+            this.autoPet = new AutoPet(getAsJsonObject("autopet", object));
             this.pets = new ArrayList<>();
-            JsonArray petsArray = object.getAsJsonArray("pets");
+            JsonArray petsArray = getAsJsonArray("pets", object);
             for (JsonElement jsonElement : petsArray) {
                 pets.add(new Pet(jsonElement.getAsJsonObject()));
             }
@@ -2361,23 +2756,23 @@ public class SkyblockUtil {
             private final UUID uuid;
             private final UUID uniqueId;
             private final String type;
-            private final BigInteger exp;
-            private final boolean active;
+            private final Double exp;
+            private final Boolean active;
             private final String tier;
             private final String heldItem;
-            private final int candyUsed;
+            private final Integer candyUsed;
             private final String skin;
 
             public Pet(JsonObject object) {
-                this.uuid = UUID.fromString(object.get("uuid").getAsString());
-                this.uniqueId = UUID.fromString(object.get("uniqueId").getAsString());
-                this.type = object.get("type").getAsString();
-                this.exp = object.get("exp").getAsBigInteger();
-                this.active = object.get("active").getAsBoolean();
-                this.tier = object.get("tier").getAsString();
-                this.heldItem = object.get("heldItem").getAsString();
-                this.candyUsed = object.get("candyUsed").getAsInt();
-                this.skin = object.get("skin").getAsString();
+                this.uuid = fromString(getAsString("uuid", object));
+                this.uniqueId = fromString(getAsString("uniqueId", object));
+                this.type = getAsString("type", object);
+                this.exp = getAsDouble("exp", object);
+                this.active = getAsBoolean("active", object);
+                this.tier = getAsString("tier", object);
+                this.heldItem = getAsString("heldItem", object);
+                this.candyUsed = getAsInteger("candyUsed", object);
+                this.skin = getAsString("skin", object);
             }
 
             public UUID getUuid() {
@@ -2392,7 +2787,7 @@ public class SkyblockUtil {
                 return candyUsed;
             }
 
-            public BigInteger getExp() {
+            public Double getExp() {
                 return exp;
             }
 
@@ -2418,12 +2813,12 @@ public class SkyblockUtil {
         }
     }
     public class GardenPlayerData {
-        private final int copper;
-        private final int larvaConsumed;
+        private final Integer copper;
+        private final Integer larvaConsumed;
 
         public GardenPlayerData(JsonObject object) {
-            this.copper = object.get("copper").getAsInt();
-            this.larvaConsumed = object.get("larva_consumed").getAsInt();
+            this.copper = getAsInteger("copper", object);
+            this.larvaConsumed = getAsInteger("larva_consumed", object);
         }
 
         public int getCopper() {
@@ -2439,7 +2834,7 @@ public class SkyblockUtil {
         private final Easter easter;
 
         public Events(JsonObject object) {
-            this.easter = new Easter(object.getAsJsonObject("easter"));
+            this.easter = new Easter(getAsJsonObject("easter", object));
         }
 
         public Easter getEaster() {
@@ -2447,60 +2842,60 @@ public class SkyblockUtil {
         }
 
         public class Easter {
-            private final long chocolate;
-            private final long chocolateSincePrestige;
-            private final long totalChocolate;
+            private final Long chocolate;
+            private final Long chocolateSincePrestige;
+            private final Long totalChocolate;
             private final HashMap<String, Integer> employees;
-            private final long lastViewedChocolateFactory;
+            private final Long lastViewedChocolateFactory;
             private final Rabbits rabbits;
             private final Shop shop;
-            private final int rabbitBarnCapacityLevel;
+            private final Integer rabbitBarnCapacityLevel;
             private final String rabbitSort;
-            private final int chocolateLevel;
+            private final Integer chocolateLevel;
             private final TimeTower timeTower;
             private final String rabbitFilter;
-            private final int chocolateMultiplierUpgrades;
-            private final int clickUpgrades;
-            private final int rabbitRarityUpgrades;
-            private final int supremeChocolateBars;
-            private final int refinedDarkCacaoTruffles;
+            private final Integer chocolateMultiplierUpgrades;
+            private final Integer clickUpgrades;
+            private final Integer rabbitRarityUpgrades;
+            private final Integer supremeChocolateBars;
+            private final Integer refinedDarkCacaoTruffles;
 
             public Easter(JsonObject object) {
-                this.chocolate = object.get("chocolate").getAsLong();
-                this.chocolateSincePrestige = object.get("chocolate_since_prestige").getAsLong();
-                this.totalChocolate = object.get("total_chocolate").getAsLong();
+                this.chocolate = getAsLong("chocolate", object);
+                this.chocolateSincePrestige = getAsLong("chocolate_since_prestige", object);
+                this.totalChocolate = getAsLong("total_chocolate", object);
                 this.employees = new HashMap<>();
-                JsonObject employeesObject = object.getAsJsonObject("employees");
+                JsonObject employeesObject = getAsJsonObject("employees", object);
                 for (Map.Entry<String, JsonElement> entry : employeesObject.entrySet()) {
                     String string = entry.getKey();
-                    employees.put(string, employeesObject.get(string).getAsInt());
+                    employees.put(string, getAsInteger(string, employeesObject));
                 }
-                this.lastViewedChocolateFactory = object.get("last_viewed_chocolate_factory").getAsInt();
-                this.rabbits = new Rabbits(object.getAsJsonObject("rabbits"));
-                this.shop = new Shop(object.getAsJsonObject("shop"));
-                this.rabbitBarnCapacityLevel = object.get("rabbit_barn_capacity_level").getAsInt();
-                this.rabbitSort = object.get("rabbit_sort").getAsString();
-                this.chocolateLevel = object.get("chocolate_level").getAsInt();
-                this.timeTower = new TimeTower(object.getAsJsonObject("time_tower"));
-                this.rabbitFilter = object.get("rabbit_filter").getAsString();
-                this.chocolateMultiplierUpgrades = object.get("chocolate_multiplier_upgrades").getAsInt();
-                this.clickUpgrades = object.get("click_upgrades").getAsInt();
-                this.rabbitRarityUpgrades = object.get("rabbit_rarity_upgrades").getAsInt();
-                this.supremeChocolateBars = object.get("supreme_chocolate_bars").getAsInt();
-                this.refinedDarkCacaoTruffles = object.get("refined_dark_cacao_truffles").getAsInt();
+                this.lastViewedChocolateFactory = getAsLong("last_viewed_chocolate_factory", object);
+                this.rabbits = new Rabbits(getAsJsonObject("rabbits", object));
+                this.shop = new Shop(getAsJsonObject("shop", object));
+                this.rabbitBarnCapacityLevel = getAsInteger("rabbit_barn_capacity_level", object);
+                this.rabbitSort = getAsString("rabbit_sort", object);
+                this.chocolateLevel = getAsInteger("chocolate_level", object);
+                this.timeTower = new TimeTower(getAsJsonObject("time_tower", object));
+                this.rabbitFilter = getAsString("rabbit_filter", object);
+                this.chocolateMultiplierUpgrades = getAsInteger("chocolate_multiplier_upgrades", object);
+                this.clickUpgrades = getAsInteger("click_upgrades", object);
+                this.rabbitRarityUpgrades = getAsInteger("rabbit_rarity_upgrades", object);
+                this.supremeChocolateBars = getAsInteger("supreme_chocolate_bars", object);
+                this.refinedDarkCacaoTruffles = getAsInteger("refined_dark_cacao_truffles", object);
             }
 
             public class TimeTower {
-                private final int charges;
-                private final long lastChargeTime;
-                private final int level;
-                private final long activationTime;
+                private final Integer charges;
+                private final Long lastChargeTime;
+                private final Integer level;
+                private final Long activationTime;
 
                 public TimeTower(JsonObject object) {
-                    this.charges = object.get("charges").getAsInt();
-                    this.lastChargeTime = object.get("last_charge_time").getAsLong();
-                    this.level = object.get("level").getAsInt();
-                    this.activationTime = object.get("activation_time").getAsLong();
+                    this.charges = getAsInteger("charges", object);
+                    this.lastChargeTime = getAsLong("last_charge_time", object);
+                    this.level = getAsInteger("level", object);
+                    this.activationTime = getAsLong("activation_time", object);
                 }
 
                 public int getCharges() {
@@ -2521,26 +2916,26 @@ public class SkyblockUtil {
             }
 
             public class Shop {
-                private final int year;
+                private final Integer year;
                 private final List<String> rabbitsShop;
                 private final List<String> rabbitsPurchased;
-                private final long chocolateSpent;
-                private final int cocoaFortuneUpgrades;
+                private final Long chocolateSpent;
+                private final Integer cocoaFortuneUpgrades;
 
                 public Shop(JsonObject object) {
-                    this.year = object.get("year").getAsInt();
+                    this.year = getAsInteger("year", object);
                     this.rabbitsShop = new ArrayList<>();
-                    JsonArray rabbitsShopArray = object.getAsJsonArray("rabbits");
+                    JsonArray rabbitsShopArray = getAsJsonArray("rabbits", object);
                     for (JsonElement jsonElement : rabbitsShopArray) {
                         rabbitsShop.add(jsonElement.getAsString());
                     }
                     this.rabbitsPurchased = new ArrayList<>();
-                    JsonArray rabbitsPurchasedArray = object.getAsJsonArray("rabbits_purchased");
+                    JsonArray rabbitsPurchasedArray = getAsJsonArray("rabbits_purchased", object);
                     for (JsonElement jsonElement : rabbitsPurchasedArray) {
                         rabbitsPurchased.add(jsonElement.getAsString());
                     }
-                    this.chocolateSpent = object.getAsJsonPrimitive("chocolate").getAsLong();
-                    this.cocoaFortuneUpgrades = object.getAsJsonPrimitive("cocoa_fortune_upgrades").getAsInt();
+                    this.chocolateSpent = getAsLong("chocolate", object);
+                    this.cocoaFortuneUpgrades = getAsInteger("cocoa_fortune_upgrades", object);
                 }
 
                 public int getCocoaFortuneUpgrades() {
@@ -2569,13 +2964,13 @@ public class SkyblockUtil {
 
                 public Rabbits(JsonObject object) {
                     this.collectedEggs = new HashMap<>();
-                    JsonObject collectedEggsObject = object.getAsJsonObject("collected_eggs");
+                    JsonObject collectedEggsObject = getAsJsonObject("collected_eggs", object);
                     for (Map.Entry<String, JsonElement> entry : collectedEggsObject.entrySet()) {
                         String string = entry.getKey();
-                        collectedEggs.put(string, collectedEggsObject.get(string).getAsLong());
+                        collectedEggs.put(string, getAsLong(string, collectedEggsObject));
                     }
                     this.collectedLocations = new HashMap<>();
-                    JsonObject collectedLocationsObject = object.getAsJsonObject("collected_locations");
+                    JsonObject collectedLocationsObject = getAsJsonObject("collected_locations", object);
                     for (Map.Entry<String, JsonElement> entry : collectedLocationsObject.entrySet()) {
                         String string = entry.getKey();
                         collectedLocations.put(string, new ArrayList<>());
@@ -2667,24 +3062,24 @@ public class SkyblockUtil {
 
     public class GlacitePlayerData {
         private final List<String> fossilsDonated;
-        private final double fossilDust;
+        private final Double fossilDust;
         private final HashMap<String, Integer> corpsesLooted;
-        private final int mineshaftsEntered;
+        private final Integer mineshaftsEntered;
 
         public GlacitePlayerData(JsonObject object) {
             this.fossilsDonated = new ArrayList<>();
-            JsonArray fossilsDonatedArray = object.getAsJsonArray("fossils_donated");
+            JsonArray fossilsDonatedArray = getAsJsonArray("fossils_donated", object);
             for (JsonElement jsonElement : fossilsDonatedArray) {
                 fossilsDonated.add(jsonElement.getAsString());
             }
             this.corpsesLooted = new HashMap<>();
-            JsonObject corpsesLootedObject = object.getAsJsonObject("corpses_looted");
+            JsonObject corpsesLootedObject = getAsJsonObject("corpses_looted", object);
             for (Map.Entry<String, JsonElement> entry : corpsesLootedObject.entrySet()) {
                 String string = entry.getKey();
-                corpsesLooted.put(string, corpsesLootedObject.get(string).getAsInt());
+                corpsesLooted.put(string, getAsInteger(string, corpsesLootedObject));
             }
-            this.fossilDust = object.getAsJsonPrimitive("fossil_dust").getAsDouble();
-            this.mineshaftsEntered = object.getAsJsonPrimitive("mineshafts_entered").getAsInt();
+            this.fossilDust = getAsDouble("fossil_dust", object);
+            this.mineshaftsEntered = getAsInteger("mineshafts_entered", object);
         }
 
         public double getFossilDust() {
@@ -2705,16 +3100,16 @@ public class SkyblockUtil {
     }
 
     public class TempStatBuff {
-        private final int stat;
+        private final Integer stat;
         private final String key;
-        private final int amount;
-        private final long expireAt;
+        private final Integer amount;
+        private final Long expireAt;
 
         public TempStatBuff(JsonObject object) {
-            this.stat = object.get("stat").getAsInt();
-            this.key = object.get("key").getAsString();
-            this.amount = object.get("amount").getAsInt();
-            this.expireAt = object.get("expire_at").getAsLong();
+            this.stat = getAsInteger("stat", object);
+            this.key = getAsString("key", object);
+            this.amount = getAsInteger("amount", object);
+            this.expireAt = getAsLong("expire_at", object);
         }
 
         public int getAmount() {
@@ -2733,10 +3128,85 @@ public class SkyblockUtil {
             return key;
         }
     }
-
-    public UUID getProfileUUID(UUID playerUUID) {
-        JsonObject activeProfile = getActiveProfile(playerUUID);
-        SkyblockProfile profile = new SkyblockProfile(activeProfile);
-        return profile.getProfileID();
+    public static UUID fromString(String uuid) {
+        if (uuid == null) return null;
+        if (!uuid.contains("-")) {
+            return fixMalformed(uuid);
+        }
+        return UUID.fromString(uuid);
     }
+
+    public static UUID fixMalformed(String uuid) {
+        return fromString(uuid.substring(0, 8) + "-" + uuid.substring(8, 12) + "-" + uuid.substring(12,16) + "-" + uuid.substring(16, 20) + "-" + uuid.substring(20));
+    }
+
+    public static JsonObject getCurrentProfile(UUID uuid) {
+        JsonObject player = getPlayerProfiles(uuid);
+        JsonArray profiles = getAsJsonArray("profiles", player);
+        for (JsonElement profile : profiles) {
+            JsonObject profileObj = profile.getAsJsonObject();
+            if (profileObj.get("selected").getAsBoolean()) {
+                JsonObject members = getAsJsonObject("members", profileObj);
+                for (Map.Entry<String, JsonElement> entry : members.entrySet()) {
+                    String s = entry.getKey();
+                    if (fixMalformed(s).equals(uuid)) {
+                        JsonObject member = members.get(s).getAsJsonObject();
+                        return member;
+                    }
+                }
+            }
+        }
+        return null;
+    }
+
+    public static JsonObject getPlayerProfiles(UUID player) {
+        try {
+            URL url = new URL("https://api.hypixel.net/v2/skyblock/profiles?uuid=" + player);
+            HttpURLConnection con = (HttpURLConnection) url.openConnection();
+            con.setRequestMethod("GET");
+            con.setRequestProperty("Content-Type", "application/json");
+            con.setRequestProperty("API-Key", MeloConfiguration.apiKey);
+
+            con.setConnectTimeout(5000);
+            con.setReadTimeout(5000);
+            int status = con.getResponseCode();
+
+            if (status == 200) {
+                BufferedReader in = new BufferedReader(
+                        new InputStreamReader(con.getInputStream())
+                );
+                String inputLine;
+                StringBuffer content = new StringBuffer();
+                while ((inputLine = in.readLine()) != null) {
+                    content.append(inputLine);
+                }
+                in.close();
+                con.disconnect();
+                String contentString = content.toString();
+                JsonObject toReturn = new JsonParser().parse(contentString).getAsJsonObject();
+                if (toReturn.get("success").getAsBoolean()) {
+                    System.out.println("successful return");
+                    return toReturn;
+                }
+            }
+
+            System.out.println("yea");
+            return null;
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
+    }
+
+    public void generateCurrentProfile(UUID playerUUID) {
+        meloMod.playerProfile = new ProfileMember(playerUUID, getCurrentProfile(playerUUID));
+        HashMap<String, Integer> kills = meloMod.playerProfile.getBestiary().getKills();
+        for (Map.Entry<String, Integer> entry : kills.entrySet()) {
+            String string = entry.getKey();
+            ChatEvent.seaCreatureSession.put(ChatEvent.SeaCreature.convertBestiaryMob(string), entry.getValue());
+        }
+        System.out.println(ChatEvent.seaCreatureSession);
+
+    }
+
 }

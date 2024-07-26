@@ -1,4 +1,4 @@
-package me.vlink102.melomod.world;
+package me.vlink102.melomod.util;
 
 import com.google.common.collect.Sets;
 import net.minecraft.client.Minecraft;

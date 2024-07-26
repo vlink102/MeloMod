@@ -12,7 +12,10 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.util.BlockPos;
 import net.minecraft.world.EnumSkyBlock;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Objects;
+import java.util.UUID;
 
 public class InternalLocraw {
     private final MeloMod mod;
@@ -50,14 +53,26 @@ public class InternalLocraw {
         EventManager.INSTANCE.register(this);
     }
 
-    private static volatile SkyblockUtil.Location gameMode;
+    private static SkyblockUtil.Location gameMode;
 
     public static SkyblockUtil.Location getLocation() {
         return gameMode;
     }
 
+    private static String serverID;
+
+    public static String getServerID() {
+        return serverID;
+    }
+
+
     @Subscribe
     private void onServerTransfer(LocrawEvent event) {
         gameMode = SkyblockUtil.Location.parseFromLocraw(event.info.getGameMode());
+        serverID = event.info.getServerId();
+
+        if (mod.playerProfile == null) {
+            mod.getSkyblockUtil().generateCurrentProfile(Minecraft.getMinecraft().thePlayer.getUniqueID());
+        }
     }
 }
