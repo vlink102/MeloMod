@@ -501,13 +501,13 @@ public class SkyblockUtil {
         private final UUID profileID;
         private final Long createdAt;
         private final Boolean selected;
-        private final List<ProfileMember> members;
+        private final HashMap<String, ProfileMember> members;
         private final String cuteName;
         private final List<CommunityUpgrade> communityUpgrades;
         private final Gamemode gamemode;
 
         @Deprecated
-        public SkyblockProfile(UUID profileID, Long createdAt, boolean selected, List<ProfileMember> members, Gamemode gamemode) {
+        public SkyblockProfile(UUID profileID, Long createdAt, boolean selected, HashMap<String, ProfileMember> members, Gamemode gamemode) {
             this.profileID = profileID;
             this.selected = selected;
             this.createdAt = createdAt;
@@ -531,11 +531,11 @@ public class SkyblockUtil {
             }
             this.communityUpgrades = upgrades;
             this.createdAt = getAsLong("created_at", profileObject);
-            this.members = new ArrayList<>();
+            this.members = new HashMap<>();
             JsonObject membersObject = getAsJsonObject("members", profileObject);
             for (Map.Entry<String, JsonElement> entry : membersObject.entrySet()) {
                 String string = entry.getKey();
-                members.add(new ProfileMember(fromString(string), getAsJsonObject(string, membersObject)));
+                members.put(string, new ProfileMember(fromString(string), getAsJsonObject(string, membersObject)));
             }
             this.selected = getAsBoolean("selected", profileObject);
             this.cuteName = getAsString("cute_name", profileObject);
@@ -554,17 +554,8 @@ public class SkyblockUtil {
             return communityUpgrades;
         }
 
-        public List<ProfileMember> getMembers() {
+        public HashMap<String, ProfileMember> getMembers() {
             return members;
-        }
-
-        public ProfileMember getProfileMember(UUID uuid) {
-            for (ProfileMember member : members) {
-                if (member.getPlayerID().equals(uuid)) {
-                    return member;
-                }
-            }
-            return null;
         }
 
         public Long getCreatedAt() {
@@ -3115,13 +3106,23 @@ public class SkyblockUtil {
     }
 
     public void updateInformation(JsonObject object) {
-        System.out.println(object);
-        meloMod.setPlayerProfile(new SkyblockProfile(object));
-        HashMap<String, Integer> kills = meloMod.getPlayerProfile().getProfileMember(Minecraft.getMinecraft().thePlayer.getUniqueID()).getBestiary().getKills();
-        for (Map.Entry<String, Integer> entry : kills.entrySet()) {
-            String string = entry.getKey();
-            ChatEvent.seaCreatureSession.put(ChatEvent.SeaCreature.convertBestiaryMob(string), entry.getValue());
+
+        JsonArray profiles = object.get("profiles").getAsJsonArray();
+        for (JsonElement profile : profiles) {
+            JsonObject profileObject = profile.getAsJsonObject();
+            if (profileObject.get("selected").getAsBoolean()) {
+                meloMod.setPlayerProfile(new SkyblockProfile(profileObject));
+                System.out.println(Minecraft.getMinecraft().thePlayer.getUniqueID().toString().replace("-", ""));
+
+                HashMap<String, Integer> kills = meloMod.getPlayerProfile().getMembers().get(Minecraft.getMinecraft().thePlayer.getUniqueID().toString().replace("-", "")).getBestiary().getKills();
+                for (Map.Entry<String, Integer> entry : kills.entrySet()) {
+                    String string = entry.getKey();
+                    ChatEvent.seaCreatureSession.put(ChatEvent.SeaCreature.convertBestiaryMob(string), entry.getValue());
+                }
+                return;
+            }
         }
+
     }
 
 }
