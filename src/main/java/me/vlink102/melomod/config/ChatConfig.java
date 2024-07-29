@@ -1,5 +1,6 @@
 package me.vlink102.melomod.config;
 
+import cc.polyfrost.oneconfig.config.annotations.Dropdown;
 import cc.polyfrost.oneconfig.config.annotations.HUD;
 import cc.polyfrost.oneconfig.config.annotations.Switch;
 import cc.polyfrost.oneconfig.config.annotations.Text;
@@ -154,6 +155,33 @@ public class ChatConfig extends SubConfig {
     }
 
     @Switch(
+            name = "Enable networth command"
+    )
+    public static boolean networth = true;
+
+    public static boolean isNetworth() {
+        return networth;
+    }
+
+    @Switch(
+            name = "Enable username history"
+    )
+    public static boolean userNameHistory = true;
+
+    public static boolean isUserNameHistory() {
+        return userNameHistory;
+    }
+
+    @Switch(
+            name = "Enable last online info"
+    )
+    public static boolean lastOnlineInfo = true;
+
+    public static boolean isLastOnlineInfo() {
+        return lastOnlineInfo;
+    }
+
+    @Switch(
             name = "Enable fishing chat"
     )
     public static boolean fishingChat = true;
@@ -164,10 +192,45 @@ public class ChatConfig extends SubConfig {
     )
     public static boolean chatCaching = true;
 
+    @Switch(
+            name = "Enable AI"
+    )
+    public static boolean ai = true;
+
+    public static boolean isAi() {
+        return ai;
+    }
+
     @Text(
             name = "Prefix"
     )
     public static String chatPrefix = "?";
+
+    @Dropdown(
+            name = "AI Model",
+            options = {
+                    "gemma2-9b-it",
+                    "gemma-7b-it",
+                    "llama-3.1-70b-versatile",
+                    "llama-3.1-8b-instant",
+                    "llama3-70b-8192",
+                    "llama3-8b-8192",
+                    "llama3-groq-70b-8192-tool-use-preview",
+                    "llama3-groq-8b-8192-tool-use-preview",
+                    "mixtral-8x7b-32768"
+            }
+    )
+    public static int aiModel = 3;
+
+
+    public static int getAiModel() {
+        return aiModel;
+    }
+
+    @Text(
+            name = "GROQ API Key"
+    )
+    public static String groqApiKey = "";
 
     public ChatConfig() {
         super("Chat", MeloMod.MODID + "/" + "chat" + ".json");

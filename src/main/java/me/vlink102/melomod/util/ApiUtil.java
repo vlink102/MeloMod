@@ -4,6 +4,7 @@ package me.vlink102.melomod.util;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import me.vlink102.melomod.MeloMod;
+import me.vlink102.melomod.config.ChatConfig;
 import me.vlink102.melomod.config.MeloConfiguration;
 import net.minecraft.client.Minecraft;
 import net.minecraft.util.ChatComponentText;
@@ -204,6 +205,81 @@ public class ApiUtil {
             }, executorService);
         }
 
+        public CompletableFuture<String> requestAIStringAnon(JsonObject body) {
+            return buildUrl().thenApplyAsync(url -> {
+                try {
+                    InputStream inputStream = null;
+                    URLConnection conn = null;
+                    try {
+                        conn = url.openConnection();
+                        if (conn instanceof HttpURLConnection) {
+                            ((HttpURLConnection) conn).setRequestMethod(method);
+                        }
+                        conn.setConnectTimeout(10000);
+                        conn.setReadTimeout(10000);
+                        conn.setRequestProperty("User-Agent", USER_AGENT);
+                        conn.setRequestProperty("Content-Type", "application/json");
+                        conn.setRequestProperty("Authorization", "Bearer " + ChatConfig.groqApiKey);
+
+
+                        conn.setDoOutput(true);
+                        String jsonInputString = body.toString();
+                        try(OutputStream os = conn.getOutputStream()) {
+                            byte[] input = jsonInputString.getBytes(StandardCharsets.UTF_8);
+                            os.write(input, 0, input.length);
+                        }
+
+                        if (conn instanceof HttpsURLConnection) {
+                            int response = ((HttpsURLConnection) conn).getResponseCode();
+                            if (response != 200) {
+                                System.out.println("FATAL: " + StatusCodes.getFromCode(response));
+                            }
+                        }
+                        inputStream = conn.getInputStream();
+
+                        if (shouldGunzip) {
+                            inputStream = new GZIPInputStream(inputStream);
+                        }
+
+                        // While the assumption of UTF8 isn't always true; it *should* always be true.
+                        // Not in the sense that this will hold in most cases (although that as well),
+                        // but in the sense that any violation of this better have a good reason.
+                        return IOUtils.toString(inputStream, StandardCharsets.UTF_8);
+                    } finally {
+                        try {
+                            if (inputStream != null) {
+                                inputStream.close();
+                            }
+                        } finally {
+                            if (conn instanceof HttpURLConnection) {
+                                ((HttpURLConnection) conn).disconnect();
+                            }
+                        }
+                    }
+                } catch (IOException e) {
+                    throw new RuntimeException(e); // We can rethrow, since supplyAsync catches exceptions.
+                }
+            }, executorService);
+        }
+
+
+        public CompletableFuture<JsonObject> requestAIAnon(JsonObject body) {
+            return requestAIAnon(JsonObject.class, body);
+        }
+        public <T> CompletableFuture<T> requestAIAnon(Class<? extends T> clazz, JsonObject body) {
+            return requestAIStringAnon(body).thenApply(str -> gson.fromJson(str, clazz));
+        }
+
+
+    }
+
+
+
+    public synchronized void requestAI(String url, JsonObject body, Consumer<? super JsonObject> action) {
+        ApiUtil.Request request = new Request()
+                .url(url).method("POST");
+        CompletableFuture<JsonObject> object = request.requestAIAnon(body);
+        object.thenAcceptAsync(action, executorService);
     }
 
     public Request request() {
@@ -235,6 +311,13 @@ public class ApiUtil {
         object.thenAcceptAsync(action, executorService);
     }
 
+    public synchronized void requestServer(String url, Consumer<? super JsonObject> action) {
+        ApiUtil.Request request = new Request()
+                .url(url).method("GET");
+        CompletableFuture<JsonObject> object = request.requestJson();
+        object.thenAcceptAsync(action, executorService);
+    }
+
     public synchronized void requestServer(String url, JsonObject body, Consumer<? super JsonObject> action, HypixelEndpoint.FilledEndpointArgument... arguments) {
         ApiUtil.Request request = new Request()
                 .url(url).method("GET");
@@ -250,6 +333,8 @@ public class ApiUtil {
             return null;
         });
     }
+
+
 
 
     public enum SkyCryptEndpoint {

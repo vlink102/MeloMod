@@ -43,43 +43,41 @@ public class TickHandler
     @SubscribeEvent (priority = EventPriority.NORMAL, receiveCanceled = true)
     public void onEvent(TickEvent.ClientTickEvent tickEvent)
     {
-        if (isHypixel && hasChatCooldown)
-        {
-            if (ticksSinceLastChat >= 160 && !scheduledChat.isEmpty())
-            {
+        if (isHypixel && hasChatCooldown) {
+            if (ticksSinceLastChat >= 160 && !scheduledChat.isEmpty()) {
                 sendChat(scheduledChat.remove(0));
-                return;
+
             }
         } else if(!scheduledChat.isEmpty()) {
-            if (ticksSinceLastChat >= 10) {
+            if (ticksSinceLastChat >= 20) {
                 sendChat(scheduledChat.remove(0));
             }
-            return;
         }
 
         if (isHypixel)
         {
-            if (ticksSinceLastCommand > 10 && !scheduledCommands.isEmpty())
+            if (ticksSinceLastCommand > 20 && !scheduledCommands.isEmpty())
             {
                 sendCommand(scheduledCommands.remove(0));
-                return;
+
             }
         } else if (!scheduledCommands.isEmpty()) {
-            if (ticksSinceLastCommand >= 10) {
+            if (ticksSinceLastCommand >= 20) {
                 sendCommand(scheduledCommands.remove(0));
             }
-            return;
+
         }
-        
+
         if (ticksSinceLastChat < 160)
         {
             ticksSinceLastChat++;
         }
-        
+
         if (ticksSinceLastCommand < 20)
         {
             ticksSinceLastCommand++;
         }
+
     }
     
     @SideOnly (Side.CLIENT)
