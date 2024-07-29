@@ -723,7 +723,7 @@ public class SkyblockUtil {
         }
     }
 
-    public class SkyblockProfile {
+    public static class SkyblockProfile {
         private final UUID profileID;
         private final Long createdAt;
         private final Boolean selected;
@@ -742,7 +742,7 @@ public class SkyblockUtil {
             this.cuteName = null;
             this.communityUpgrades = null;
         }
-
+        
         public SkyblockProfile(JsonObject profileObject) {
             this.profileID = fromString(getAsString("profile_id", profileObject));
             JsonObject communityUpgrades = getAsJsonObject("community_upgrades", profileObject);
@@ -797,7 +797,7 @@ public class SkyblockUtil {
         }
     }
 
-    public class ProfileMember {
+    public static class ProfileMember {
         private final UUID playerID;
         private final RiftData riftData;
         private final PlayerData playerData;
@@ -886,7 +886,7 @@ public class SkyblockUtil {
             return playerID;
         }
 
-        public class DeletionNotice {
+        public static class DeletionNotice {
             private final Integer timestamp;
 
             public DeletionNotice(int timestamp) {
@@ -899,7 +899,7 @@ public class SkyblockUtil {
         }
     }
 
-    public class Bestiary {
+    public static class Bestiary {
         private final Boolean migratedStats;
         private final Boolean migration;
         private final HashMap<String, Integer> kills;
@@ -932,7 +932,7 @@ public class SkyblockUtil {
         }
     }
 
-    public class RiftData {
+    public static class RiftData {
         private final List<String> lifetimePurchasedBoundaries;
         private final VillagePlaza villagePlaza;
         private final WitherCage witherCage;
@@ -1025,7 +1025,7 @@ public class SkyblockUtil {
             return wyldWoods;
         }
 
-        public class VillagePlaza {
+        public static class VillagePlaza {
             private final Boolean gotScammed;
             private final Murder murder;
             private final BarryCenter barryCenter;
@@ -1066,7 +1066,7 @@ public class SkyblockUtil {
                 return seraphine;
             }
 
-            public class Murder {
+            public static class Murder {
                 private final Integer stepIndex;
                 private final List<String> roomClues;
 
@@ -1088,7 +1088,7 @@ public class SkyblockUtil {
                 }
             }
 
-            public class BarryCenter {
+            public static class BarryCenter {
                 private final Boolean firstTalkToBarry;
                 private final List<String> convinced;
                 private final Boolean receivedReward;
@@ -1116,7 +1116,7 @@ public class SkyblockUtil {
                 }
             }
 
-            public class Cowboy {
+            public static class Cowboy {
                 private final Integer stage;
                 private final Integer hayEaten;
                 private final String rabbitName;
@@ -1146,7 +1146,7 @@ public class SkyblockUtil {
                 }
             }
 
-            public class Lonely {
+            public static class Lonely {
                 private final Integer secondsSitting;
 
                 public Lonely(JsonObject object) {
@@ -1158,7 +1158,7 @@ public class SkyblockUtil {
                 }
             }
 
-            public class Seraphine {
+            public static class Seraphine {
                 private final Integer stepIndex;
 
                 public Seraphine(JsonObject object) {
@@ -1171,7 +1171,7 @@ public class SkyblockUtil {
             }
         }
 
-        public class WitherCage {
+        public static class WitherCage {
             private final List<String> eyesKilled;
 
             public WitherCage(JsonObject object) {
@@ -1187,7 +1187,7 @@ public class SkyblockUtil {
             }
         }
 
-        public class BlackLagoon {
+        public static class BlackLagoon {
             private final Boolean talkedToEdwin;
             private final Boolean receivedSciencePaper;
             private final Integer completedStep;
@@ -1217,7 +1217,7 @@ public class SkyblockUtil {
             }
         }
 
-        public class DeadCats {
+        public static class DeadCats {
             private final Boolean talkedToJacquelle;
             private final Boolean pickedUpDetector;
             private final List<String> foundCats;
@@ -1256,7 +1256,7 @@ public class SkyblockUtil {
                 return montezuma;
             }
 
-            public class Montezuma {
+            public static class Montezuma {
                 //private final UUID uuid; // ??
                 private final UUID uniqueID;
                 private final String type;
@@ -1304,7 +1304,7 @@ public class SkyblockUtil {
             }
         }
 
-        public class WizardTower {
+        public static class WizardTower {
             private final Integer wizardQuestStep;
             private final Integer crumbsLaidOut;
 
@@ -1322,7 +1322,7 @@ public class SkyblockUtil {
             }
         }
 
-        public class Enigma {
+        public static class Enigma {
             private final Boolean boughtCloak;
             private final List<String> foundSouls;
             private final Integer claimedBonusIndex;
@@ -1350,7 +1350,7 @@ public class SkyblockUtil {
             }
         }
 
-        public class Gallery {
+        public static class Gallery {
             private final Integer eliseStep;
             private final List<SecuredTrophy> securedTrophies;
             private final List<String> sentTrophyDialogues;
@@ -1381,7 +1381,7 @@ public class SkyblockUtil {
                 return sentTrophyDialogues;
             }
 
-            public class SecuredTrophy {
+            public static class SecuredTrophy {
                 private final String type;
                 private final Long timestamp;
                 private final Integer visits;
@@ -1406,7 +1406,7 @@ public class SkyblockUtil {
             }
         }
 
-        public class WestVillage {
+        public static class WestVillage {
             private final MirrorVerse mirrorVerse;
             private final CrazyKloon crazyKloon;
             private final KatHouse katHouse;
@@ -1435,7 +1435,7 @@ public class SkyblockUtil {
                 return mirrorVerse;
             }
 
-            public class MirrorVerse {
+            public static class MirrorVerse {
                 private final List<String> roomsVisited;
                 private final Boolean upsideDownHard;
                 private final List<String> claimedChestItems;
@@ -1473,7 +1473,7 @@ public class SkyblockUtil {
                 }
             }
 
-            public class CrazyKloon {
+            public static class CrazyKloon {
                 private final HashMap<String, String> selectedColors;
                 private final Boolean talked;
                 private final List<String> hackedTerminals;
@@ -1512,7 +1512,7 @@ public class SkyblockUtil {
                 }
             }
 
-            public class KatHouse {
+            public static class KatHouse {
                 private final Integer binCollectedMosquito;
                 private final Integer binCollectedSilverfish;
                 private final Integer binCollectedSpider;
@@ -1536,7 +1536,7 @@ public class SkyblockUtil {
                 }
             }
 
-            public class Glyphs {
+            public static class Glyphs {
                 private final Boolean claimedWand;
                 private final Boolean currentGlyphDelivered;
                 private final Boolean currentGlyphCompleted;
@@ -1579,7 +1579,7 @@ public class SkyblockUtil {
             }
         }
 
-        public class WyldWoods {
+        public static class WyldWoods {
             private final List<String> talkedThreeBrothers;
             private final Boolean siriusStartedQA;
             private final Boolean siriusQAChainDone;
@@ -1625,7 +1625,7 @@ public class SkyblockUtil {
             }
         }
 
-        public class Castle {
+        public static class Castle {
             private final Boolean unlockedPathwaySkip;
             private final Integer fairyStep;
             private final Integer grubberStacks;
@@ -1649,7 +1649,7 @@ public class SkyblockUtil {
             }
         }
 
-        public class Access {
+        public static class Access {
             private final Long lastFree;
             private final Boolean consumedPrism;
 
@@ -1668,7 +1668,7 @@ public class SkyblockUtil {
 
         }
 
-        public class Dreadfarm {
+        public static class Dreadfarm {
             private final Integer shaniaStage;
             private final List<Long> caducousFeederUses;
 
@@ -1691,7 +1691,7 @@ public class SkyblockUtil {
         }
     }
 
-    public class Inventory {
+    public static class Inventory {
         private final EnderChestContents enderChestContents;
         private final InventoryContents inventoryContents;
         private final InventoryArmor inventoryArmor;
@@ -1718,7 +1718,7 @@ public class SkyblockUtil {
             this.equipmentContents = new EquipmentContents(getAsJsonObject("equipment_contents", object));
         }
 
-        public class EnderChestContents {
+        public static class EnderChestContents {
             private final Integer type;
             private final String data;
 
@@ -1736,7 +1736,7 @@ public class SkyblockUtil {
             }
         }
 
-        public class InventoryContents {
+        public static class InventoryContents {
             private final Integer type;
             private final String data;
 
@@ -1754,7 +1754,7 @@ public class SkyblockUtil {
             }
         }
 
-        public class InventoryArmor {
+        public static class InventoryArmor {
             private final Integer type;
             private final String data;
 
@@ -1772,7 +1772,7 @@ public class SkyblockUtil {
             }
         }
 
-        public class EquipmentContents {
+        public static class EquipmentContents {
             private final Integer type;
             private final String data;
 
@@ -1791,7 +1791,7 @@ public class SkyblockUtil {
         }
     }
 
-    public class PlayerData {
+    public static class PlayerData {
         private final List<String> visitedZones;
         private final Long lastDeath;
         private final HashMap<String, Integer> perks;
@@ -1862,12 +1862,13 @@ public class SkyblockUtil {
 
     }
 
-    public class Dungeons {
+    public static class Dungeons {
         private final Catacombs catacombs;
         private final Catacombs masterCatacombs;
         private final HashMap<String, Double> playerClasses;
         private final List<String> unlockedJournals;
         private final List<String> dungeonsBlahBlah;
+        private final Integer secrets;
 
         private final DailyRuns dailyRuns;
 
@@ -1892,6 +1893,12 @@ public class SkyblockUtil {
             for (JsonElement jsonElement : dungeonsBlahBlahArray) {
                 dungeonsBlahBlah.add(jsonElement.getAsString());
             }
+            // todo
+            this.secrets = getAsInteger("secrets", object);
+        }
+
+        public Integer getSecrets() {
+            return secrets;
         }
 
         public Catacombs getCatacombs() {
@@ -1919,7 +1926,7 @@ public class SkyblockUtil {
         }
         // TODO line 8991
 
-        public class DailyRuns {
+        public static class DailyRuns {
             private final Integer currentDayStamp;
             private final Integer completedRunsCount;
 
@@ -1938,7 +1945,7 @@ public class SkyblockUtil {
 
         }
 
-        public class Catacombs {
+        public static class Catacombs {
             private final HashMap<String, Float> mobsKilled;
             private final HashMap<String, Float> fastestTimeS;
             private final HashMap<String, Float> mostDamageTank;
@@ -2146,7 +2153,7 @@ public class SkyblockUtil {
                 return bestRuns;
             }
 
-            public class BestRun {
+            public static class BestRun {
                 private final Long timeStamp;
                 private final Integer scoreExploration;
                 private final Integer scoreSpeed;
@@ -2243,7 +2250,7 @@ public class SkyblockUtil {
 
     }
 
-    public class Currencies {
+    public static class Currencies {
         private final Double coinPurse;
         private final Double motesPurse;
         private final HashMap<String, Integer> essence;
@@ -2272,7 +2279,7 @@ public class SkyblockUtil {
         }
     }
 
-    public class JacobsContest {
+    public static class JacobsContest {
         private final HashMap<String, Integer> medalsInv;
         private final HashMap<String, Integer> perks;
         private final List<JacobsContestData> jacobsContestDataList;
@@ -2347,7 +2354,7 @@ public class SkyblockUtil {
             return migration;
         }
 
-        public class JacobsContestData {
+        public static class JacobsContestData {
             private final Integer collected;
             private final Boolean claimedRewards;
             private final Integer claimedPosition;
@@ -2384,7 +2391,7 @@ public class SkyblockUtil {
         }
     }
 
-    public class ItemData {
+    public static class ItemData {
         private final Integer soulflow;
         private final Integer favoriteArrow;
 
@@ -2402,7 +2409,7 @@ public class SkyblockUtil {
         }
     }
 
-    public class Levelling {
+    public static class Levelling {
         private final Integer experience;
         private final HashMap<String, Integer> completions;
         private final List<String> completed;
@@ -2525,7 +2532,7 @@ public class SkyblockUtil {
         }
     }
 
-    public class AccessoryBagStorage {
+    public static class AccessoryBagStorage {
         private final Tuning tuning;
         private final String selectedPower;
         private final List<String> unlockedPowers;
@@ -2564,7 +2571,7 @@ public class SkyblockUtil {
             return tuning;
         }
 
-        public class Tuning {
+        public static class Tuning {
             private final HashMap<String, Integer> slot0;
 
             public Tuning(JsonObject object) {
@@ -2583,7 +2590,7 @@ public class SkyblockUtil {
 
     }
 
-    public class PetsData {
+    public static class PetsData {
         private final List<Pet> pets;
         private final PetCare petCare;
         private final AutoPet autoPet;
@@ -2610,7 +2617,7 @@ public class SkyblockUtil {
             return petCare;
         }
 
-        public class PetCare {
+        public static class PetCare {
             private final Double coinsSpent;
             private final List<String> petTypesSacrificed;
 
@@ -2632,7 +2639,7 @@ public class SkyblockUtil {
             }
         }
 
-        public class AutoPet {
+        public static class AutoPet {
             private final Integer rulesLimit;
             private final List<AutoPetRule> autoPetRules;
             private final Boolean migrated;
@@ -2666,7 +2673,7 @@ public class SkyblockUtil {
                 return rulesLimit;
             }
 
-            public class AutoPetRule {
+            public static class AutoPetRule {
                 private final UUID uuid;
                 private final String id;
                 private final String name;
@@ -2723,7 +2730,7 @@ public class SkyblockUtil {
                     return name;
                 }
 
-                public class AutoPetRuleException {
+                public static class AutoPetRuleException {
                     private final String id;
                     private final HashMap<String, String> data;
 
@@ -2748,7 +2755,7 @@ public class SkyblockUtil {
             }
         }
 
-        public class Pet {
+        public static class Pet {
             private final UUID uuid;
             private final UUID uniqueId;
             private final String type;
@@ -2809,7 +2816,7 @@ public class SkyblockUtil {
         }
     }
 
-    public class GardenPlayerData {
+    public static class GardenPlayerData {
         private final Integer copper;
         private final Integer larvaConsumed;
 
@@ -2827,7 +2834,7 @@ public class SkyblockUtil {
         }
     }
 
-    public class Events {
+    public static class Events {
         private final Easter easter;
 
         public Events(JsonObject object) {
@@ -2838,7 +2845,7 @@ public class SkyblockUtil {
             return easter;
         }
 
-        public class Easter {
+        public static class Easter {
             private final Long chocolate;
             private final Long chocolateSincePrestige;
             private final Long totalChocolate;
@@ -2950,7 +2957,7 @@ public class SkyblockUtil {
                 return timeTower;
             }
 
-            public class TimeTower {
+            public static class TimeTower {
                 private final Integer charges;
                 private final Long lastChargeTime;
                 private final Integer level;
@@ -2980,7 +2987,7 @@ public class SkyblockUtil {
                 }
             }
 
-            public class Shop {
+            public static class Shop {
                 private final Integer year;
                 private final List<String> rabbitsShop;
                 private final List<String> rabbitsPurchased;
@@ -3024,7 +3031,7 @@ public class SkyblockUtil {
                 }
             }
 
-            public class Rabbits {
+            public static class Rabbits {
                 private final HashMap<String, Long> collectedEggs;
                 private final HashMap<String, List<String>> collectedLocations;
 
@@ -3058,7 +3065,7 @@ public class SkyblockUtil {
         }
     }
 
-    public class GlacitePlayerData {
+    public static class GlacitePlayerData {
         private final List<String> fossilsDonated;
         private final Double fossilDust;
         private final HashMap<String, Integer> corpsesLooted;
@@ -3097,7 +3104,7 @@ public class SkyblockUtil {
         }
     }
 
-    public class TempStatBuff {
+    public static class TempStatBuff {
         private final Integer stat;
         private final String key;
         private final Integer amount;

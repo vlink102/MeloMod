@@ -120,6 +120,40 @@ public class ChatConfig extends SubConfig {
     }
 
     @Switch(
+            name = "Enable secret command"
+    )
+    public static boolean secret = true;
+
+    public static boolean isSecret() {
+        return secret;
+    }
+
+    @Switch(
+            name = "Enable whole party secret command"
+    )
+    public static boolean wholePartySecret = true;
+    public static boolean isWholePartySecret() {
+        return wholePartySecret;
+    }
+
+    @Switch(
+            name = "N-Word pass"
+    )
+    public static boolean nWordPass = true;
+    public static boolean isnWordPass() {
+        return nWordPass;
+    }
+
+    @Switch(
+            name = "Enable femboy command"
+    )
+    public static boolean femboy = true;
+
+    public static boolean isFemboy() {
+        return femboy;
+    }
+
+    @Switch(
             name = "Enable fishing chat"
     )
     public static boolean fishingChat = true;

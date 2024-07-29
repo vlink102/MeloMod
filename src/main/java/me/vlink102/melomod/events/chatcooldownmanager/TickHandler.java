@@ -29,13 +29,14 @@ public class TickHandler
     public static void addToQueue(String message) {
         if (message.startsWith("/pc") || message.startsWith("/pchat") || message.startsWith("/partychat")) {
             scheduledChat.add(message);
-            return;
-        }
-        if (message.startsWith("/")) {
-            scheduledCommands.add(message);
         } else {
-            scheduledChat.add(message);
+            if (message.startsWith("/")) {
+                scheduledCommands.add(message);
+            } else {
+                scheduledChat.add(message);
+            }
         }
+
     }
     
     @SideOnly (Side.CLIENT)

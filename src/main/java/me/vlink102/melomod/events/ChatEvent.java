@@ -5,10 +5,7 @@ import cc.polyfrost.oneconfig.events.EventManager;
 import cc.polyfrost.oneconfig.events.event.ChatReceiveEvent;
 import cc.polyfrost.oneconfig.events.event.ChatSendEvent;
 import cc.polyfrost.oneconfig.libs.eventbus.Subscribe;
-import com.google.gson.GsonBuilder;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
+import com.google.gson.*;
 import me.vlink102.melomod.MeloMod;
 import me.vlink102.melomod.config.ChatConfig;
 import me.vlink102.melomod.events.chatcooldownmanager.ServerTracker;
@@ -48,6 +45,8 @@ public class ChatEvent {
         body.addProperty("depth", 10);
         mod.apiUtil.requestServer("https://chess-api.com/v1", body, object -> TickHandler.addToQueue("/pc »»» " + object.get("text").getAsString() + " «««"));
     }
+
+    public List<String> party = new ArrayList<>();
 
     /*
     public CompletableFuture<Void> getChessMove(String fen) {
@@ -259,11 +258,6 @@ public class ChatEvent {
         }
     }
 
-    @Subscribe
-    public void onChatSend(ChatSendEvent event) {
-        TickHandler.ticksSinceLastChat = 0;
-    }
-
     public enum Commands {
         GAY("gay", ChatConfig::isGay, optional("player", true)),
         RACIST("racist", ChatConfig::isRacist, optional("player", true)),
@@ -281,7 +275,11 @@ public class ChatEvent {
         TWITCH("twitch", ChatConfig::isSocialMedia, optional("player", true)),
         TIKTOK("tiktok", ChatConfig::isSocialMedia, optional("player", true)),
         FORUMS("forums", ChatConfig::isSocialMedia, optional("player", true)),
-        INSTAGRAM("instagram", ChatConfig::isSocialMedia, optional("player", true));
+        INSTAGRAM("instagram", ChatConfig::isSocialMedia, optional("player", true)),
+        HELP("help", () -> true, optional("page", false)),
+        SECRET("secrets", ChatConfig::isSecret, optional("player", true)),
+        NPASS("npass", ChatConfig::isnWordPass, optional("player", true)),
+        FEMBOY("femboy", ChatConfig::isFemboy, optional("player", true));
 
         private final String command;
         private final List<CommandParameter> params;
@@ -421,6 +419,8 @@ public class ChatEvent {
         return pages;
     }
 
+    private int memberCount = -1;
+
     @Subscribe
     public void onChatEvent(ChatReceiveEvent event) {
         String fullMessage = event.message.getUnformattedText();
@@ -444,13 +444,40 @@ public class ChatEvent {
             return;
         }
 
+        if (stripped.startsWith("Party Members (")) {
+            memberCount = Integer.parseInt(String.valueOf(stripped.split("\\(")[1].charAt(0)));
+        }
+
+        /*
+        if ((stripped.startsWith("Party Leader: ") || stripped.startsWith("Party Moderators: ") || stripped.startsWith("Party Members: "))) {
+            String names = "\\s([a-zA-Z0-9_]*?)\\s●";
+            Pattern regex = Pattern.compile(names);
+            Matcher matcher = regex.matcher(stripped);
+
+            while (matcher.find()) {
+                String match = matcher.group(1);
+                if (!party.contains(match)) {
+                    party.add(match);
+                    memberCount--;
+                }
+            }
+
+        }
+        if (stripped.equalsIgnoreCase("-----------------------------------------------------") && memberCount == 0) {
+            sayAllPlayerSecrets();
+            party.clear();
+            memberCount = -1;
+        }
+
+         */
+
         if (stripped.startsWith("Party > ")) {
             String chatMessage = stripped.split("Party\\s>.*?:\\s")[1];
-            if (chatMessage.equalsIgnoreCase(ChatConfig.chatPrefix + "help")) {
+            if (chatMessage.equalsIgnoreCase(ChatConfig.chatPrefix + Commands.HELP.getCommand())) {
                 sendLaterParty("/pc " + paginateHelp().get(0));
             }
             if (chatMessage.startsWith(ChatConfig.chatPrefix + "help ")) {
-                String[] args = chatMessage.split("\\" + ChatConfig.chatPrefix + "help ");
+                String[] args = chatMessage.split("\\" + ChatConfig.chatPrefix + Commands.HELP.getCommand() + " ");
                 if (args.length == 2) {
                     String length = args[1];
                     if (length.matches("\\d+?")) {
@@ -462,9 +489,24 @@ public class ChatEvent {
                     }
                 }
             }
+
+            if (ChatConfig.secret) {
+                if (chatMessage.startsWith(ChatConfig.chatPrefix + Commands.SECRET.getCommand() + " ")) {
+                    String[] args = chatMessage.split("\\" + ChatConfig.chatPrefix + Commands.SECRET.getCommand() + " ");
+                    if (args.length == 2) {
+                        String player = args[1];
+                        sayPlayerSecrets(player);
+                    }
+                }
+            }
+            if (ChatConfig.wholePartySecret) {
+                if (chatMessage.equalsIgnoreCase(ChatConfig.chatPrefix + Commands.SECRET)) {
+                    sendLaterParty("/party list");
+                }
+            }
             if (ChatConfig.chessEngine) {
-                if (chatMessage.startsWith(ChatConfig.chatPrefix + "chess ")) {
-                    String[] args = chatMessage.split("\\" + ChatConfig.chatPrefix + "chess ");
+                if (chatMessage.startsWith(ChatConfig.chatPrefix + Commands.CHESSENGINE.getCommand() + " ")) {
+                    String[] args = chatMessage.split("\\" + ChatConfig.chatPrefix + Commands.CHESSENGINE.getCommand() + " ");
                     if (args.length > 1) {
                         String fen = args[1];
                         getChessMove(fen);
@@ -473,8 +515,8 @@ public class ChatEvent {
             }
 
             if (ChatConfig.stalk) {
-                if (chatMessage.startsWith(ChatConfig.chatPrefix + "stalk ")) {
-                    String[] args = chatMessage.split("\\" + ChatConfig.chatPrefix + "stalk ");
+                if (chatMessage.startsWith(ChatConfig.chatPrefix + Commands.STALK.getCommand() + " ")) {
+                    String[] args = chatMessage.split("\\" + ChatConfig.chatPrefix + Commands.STALK.getCommand() + " ");
                     if (args.length > 1) {
                         String player = args[1];
                         lastLogin(player);
@@ -482,8 +524,8 @@ public class ChatEvent {
                 }
             }
             if (ChatConfig.mathEvaluation) {
-                if (chatMessage.startsWith(ChatConfig.chatPrefix + "eval ")) {
-                    String[] args = chatMessage.split("\\" + ChatConfig.chatPrefix + "eval ");
+                if (chatMessage.startsWith(ChatConfig.chatPrefix + Commands.MATHEVALUATION.getCommand() + " ")) {
+                    String[] args = chatMessage.split("\\" + ChatConfig.chatPrefix + Commands.MATHEVALUATION.getCommand() + " ");
                     if (args.length > 1) {
                         String expression = args[1];
                         sendLaterParty("/pc ⚡ Evaluated: ≈" + new DoubleEvaluator().evaluate(expression).toString());
@@ -501,17 +543,17 @@ public class ChatEvent {
                 playerName = "?";
             }
             if (ChatConfig.coinFlip) {
-                if (chatMessage.equalsIgnoreCase(ChatConfig.chatPrefix + "coinflip")) {
+                if (chatMessage.equalsIgnoreCase(ChatConfig.chatPrefix + Commands.COINFLIP.getCommand())) {
                     sendLaterParty("/pc »»» " + playerName + " flipped a coin! It's " + (RandomUtils.nextInt(0, 2) == 0 ? "Heads!" : "Tails!") + " «««");
                 }
             }
             if (ChatConfig.socialMedia) {
-                if (chatMessage.equalsIgnoreCase(ChatConfig.chatPrefix + "dc")) {
+                if (chatMessage.equalsIgnoreCase(ChatConfig.chatPrefix + Commands.DISCORD.getCommand())) {
                     playerSocials(playerName, "dc");
                 }
                 if (ChatConfig.runOthers) {
                     if (chatMessage.startsWith(ChatConfig.chatPrefix + "dc ")) {
-                        String[] args = chatMessage.split("\\" + ChatConfig.chatPrefix + "dc ");
+                        String[] args = chatMessage.split("\\" + ChatConfig.chatPrefix + Commands.DISCORD.getCommand() + " ");
                         if (args.length > 1) {
                             String player = args[1];
                             playerSocials(player, "dc");
@@ -519,12 +561,12 @@ public class ChatEvent {
                         }
                     }
                 }
-                if (chatMessage.equalsIgnoreCase(ChatConfig.chatPrefix + "twitter")) {
+                if (chatMessage.equalsIgnoreCase(ChatConfig.chatPrefix + Commands.TWITTER.getCommand())) {
                     playerSocials(playerName, "twitter");
                 }
                 if (ChatConfig.runOthers) {
-                    if (chatMessage.startsWith(ChatConfig.chatPrefix + "twitter ")) {
-                        String[] args = chatMessage.split("\\" + ChatConfig.chatPrefix + "twitter ");
+                    if (chatMessage.startsWith(ChatConfig.chatPrefix + Commands.TWITTER.getCommand() + " ")) {
+                        String[] args = chatMessage.split("\\" + ChatConfig.chatPrefix + Commands.TWITTER.getCommand() + " ");
                         if (args.length > 1) {
                             String player = args[1];
                             playerSocials(player, "twitter");
@@ -532,12 +574,12 @@ public class ChatEvent {
                         }
                     }
                 }
-                if (chatMessage.equalsIgnoreCase(ChatConfig.chatPrefix + "twitch")) {
+                if (chatMessage.equalsIgnoreCase(ChatConfig.chatPrefix + Commands.TWITCH.getCommand())) {
                     playerSocials(playerName, "twitch");
                 }
                 if (ChatConfig.runOthers) {
-                    if (chatMessage.startsWith(ChatConfig.chatPrefix + "twitch ")) {
-                        String[] args = chatMessage.split("\\" + ChatConfig.chatPrefix + "twitch ");
+                    if (chatMessage.startsWith(ChatConfig.chatPrefix + Commands.TWITCH.getCommand() + " ")) {
+                        String[] args = chatMessage.split("\\" + ChatConfig.chatPrefix + Commands.TWITCH.getCommand() + " ");
                         if (args.length > 1) {
                             String player = args[1];
                             playerSocials(player, "twitch");
@@ -545,12 +587,12 @@ public class ChatEvent {
                         }
                     }
                 }
-                if (chatMessage.equalsIgnoreCase(ChatConfig.chatPrefix + "instagram")) {
+                if (chatMessage.equalsIgnoreCase(ChatConfig.chatPrefix + Commands.INSTAGRAM.getCommand())) {
                     playerSocials(playerName, "instagram");
                 }
                 if (ChatConfig.runOthers) {
-                    if (chatMessage.startsWith(ChatConfig.chatPrefix + "instagram ")) {
-                        String[] args = chatMessage.split("\\" + ChatConfig.chatPrefix + "instagram ");
+                    if (chatMessage.startsWith(ChatConfig.chatPrefix + Commands.INSTAGRAM.getCommand() + " ")) {
+                        String[] args = chatMessage.split("\\" + ChatConfig.chatPrefix + Commands.INSTAGRAM.getCommand() + " ");
                         if (args.length > 1) {
                             String player = args[1];
                             playerSocials(player, "instagram");
@@ -558,12 +600,12 @@ public class ChatEvent {
                         }
                     }
                 }
-                if (chatMessage.equalsIgnoreCase(ChatConfig.chatPrefix + "youtube")) {
+                if (chatMessage.equalsIgnoreCase(ChatConfig.chatPrefix + Commands.YOUTUBE.getCommand())) {
                     playerSocials(playerName, "youtube");
                 }
                 if (ChatConfig.runOthers) {
-                    if (chatMessage.startsWith(ChatConfig.chatPrefix + "youtube ")) {
-                        String[] args = chatMessage.split("\\" + ChatConfig.chatPrefix + "youtube ");
+                    if (chatMessage.startsWith(ChatConfig.chatPrefix + Commands.YOUTUBE.getCommand() + " ")) {
+                        String[] args = chatMessage.split("\\" + ChatConfig.chatPrefix + Commands.YOUTUBE.getCommand() + " ");
                         if (args.length > 1) {
                             String player = args[1];
                             playerSocials(player, "youtube");
@@ -571,12 +613,12 @@ public class ChatEvent {
                         }
                     }
                 }
-                if (chatMessage.equalsIgnoreCase(ChatConfig.chatPrefix + "tiktok")) {
+                if (chatMessage.equalsIgnoreCase(ChatConfig.chatPrefix + Commands.TIKTOK.getCommand())) {
                     playerSocials(playerName, "tiktok");
                 }
                 if (ChatConfig.runOthers) {
-                    if (chatMessage.startsWith(ChatConfig.chatPrefix + "tiktok ")) {
-                        String[] args = chatMessage.split("\\" + ChatConfig.chatPrefix + "tiktok ");
+                    if (chatMessage.startsWith(ChatConfig.chatPrefix + Commands.TIKTOK.getCommand() + " ")) {
+                        String[] args = chatMessage.split("\\" + ChatConfig.chatPrefix + Commands.TIKTOK.getCommand() + " ");
                         if (args.length > 1) {
                             String player = args[1];
                             playerSocials(player, "tiktok");
@@ -584,12 +626,12 @@ public class ChatEvent {
                         }
                     }
                 }
-                if (chatMessage.equalsIgnoreCase(ChatConfig.chatPrefix + "forums")) {
+                if (chatMessage.equalsIgnoreCase(ChatConfig.chatPrefix + Commands.FORUMS.getCommand())) {
                     playerSocials(playerName, "forums");
                 }
                 if (ChatConfig.runOthers) {
-                    if (chatMessage.startsWith(ChatConfig.chatPrefix + "forums ")) {
-                        String[] args = chatMessage.split("\\" + ChatConfig.chatPrefix + "forums ");
+                    if (chatMessage.startsWith(ChatConfig.chatPrefix + Commands.FORUMS.getCommand() + " ")) {
+                        String[] args = chatMessage.split("\\" + ChatConfig.chatPrefix + Commands.FORUMS.getCommand() + " ");
                         if (args.length > 1) {
                             String player = args[1];
                             playerSocials(player, "forums");
@@ -599,16 +641,41 @@ public class ChatEvent {
                 }
             }
             if (ChatConfig.gay) {
-                if (chatMessage.equalsIgnoreCase(ChatConfig.chatPrefix + "gay")) {
-                    sendLaterParty("/pc »»» " + playerName + " is " + RandomUtils.nextInt(0, 101) + "% gay. «««");
+                if (chatMessage.equalsIgnoreCase(ChatConfig.chatPrefix + Commands.GAY.getCommand())) {
+                    int randomNum = RandomUtils.nextInt(0, 101);
+                    if (playerName.equalsIgnoreCase("kalabash")) randomNum = 100;
+                    sendLaterParty("/pc »»» " + playerName + " is " + randomNum + "% gay. «««");
                     return;
                 }
                 if (ChatConfig.runOthers) {
-                    if (chatMessage.startsWith(ChatConfig.chatPrefix + "gay ")) {
+                    if (chatMessage.startsWith(ChatConfig.chatPrefix + Commands.GAY.getCommand() + " ")) {
                         String[] args = chatMessage.split(" ");
                         if (args.length > 1) {
                             String gay = args[1];
-                            sendLaterParty("/pc »»» " + gay + " is " + RandomUtils.nextInt(0, 101) + "% gay. «««");
+                            int randomNum = RandomUtils.nextInt(0, 101);
+                            if (gay.equalsIgnoreCase("kalabash")) randomNum = 100;
+                            sendLaterParty("/pc »»» " + gay + " is " + randomNum + "% gay. «««");
+                            return;
+                        }
+                    }
+                }
+            }
+            if (ChatConfig.nWordPass) {
+                if (chatMessage.equalsIgnoreCase(ChatConfig.chatPrefix + Commands.NPASS.getCommand())) {
+                    sendLaterParty("/pc »»» " + playerName + " was granted the N pass. «««");
+                }
+            }
+            if (ChatConfig.femboy) {
+                if (chatMessage.equalsIgnoreCase(ChatConfig.chatPrefix + Commands.FEMBOY.getCommand())) {
+                    sendLaterParty("/pc »»» " + playerName + " is " + RandomUtils.nextInt(0, 101) + "% femboy. «««");
+                    return;
+                }
+                if (ChatConfig.runOthers) {
+                    if (chatMessage.startsWith(ChatConfig.chatPrefix + Commands.FEMBOY.getCommand() + " ")) {
+                        String[] args = chatMessage.split(" ");
+                        if (args.length > 1) {
+                            String gay = args[1];
+                            sendLaterParty("/pc »»» " + gay + " is " + RandomUtils.nextInt(0, 101) + "% femboy. «««");
                             return;
                         }
                     }
@@ -616,12 +683,12 @@ public class ChatEvent {
             }
 
             if (ChatConfig.racist) {
-                if (chatMessage.equalsIgnoreCase(ChatConfig.chatPrefix + "racist")) {
+                if (chatMessage.equalsIgnoreCase(ChatConfig.chatPrefix + Commands.RACIST.getCommand())) {
                     sendLaterParty("/pc »»» " + playerName + " is " + RandomUtils.nextInt(0, 101) + "% racist. «««");
                     return;
                 }
                 if (ChatConfig.runOthers) {
-                    if (chatMessage.startsWith(ChatConfig.chatPrefix + "racist ")) {
+                    if (chatMessage.startsWith(ChatConfig.chatPrefix + Commands.RACIST.getCommand() + " ")) {
                         String[] args = chatMessage.split(" ");
                         if (args.length > 1) {
                             String racist = args[1];
@@ -633,20 +700,20 @@ public class ChatEvent {
             }
 
             if (ChatConfig.pray) {
-                if (chatMessage.equalsIgnoreCase(ChatConfig.chatPrefix + "pray")) {
+                if (chatMessage.equalsIgnoreCase(ChatConfig.chatPrefix + Commands.PRAY.getCommand())) {
                     sendLaterParty("/pc »»» " + playerName + " prayed to RNGesus! (+" + RandomUtils.nextInt(0, 501) + "% ✯ Magic Find) «««");
                     return;
                 }
             }
             if (ChatConfig.diceRoll) {
-                if (chatMessage.equalsIgnoreCase(ChatConfig.chatPrefix + "dice")) {
+                if (chatMessage.equalsIgnoreCase(ChatConfig.chatPrefix + Commands.DICEROLL.getCommand())) {
                     int roll = RandomUtils.nextInt(1, 7);
                     sendLaterParty("/pc »»» " + playerName + " rolled a " + roll + "! " + getDice(roll) + " «««");
                     return;
                 }
             }
             if (ChatConfig.multiDiceRoll) {
-                if (chatMessage.startsWith(ChatConfig.chatPrefix + "dice ")) {
+                if (chatMessage.startsWith(ChatConfig.chatPrefix + Commands.DICEROLL.getCommand() + " ")) {
                     String[] args = chatMessage.split(" ");
                     if (args.length == 2) {
                         String rollCount = args[1];
@@ -669,12 +736,12 @@ public class ChatEvent {
             }
 
             if (ChatConfig.guild) {
-                if (chatMessage.equalsIgnoreCase(ChatConfig.chatPrefix + "guild")) {
+                if (chatMessage.equalsIgnoreCase(ChatConfig.chatPrefix + Commands.GUILD.getCommand())) {
                     sayGuildInformation(playerName);
                     return;
                 }
                 if (ChatConfig.runOthers) {
-                    if (chatMessage.startsWith(ChatConfig.chatPrefix + "guild ")) {
+                    if (chatMessage.startsWith(ChatConfig.chatPrefix + Commands.GUILD.getCommand() + " ")) {
                         String[] args = chatMessage.split(" ");
                         if (args.length > 1) {
                             String player = args[1];
@@ -686,13 +753,13 @@ public class ChatEvent {
             }
 
             if (ChatConfig.locate) {
-                if (chatMessage.equalsIgnoreCase(ChatConfig.chatPrefix + "locate")) {
+                if (chatMessage.equalsIgnoreCase(ChatConfig.chatPrefix + Commands.LOCATE.getCommand())) {
                     sayPlayerStatus(playerName);
                     return;
                 }
                 if (ChatConfig.runOthers) {
                     if (chatMessage.startsWith(ChatConfig.chatPrefix + "locate ")) {
-                        String[] args = chatMessage.split("\\" + ChatConfig.chatPrefix + "locate ");
+                        String[] args = chatMessage.split("\\" + ChatConfig.chatPrefix + Commands.LOCATE.getCommand() + " ");
                         if (args.length > 1) {
                             String playerToLocate = args[1];
                             if (playerToLocate.contains(" ")) return;
@@ -711,9 +778,33 @@ public class ChatEvent {
 
     public void sendLaterParty(String message) {
         TickHandler.addToQueue(message);
+        System.out.println(message);
     }
 
+    public synchronized void sayAllPlayerSecrets() {
+        for (String s : party) {
+            sayPlayerSecrets(s);
+        }
+    }
 
+    public synchronized void sayPlayerSecrets(String player) {
+        UUID parsed = fromName(player);
+        mod.apiUtil.requestAPI(
+                ApiUtil.HypixelEndpoint.SKYBLOCK_PROFILES,
+                object -> {
+                    JsonArray profiles = object.get("profiles").getAsJsonArray();
+                    for (JsonElement profile : profiles) {
+                        JsonObject profileObject = profile.getAsJsonObject();
+                        if (profileObject.get("selected").getAsBoolean()) {
+                           SkyblockUtil.SkyblockProfile sbProfile = new SkyblockUtil.SkyblockProfile(profileObject);
+                           Integer secrets = sbProfile.getMembers().get(parsed.toString().replaceAll("-", "")).getDungeons().getSecrets();
+                           sendLaterParty("/pc ☠ " + player + "'s secrets: " + secrets + " ☠");
+                        }
+                    }
+                },
+                ApiUtil.HypixelEndpoint.FilledEndpointArgument.uuid(parsed)
+        );
+    }
 
     public synchronized void sayPlayerStatus(String player) {
         UUID parsed = fromName(player);
