@@ -1,36 +1,22 @@
 package me.vlink102.melomod.mixin;
 
 import com.google.common.collect.ImmutableMap;
-import com.google.gson.*;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 import me.vlink102.melomod.MeloMod;
-import me.vlink102.melomod.config.MeloConfiguration;
 import me.vlink102.melomod.events.ChatEvent;
 import me.vlink102.melomod.events.InternalLocraw;
-import me.vlink102.melomod.util.ApiUtil;
 import net.minecraft.block.properties.IProperty;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.Minecraft;
-import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.init.Items;
 import net.minecraft.item.EnumDyeColor;
 import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.*;
-import net.minecraft.potion.Potion;
-import net.minecraft.server.MinecraftServer;
+import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.nbt.NBTTagList;
 import net.minecraft.util.BlockPos;
-import net.minecraft.util.ChatComponentText;
-import net.minecraftforge.common.util.Constants;
-import scala.math.BigInt;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
-import java.net.ProtocolException;
-import java.net.URL;
 import java.util.*;
-import java.util.concurrent.*;
 
 public class SkyblockUtil {
     private final MeloMod meloMod;
@@ -38,6 +24,148 @@ public class SkyblockUtil {
     public SkyblockUtil(MeloMod meloMod) {
         this.meloMod = meloMod;
     }
+
+    public static Location getPlayerLocation() {
+        return InternalLocraw.getLocation();
+    }
+
+    public static JsonObject getAsJsonObject(String key, JsonObject parent) {
+        if (parent == null) return null;
+        if (parent.has(key)) {
+            if (!parent.get(key).isJsonNull() && parent.get(key) != null && parent.get(key).isJsonObject()) {
+                return parent.getAsJsonObject(key);
+            }
+        }
+        return new JsonObject();
+    }
+
+    public static JsonArray getAsJsonArray(String key, JsonObject parent) {
+        if (parent == null) return null;
+        if (parent.has(key)) {
+            if (!parent.get(key).isJsonNull() && parent.get(key) != null && parent.get(key).isJsonArray()) {
+                return parent.getAsJsonArray(key);
+            }
+        }
+        return new JsonArray();
+    }
+
+    public static Boolean getAsBoolean(String key, JsonObject parent) {
+        if (parent == null) return null;
+        if (parent.has(key)) {
+            if (!parent.get(key).isJsonNull() && parent.get(key) != null && parent.get(key).isJsonPrimitive()) {
+                if (parent.getAsJsonPrimitive(key).isBoolean()) {
+                    return parent.get(key).getAsBoolean();
+                }
+            }
+        }
+        return null;
+    }
+
+    public static String getAsString(String key, JsonObject parent) {
+        if (parent == null) return null;
+        if (parent.has(key)) {
+            if (!parent.get(key).isJsonNull() && parent.get(key) != null && parent.get(key).isJsonPrimitive()) {
+                if (parent.getAsJsonPrimitive(key).isString()) {
+                    return parent.get(key).getAsString();
+                }
+            }
+        }
+        return null;
+    }
+
+    public static Integer getAsInteger(String key, JsonObject parent) {
+        if (parent == null) return null;
+        if (parent.has(key)) {
+            if (!parent.get(key).isJsonNull() && parent.get(key) != null && parent.get(key).isJsonPrimitive()) {
+                if (parent.getAsJsonPrimitive(key).isNumber()) {
+                    return parent.get(key).getAsInt();
+                }
+            }
+        }
+        return null;
+    }
+
+    public static Float getAsFloat(String key, JsonObject parent) {
+        if (parent == null) return null;
+        if (parent.has(key)) {
+            if (!parent.get(key).isJsonNull() && parent.get(key) != null && parent.get(key).isJsonPrimitive()) {
+                if (parent.getAsJsonPrimitive(key).isNumber()) {
+                    return parent.get(key).getAsFloat();
+                }
+            }
+        }
+        return null;
+    }
+
+    public static Double getAsDouble(String key, JsonObject parent) {
+        if (parent == null) return null;
+        if (parent.has(key)) {
+            if (!parent.get(key).isJsonNull() && parent.get(key) != null && parent.get(key).isJsonPrimitive()) {
+                if (parent.getAsJsonPrimitive(key).isNumber()) {
+                    return parent.get(key).getAsDouble();
+                }
+            }
+        }
+        return null;
+    }
+
+    public static Long getAsLong(String key, JsonObject parent) {
+        if (parent == null) return null;
+        if (parent.has(key)) {
+            if (!parent.get(key).isJsonNull() && parent.get(key) != null && parent.get(key).isJsonPrimitive()) {
+                if (parent.getAsJsonPrimitive(key).isNumber()) {
+                    return parent.get(key).getAsLong();
+                }
+            }
+        }
+        return null;
+    }
+
+    public static List<String> getLore(ItemStack is) {
+        return getLore(is.getTagCompound());
+    }
+
+    public static List<String> getLore(NBTTagCompound tagCompound) {
+        if (tagCompound == null) {
+            return Collections.emptyList();
+        }
+        NBTTagList tagList = tagCompound.getCompoundTag("display").getTagList("Lore", 8);
+        List<String> list = new ArrayList<>();
+        for (int i = 0; i < tagList.tagCount(); i++) {
+            list.add(tagList.getStringTagAt(i));
+        }
+        return list;
+    }
+
+    public static UUID fromString(String uuid) {
+        if (uuid == null) return null;
+        if (!uuid.contains("-")) {
+            return fixMalformed(uuid);
+        }
+        return UUID.fromString(uuid);
+    }
+
+    public static UUID fixMalformed(String uuid) {
+        return fromString(uuid.substring(0, 8) + "-" + uuid.substring(8, 12) + "-" + uuid.substring(12, 16) + "-" + uuid.substring(16, 20) + "-" + uuid.substring(20));
+    }
+
+    public void updateInformation(JsonObject object) {
+        JsonArray profiles = object.get("profiles").getAsJsonArray();
+        for (JsonElement profile : profiles) {
+            JsonObject profileObject = profile.getAsJsonObject();
+            if (profileObject.get("selected").getAsBoolean()) {
+                meloMod.setPlayerProfile(new SkyblockProfile(profileObject));
+
+                HashMap<String, Integer> kills = meloMod.getPlayerProfile().getMembers().get(MeloMod.playerUUID.toString().replaceAll("-", "")).getBestiary().getKills();
+                for (Map.Entry<String, Integer> entry : kills.entrySet()) {
+                    String string = entry.getKey();
+                    ChatEvent.seaCreatureSession.put(ChatEvent.SeaCreature.convertBestiaryMob(string), entry.getValue());
+                }
+                return;
+            }
+        }
+    }
+
 
     public enum ItemType {
         BELT,
@@ -111,10 +239,6 @@ public class SkyblockUtil {
             this.blockType = blockType;
         }
 
-        public EnumDyeColor getBlockType() {
-            return blockType;
-        }
-
         public static Gemstone getFromBlock(BlockPos block) {
             IBlockState state = Minecraft.getMinecraft().theWorld.getBlockState(block);
             ImmutableMap<IProperty, Comparable> map = state.getProperties();
@@ -128,10 +252,10 @@ public class SkyblockUtil {
             return null;
         }
 
-    }
+        public EnumDyeColor getBlockType() {
+            return blockType;
+        }
 
-    public static Location getPlayerLocation() {
-        return InternalLocraw.getLocation();
     }
 
     public enum Location {
@@ -158,11 +282,8 @@ public class SkyblockUtil {
             this.internal = internal;
         }
 
-        public String getInternal() {
-            return internal;
-        }
-
         public static Location parseFromLocraw(String locrawGamemode) {
+            if (locrawGamemode == null) return null;
             for (Location value : Location.values()) {
                 if (locrawGamemode.equalsIgnoreCase(value.getInternal())) {
                     return value;
@@ -170,8 +291,68 @@ public class SkyblockUtil {
             }
             return null;
         }
+
+        public String getInternal() {
+            return internal;
+        }
     }
 
+    public enum Gamemode {
+        NORMAL,
+        IRONMAN,
+        STRANDED,
+        BINGO;
+
+        public static Gamemode parseFromJSON(String gamemode) {
+            if (gamemode == null) return null;
+            if (gamemode.equalsIgnoreCase("ironman")) return IRONMAN;
+            if (gamemode.equalsIgnoreCase("island")) return STRANDED;
+            if (gamemode.equalsIgnoreCase("bingo")) return BINGO;
+            return NORMAL;
+        }
+    }
+
+    public enum ItemRarity {
+        UNCOMMON('a'), // swapped for matching
+        COMMON('f'),
+        RARE('9'),
+        EPIC('5'),
+        LEGENDARY('6'),
+        MYTHIC('d'),
+        DIVINE('b'),
+        VERY_SPECIAL('c'), // swapped for matching
+        SPECIAL('c'),
+        SUPREME('4'),
+        ADMIN('4');
+
+        private final char color;
+
+        ItemRarity(char color) {
+            this.color = color;
+        }
+
+        public static ItemRarity parseRarity(String rarity) {
+            if (rarity == null) {
+                return null;
+            }
+            return ItemRarity.valueOf(rarity.toUpperCase());
+        }
+
+        public static ItemRarity parseFromItemStack(ItemStack stack) {
+            List<String> lore = getLore(stack);
+            String entry = lore.get(lore.size() - 1);
+            for (ItemRarity value : ItemRarity.values()) {
+                if (entry.contains(value.toString().replaceAll("_", " "))) {
+                    return value;
+                }
+            }
+            return null;
+        }
+
+        public String getColor() {
+            return "§" + color;
+        }
+    }
 
     public static class Guild {
         //private final String guildID;
@@ -376,6 +557,7 @@ public class SkyblockUtil {
                     expHistory.put(s, getAsInteger(s, expHistoryObject));
                 }
             }
+
             public UUID getUUID() {
                 return uuid;
             }
@@ -399,190 +581,6 @@ public class SkyblockUtil {
             public HashMap<String, Integer> getExpHistory() {
                 return expHistory;
             }
-        }
-    }
-
-
-    public static JsonObject getAsJsonObject(String key, JsonObject parent) {
-        if (parent == null) return null;
-        if (parent.has(key)) {
-            if (!parent.get(key).isJsonNull() && parent.get(key) != null && parent.get(key).isJsonObject()) {
-                return parent.getAsJsonObject(key);
-            }
-        }
-        return new JsonObject();
-    }
-
-    public static JsonArray getAsJsonArray(String key, JsonObject parent) {
-        if (parent == null) return null;
-        if (parent.has(key)) {
-            if (!parent.get(key).isJsonNull() && parent.get(key) != null && parent.get(key).isJsonArray()) {
-                return parent.getAsJsonArray(key);
-            }
-        }
-        return new JsonArray();
-    }
-
-    public static Boolean getAsBoolean(String key, JsonObject parent) {
-        if (parent == null) return null;
-        if (parent.has(key)) {
-            if (!parent.get(key).isJsonNull() && parent.get(key) != null && parent.get(key).isJsonPrimitive()) {
-                if (parent.getAsJsonPrimitive(key).isBoolean()) {
-                    return parent.get(key).getAsBoolean();
-                }
-            }
-        }
-        return null;
-    }
-
-    public static String getAsString(String key, JsonObject parent) {
-        if (parent == null) return null;
-        if (parent.has(key)) {
-            if (!parent.get(key).isJsonNull() && parent.get(key) != null && parent.get(key).isJsonPrimitive()) {
-                if (parent.getAsJsonPrimitive(key).isString()) {
-                    return parent.get(key).getAsString();
-                }
-            }
-        }
-        return null;
-    }
-
-    public static Integer getAsInteger(String key, JsonObject parent) {
-        if (parent == null) return null;
-        if (parent.has(key)) {
-            if (!parent.get(key).isJsonNull() && parent.get(key) != null && parent.get(key).isJsonPrimitive()) {
-                if (parent.getAsJsonPrimitive(key).isNumber()) {
-                    return parent.get(key).getAsInt();
-                }
-            }
-        }
-        return null;
-    }
-
-    public static Float getAsFloat(String key, JsonObject parent) {
-        if (parent == null) return null;
-        if (parent.has(key)) {
-            if (!parent.get(key).isJsonNull() && parent.get(key) != null && parent.get(key).isJsonPrimitive()) {
-                if (parent.getAsJsonPrimitive(key).isNumber()) {
-                    return parent.get(key).getAsFloat();
-                }
-            }
-        }
-        return null;
-    }
-
-    public static Double getAsDouble(String key, JsonObject parent) {
-        if (parent == null) return null;
-        if (parent.has(key)) {
-            if (!parent.get(key).isJsonNull() && parent.get(key) != null && parent.get(key).isJsonPrimitive()) {
-                if (parent.getAsJsonPrimitive(key).isNumber()) {
-                    return parent.get(key).getAsDouble();
-                }
-            }
-        }
-        return null;
-    }
-
-    public static Long getAsLong(String key, JsonObject parent) {
-        if (parent == null) return null;
-        if (parent.has(key)) {
-            if (!parent.get(key).isJsonNull() && parent.get(key) != null && parent.get(key).isJsonPrimitive()) {
-                if (parent.getAsJsonPrimitive(key).isNumber()) {
-                    return parent.get(key).getAsLong();
-                }
-            }
-        }
-        return null;
-    }
-
-
-
-    public class SkyblockProfile {
-        private final UUID profileID;
-        private final Long createdAt;
-        private final Boolean selected;
-        private final HashMap<String, ProfileMember> members;
-        private final String cuteName;
-        private final List<CommunityUpgrade> communityUpgrades;
-        private final Gamemode gamemode;
-
-        @Deprecated
-        public SkyblockProfile(UUID profileID, Long createdAt, boolean selected, HashMap<String, ProfileMember> members, Gamemode gamemode) {
-            this.profileID = profileID;
-            this.selected = selected;
-            this.createdAt = createdAt;
-            this.members = members;
-            this.gamemode = gamemode;
-            this.cuteName = null;
-            this.communityUpgrades = null;
-        }
-
-        public SkyblockProfile(JsonObject profileObject) {
-            this.profileID = fromString(getAsString("profile_id", profileObject));
-            JsonObject communityUpgrades = getAsJsonObject("community_upgrades", profileObject);
-            JsonArray upgradeStates = getAsJsonArray("upgrade_states", communityUpgrades);
-            JsonArray currentlyUpgrading = getAsJsonArray("currently_upgrading", communityUpgrades);
-            List<CommunityUpgrade> upgrades = new ArrayList<>();
-            for (JsonElement upgradeState : upgradeStates) {
-                upgrades.add(new CommunityUpgrade(upgradeState.getAsJsonObject()));
-            }
-            for (JsonElement jsonElement : currentlyUpgrading) {
-                upgrades.add(new CommunityUpgrade(jsonElement.getAsJsonObject()));
-            }
-            this.communityUpgrades = upgrades;
-            this.createdAt = getAsLong("created_at", profileObject);
-            this.members = new HashMap<>();
-            JsonObject membersObject = getAsJsonObject("members", profileObject);
-            for (Map.Entry<String, JsonElement> entry : membersObject.entrySet()) {
-                String string = entry.getKey();
-                members.put(string, new ProfileMember(fromString(string), getAsJsonObject(string, membersObject)));
-            }
-            this.selected = getAsBoolean("selected", profileObject);
-            this.cuteName = getAsString("cute_name", profileObject);
-            this.gamemode = Gamemode.parseFromJSON(getAsString("game_mode", profileObject));
-        }
-
-        public Boolean getSelected() {
-            return selected;
-        }
-
-        public Gamemode getGamemode() {
-            return gamemode;
-        }
-
-        public List<CommunityUpgrade> getCommunityUpgrades() {
-            return communityUpgrades;
-        }
-
-        public HashMap<String, ProfileMember> getMembers() {
-            return members;
-        }
-
-        public Long getCreatedAt() {
-            return createdAt;
-        }
-
-        public String getCuteName() {
-            return cuteName;
-        }
-
-        public UUID getProfileID() {
-            return profileID;
-        }
-    }
-
-
-    public enum Gamemode {
-        NORMAL,
-        IRONMAN,
-        STRANDED,
-        BINGO;
-
-        public static Gamemode parseFromJSON(String gamemode) {
-            if (gamemode.equalsIgnoreCase("ironman")) return IRONMAN;
-            if (gamemode.equalsIgnoreCase("island")) return STRANDED;
-            if (gamemode.equalsIgnoreCase("bingo")) return BINGO;
-            return NORMAL;
         }
     }
 
@@ -680,17 +678,6 @@ public class SkyblockUtil {
             private final String initiatorName;
             private final Double amount;
 
-            public enum Action {
-                DEPOSIT,
-                WITHDRAW;
-
-                public static Action parseFromJSON(String action) {
-                    if (action.equalsIgnoreCase("DEPOSIT")) return DEPOSIT;
-                    if (action.equalsIgnoreCase("WITHDRAW")) return WITHDRAW;
-                    return null;
-                }
-            }
-
             @Deprecated
             public Transaction(Long timestamp, Action action, String initiatorName, Double amount) {
                 this.timestamp = timestamp;
@@ -721,6 +708,92 @@ public class SkyblockUtil {
             public String getInitiatorName() {
                 return initiatorName;
             }
+
+            public enum Action {
+                DEPOSIT,
+                WITHDRAW;
+
+                public static Action parseFromJSON(String action) {
+                    if (action == null) return null;
+                    if (action.equalsIgnoreCase("DEPOSIT")) return DEPOSIT;
+                    if (action.equalsIgnoreCase("WITHDRAW")) return WITHDRAW;
+                    return null;
+                }
+            }
+        }
+    }
+
+    public class SkyblockProfile {
+        private final UUID profileID;
+        private final Long createdAt;
+        private final Boolean selected;
+        private final HashMap<String, ProfileMember> members;
+        private final String cuteName;
+        private final List<CommunityUpgrade> communityUpgrades;
+        private final Gamemode gamemode;
+
+        @Deprecated
+        public SkyblockProfile(UUID profileID, Long createdAt, boolean selected, HashMap<String, ProfileMember> members, Gamemode gamemode) {
+            this.profileID = profileID;
+            this.selected = selected;
+            this.createdAt = createdAt;
+            this.members = members;
+            this.gamemode = gamemode;
+            this.cuteName = null;
+            this.communityUpgrades = null;
+        }
+
+        public SkyblockProfile(JsonObject profileObject) {
+            this.profileID = fromString(getAsString("profile_id", profileObject));
+            JsonObject communityUpgrades = getAsJsonObject("community_upgrades", profileObject);
+            JsonArray upgradeStates = getAsJsonArray("upgrade_states", communityUpgrades);
+            JsonArray currentlyUpgrading = getAsJsonArray("currently_upgrading", communityUpgrades);
+            List<CommunityUpgrade> upgrades = new ArrayList<>();
+            for (JsonElement upgradeState : upgradeStates) {
+                upgrades.add(new CommunityUpgrade(upgradeState.getAsJsonObject()));
+            }
+            for (JsonElement jsonElement : currentlyUpgrading) {
+                upgrades.add(new CommunityUpgrade(jsonElement.getAsJsonObject()));
+            }
+            this.communityUpgrades = upgrades;
+            this.createdAt = getAsLong("created_at", profileObject);
+            this.members = new HashMap<>();
+            JsonObject membersObject = getAsJsonObject("members", profileObject);
+            for (Map.Entry<String, JsonElement> entry : membersObject.entrySet()) {
+                String string = entry.getKey();
+                members.put(string, new ProfileMember(fromString(string), getAsJsonObject(string, membersObject)));
+            }
+            this.selected = getAsBoolean("selected", profileObject);
+            this.cuteName = getAsString("cute_name", profileObject);
+            this.gamemode = Gamemode.parseFromJSON(getAsString("game_mode", profileObject));
+        }
+
+        public Boolean getSelected() {
+            return selected;
+        }
+
+        public Gamemode getGamemode() {
+            return gamemode;
+        }
+
+        public List<CommunityUpgrade> getCommunityUpgrades() {
+            return communityUpgrades;
+        }
+
+        public HashMap<String, ProfileMember> getMembers() {
+            return members;
+        }
+
+        public Long getCreatedAt() {
+            return createdAt;
+        }
+
+        public String getCuteName() {
+            return cuteName;
+        }
+
+        public UUID getProfileID() {
+            return profileID;
         }
     }
 
@@ -809,6 +882,10 @@ public class SkyblockUtil {
             return riftData;
         }
 
+        public UUID getPlayerID() {
+            return playerID;
+        }
+
         public class DeletionNotice {
             private final Integer timestamp;
 
@@ -820,65 +897,6 @@ public class SkyblockUtil {
                 return timestamp;
             }
         }
-
-        public UUID getPlayerID() {
-            return playerID;
-        }
-    }
-
-    public enum ItemRarity {
-        UNCOMMON('a'), // swapped for matching
-        COMMON('f'),
-        RARE('9'),
-        EPIC('5'),
-        LEGENDARY('6'),
-        MYTHIC('d'),
-        DIVINE('b'),
-        VERY_SPECIAL('c'), // swapped for matching
-        SPECIAL('c'),
-        SUPREME('4'),
-        ADMIN('4');
-
-        private final char color;
-
-        ItemRarity(char color) {
-            this.color = color;
-        }
-
-        public String getColor() {
-            return "§" + color;
-        }
-
-        public static ItemRarity parseRarity(String rarity) {
-            return ItemRarity.valueOf(rarity.toUpperCase());
-        }
-
-        public static ItemRarity parseFromItemStack(ItemStack stack) {
-            List<String> lore = getLore(stack);
-            String entry = lore.get(lore.size() - 1);
-            for (ItemRarity value : ItemRarity.values()) {
-                if (entry.contains(value.toString().replaceAll("_", " "))) {
-                    return value;
-                }
-            }
-            return null;
-        }
-    }
-
-    public static List<String> getLore(ItemStack is) {
-        return getLore(is.getTagCompound());
-    }
-
-    public static List<String> getLore(NBTTagCompound tagCompound) {
-        if (tagCompound == null) {
-            return Collections.emptyList();
-        }
-        NBTTagList tagList = tagCompound.getCompoundTag("display").getTagList("Lore", 8);
-        List<String> list = new ArrayList<>();
-        for (int i = 0; i < tagList.tagCount(); i++) {
-            list.add(tagList.getStringTagAt(i));
-        }
-        return list;
     }
 
     public class Bestiary {
@@ -951,6 +969,62 @@ public class SkyblockUtil {
             this.inventory = new Inventory(getAsJsonObject("inventory", object));
         }
 
+        public Access getAccess() {
+            return access;
+        }
+
+        public BlackLagoon getBlackLagoon() {
+            return blackLagoon;
+        }
+
+        public Castle getCastle() {
+            return castle;
+        }
+
+        public DeadCats getDeadCats() {
+            return deadCats;
+        }
+
+        public Dreadfarm getDreadfarm() {
+            return dreadfarm;
+        }
+
+        public Enigma getEnigma() {
+            return enigma;
+        }
+
+        public Gallery getGallery() {
+            return gallery;
+        }
+
+        public Inventory getInventory() {
+            return inventory;
+        }
+
+        public List<String> getLifetimePurchasedBoundaries() {
+            return lifetimePurchasedBoundaries;
+        }
+
+        public VillagePlaza getVillagePlaza() {
+            return villagePlaza;
+        }
+
+        public WestVillage getWestVillage() {
+            return westVillage;
+        }
+
+        public WitherCage getWitherCage() {
+            return witherCage;
+        }
+
+        public WizardTower getWizardTower() {
+            return wizardTower;
+        }
+
+        public WyldWoods getWyldWoods() {
+            return wyldWoods;
+        }
+
         public class VillagePlaza {
             private final Boolean gotScammed;
             private final Murder murder;
@@ -966,6 +1040,30 @@ public class SkyblockUtil {
                 this.cowboy = new Cowboy(getAsJsonObject("cowboy", object));
                 this.lonely = new Lonely(getAsJsonObject("lonely", object));
                 this.seraphine = new Seraphine(getAsJsonObject("seraphine", object));
+            }
+
+            public boolean isGotScammed() {
+                return gotScammed;
+            }
+
+            public BarryCenter getBarryCenter() {
+                return barryCenter;
+            }
+
+            public Cowboy getCowboy() {
+                return cowboy;
+            }
+
+            public Lonely getLonely() {
+                return lonely;
+            }
+
+            public Murder getMurder() {
+                return murder;
+            }
+
+            public Seraphine getSeraphine() {
+                return seraphine;
             }
 
             public class Murder {
@@ -989,6 +1087,7 @@ public class SkyblockUtil {
                     return stepIndex;
                 }
             }
+
             public class BarryCenter {
                 private final Boolean firstTalkToBarry;
                 private final List<String> convinced;
@@ -1016,6 +1115,7 @@ public class SkyblockUtil {
                     return receivedReward;
                 }
             }
+
             public class Cowboy {
                 private final Integer stage;
                 private final Integer hayEaten;
@@ -1045,6 +1145,7 @@ public class SkyblockUtil {
                     return rabbitName;
                 }
             }
+
             public class Lonely {
                 private final Integer secondsSitting;
 
@@ -1056,41 +1157,20 @@ public class SkyblockUtil {
                     return secondsSitting;
                 }
             }
+
             public class Seraphine {
                 private final Integer stepIndex;
 
                 public Seraphine(JsonObject object) {
                     this.stepIndex = getAsInteger("step_index", object);
                 }
+
                 public int getStepIndex() {
                     return stepIndex;
                 }
             }
-
-            public boolean isGotScammed() {
-                return gotScammed;
-            }
-
-            public BarryCenter getBarryCenter() {
-                return barryCenter;
-            }
-
-            public Cowboy getCowboy() {
-                return cowboy;
-            }
-
-            public Lonely getLonely() {
-                return lonely;
-            }
-
-            public Murder getMurder() {
-                return murder;
-            }
-
-            public Seraphine getSeraphine() {
-                return seraphine;
-            }
         }
+
         public class WitherCage {
             private final List<String> eyesKilled;
 
@@ -1106,6 +1186,7 @@ public class SkyblockUtil {
                 return eyesKilled;
             }
         }
+
         public class BlackLagoon {
             private final Boolean talkedToEdwin;
             private final Boolean receivedSciencePaper;
@@ -1135,6 +1216,7 @@ public class SkyblockUtil {
                 return talkedToEdwin;
             }
         }
+
         public class DeadCats {
             private final Boolean talkedToJacquelle;
             private final Boolean pickedUpDetector;
@@ -1221,6 +1303,7 @@ public class SkyblockUtil {
                 }
             }
         }
+
         public class WizardTower {
             private final Integer wizardQuestStep;
             private final Integer crumbsLaidOut;
@@ -1238,6 +1321,7 @@ public class SkyblockUtil {
                 return wizardQuestStep;
             }
         }
+
         public class Enigma {
             private final Boolean boughtCloak;
             private final List<String> foundSouls;
@@ -1252,6 +1336,7 @@ public class SkyblockUtil {
                     foundSouls.add(foundSoul.getAsString());
                 }
             }
+
             public boolean isBoughtCloak() {
                 return boughtCloak;
             }
@@ -1264,6 +1349,7 @@ public class SkyblockUtil {
                 return claimedBonusIndex;
             }
         }
+
         public class Gallery {
             private final Integer eliseStep;
             private final List<SecuredTrophy> securedTrophies;
@@ -1319,6 +1405,7 @@ public class SkyblockUtil {
                 }
             }
         }
+
         public class WestVillage {
             private final MirrorVerse mirrorVerse;
             private final CrazyKloon crazyKloon;
@@ -1385,6 +1472,7 @@ public class SkyblockUtil {
                     return upsideDownHard;
                 }
             }
+
             public class CrazyKloon {
                 private final HashMap<String, String> selectedColors;
                 private final Boolean talked;
@@ -1423,6 +1511,7 @@ public class SkyblockUtil {
                     return talked;
                 }
             }
+
             public class KatHouse {
                 private final Integer binCollectedMosquito;
                 private final Integer binCollectedSilverfish;
@@ -1446,6 +1535,7 @@ public class SkyblockUtil {
                     return binCollectedSpider;
                 }
             }
+
             public class Glyphs {
                 private final Boolean claimedWand;
                 private final Boolean currentGlyphDelivered;
@@ -1488,6 +1578,7 @@ public class SkyblockUtil {
                 }
             }
         }
+
         public class WyldWoods {
             private final List<String> talkedThreeBrothers;
             private final Boolean siriusStartedQA;
@@ -1533,6 +1624,7 @@ public class SkyblockUtil {
                 return talkedThreeBrothers;
             }
         }
+
         public class Castle {
             private final Boolean unlockedPathwaySkip;
             private final Integer fairyStep;
@@ -1556,6 +1648,7 @@ public class SkyblockUtil {
                 return unlockedPathwaySkip;
             }
         }
+
         public class Access {
             private final Long lastFree;
             private final Boolean consumedPrism;
@@ -1574,6 +1667,7 @@ public class SkyblockUtil {
             }
 
         }
+
         public class Dreadfarm {
             private final Integer shaniaStage;
             private final List<Long> caducousFeederUses;
@@ -1595,134 +1689,14 @@ public class SkyblockUtil {
                 return caducousFeederUses;
             }
         }
-
-        public Access getAccess() {
-            return access;
-        }
-
-        public BlackLagoon getBlackLagoon() {
-            return blackLagoon;
-        }
-
-        public Castle getCastle() {
-            return castle;
-        }
-
-        public DeadCats getDeadCats() {
-            return deadCats;
-        }
-
-        public Dreadfarm getDreadfarm() {
-            return dreadfarm;
-        }
-
-        public Enigma getEnigma() {
-            return enigma;
-        }
-
-        public Gallery getGallery() {
-            return gallery;
-        }
-
-        public Inventory getInventory() {
-            return inventory;
-        }
-
-        public List<String> getLifetimePurchasedBoundaries() {
-            return lifetimePurchasedBoundaries;
-        }
-
-        public VillagePlaza getVillagePlaza() {
-            return villagePlaza;
-        }
-
-        public WestVillage getWestVillage() {
-            return westVillage;
-        }
-
-        public WitherCage getWitherCage() {
-            return witherCage;
-        }
-
-        public WizardTower getWizardTower() {
-            return wizardTower;
-        }
-
-        public WyldWoods getWyldWoods() {
-            return wyldWoods;
-        }
     }
-
 
     public class Inventory {
         private final EnderChestContents enderChestContents;
         private final InventoryContents inventoryContents;
         private final InventoryArmor inventoryArmor;
         private final EquipmentContents equipmentContents;
-
-        public class EnderChestContents {
-            private final Integer type;
-            private final String data;
-
-            public EnderChestContents(JsonObject object) {
-                this.type = getAsInteger("type", object);
-                this.data = getAsString("data", object); // TODO
-            }
-
-            public int getType() {
-                return type;
-            }
-
-            public String getData() {
-                return data;
-            }
-        }
         private final List<String> enderChestPageIcons;
-        public class InventoryContents {
-            private final Integer type;
-            private final String data;
-
-            public InventoryContents(JsonObject object) {
-                this.type = getAsInteger("type", object);
-                this.data = getAsString("data", object);// TODO
-            }
-
-            public String getData() {
-                return data;
-            }
-            public int getType() {
-                return type;
-            }
-        }
-        public class InventoryArmor {
-            private final Integer type;
-            private final String data;
-            public InventoryArmor(JsonObject object) {
-                this.type = getAsInteger("type", object);
-                this.data = getAsString("data", object); // TODO
-            }
-            public int getType() {
-                return type;
-            }
-            public String getData() {
-                return data;
-            }
-        }
-        public class EquipmentContents {
-            private final Integer type;
-            private final String data;
-            public EquipmentContents(JsonObject object) {
-                this.type = getAsInteger("type", object);
-                this.data = getAsString("data", object); // TODO
-            }
-            public int getType() {
-                return type;
-            }
-
-            public String getData() {
-                return data;
-            }
-        }
 
         public Inventory(JsonObject object) {
             this.enderChestPageIcons = new ArrayList<>();
@@ -1742,6 +1716,78 @@ public class SkyblockUtil {
             this.inventoryContents = new InventoryContents(getAsJsonObject("inv_contents", object));
             this.inventoryArmor = new InventoryArmor(getAsJsonObject("inv_armor", object));
             this.equipmentContents = new EquipmentContents(getAsJsonObject("equipment_contents", object));
+        }
+
+        public class EnderChestContents {
+            private final Integer type;
+            private final String data;
+
+            public EnderChestContents(JsonObject object) {
+                this.type = getAsInteger("type", object);
+                this.data = getAsString("data", object); // TODO
+            }
+
+            public int getType() {
+                return type;
+            }
+
+            public String getData() {
+                return data;
+            }
+        }
+
+        public class InventoryContents {
+            private final Integer type;
+            private final String data;
+
+            public InventoryContents(JsonObject object) {
+                this.type = getAsInteger("type", object);
+                this.data = getAsString("data", object);// TODO
+            }
+
+            public String getData() {
+                return data;
+            }
+
+            public int getType() {
+                return type;
+            }
+        }
+
+        public class InventoryArmor {
+            private final Integer type;
+            private final String data;
+
+            public InventoryArmor(JsonObject object) {
+                this.type = getAsInteger("type", object);
+                this.data = getAsString("data", object); // TODO
+            }
+
+            public int getType() {
+                return type;
+            }
+
+            public String getData() {
+                return data;
+            }
+        }
+
+        public class EquipmentContents {
+            private final Integer type;
+            private final String data;
+
+            public EquipmentContents(JsonObject object) {
+                this.type = getAsInteger("type", object);
+                this.data = getAsString("data", object); // TODO
+            }
+
+            public int getType() {
+                return type;
+            }
+
+            public String getData() {
+                return data;
+            }
         }
     }
 
@@ -1831,7 +1877,7 @@ public class SkyblockUtil {
             this.masterCatacombs = new Catacombs(getAsJsonObject("master_catacombs", typeObject), true);
             this.playerClasses = new HashMap<>();
             JsonObject playerClassesObject = getAsJsonObject("player_classes", object);
-            for (Map.Entry<String, JsonElement> entry  : playerClassesObject.entrySet()) {
+            for (Map.Entry<String, JsonElement> entry : playerClassesObject.entrySet()) {
                 String string = entry.getKey();
                 playerClasses.put(string, getAsDouble(string, playerClassesObject));
             }
@@ -2031,48 +2077,63 @@ public class SkyblockUtil {
             public HashMap<String, Float> getMobsKilled() {
                 return mobsKilled;
             }
+
             public HashMap<String, Float> getFastestTimeS() {
                 return fastestTimeS;
             }
+
             public HashMap<String, Float> getMostDamageTank() {
                 return mostDamageTank;
             }
+
             public HashMap<String, Float> getFastestTime() {
                 return fastestTime;
             }
+
             public HashMap<String, Float> getMostDamageMage() {
                 return mostDamageMage;
             }
+
             public HashMap<String, Float> getTierCompletions() {
                 return tierCompletions;
             }
+
             public HashMap<String, Float> getMostDamageHealer() {
                 return mostDamageHealer;
             }
+
             public HashMap<String, Float> getMostDamageArcher() {
                 return mostDamageArcher;
             }
+
             public HashMap<String, Float> getWatcherKills() {
                 return watcherKills;
             }
+
             public HashMap<String, Float> getMostHealing() {
                 return mostHealing;
             }
+
             public HashMap<String, Float> getBestScore() {
                 return bestScore;
             }
+
             public HashMap<String, Float> getMostDamageBerserk() {
                 return mostDamageBerserk;
             }
+
             public HashMap<String, Float> getFastestTimeSPlus() {
                 return fastestTimeSPlus;
             }
+
             public HashMap<String, Float> getMostMobsKilled() {
                 return mostMobsKilled;
             }
+
             public HashMap<String, Float> getTimesPlayed() {
                 return timesPlayed;
             }
+
             public HashMap<String, Float> getMilestoneCompletions() {
                 return milestoneCompletions;
             }
@@ -2181,6 +2242,7 @@ public class SkyblockUtil {
         }
 
     }
+
     public class Currencies {
         private final Double coinPurse;
         private final Double motesPurse;
@@ -2209,6 +2271,7 @@ public class SkyblockUtil {
             return essence;
         }
     }
+
     public class JacobsContest {
         private final HashMap<String, Integer> medalsInv;
         private final HashMap<String, Integer> perks;
@@ -2221,13 +2284,13 @@ public class SkyblockUtil {
         public JacobsContest(JsonObject object) {
             this.medalsInv = new HashMap<>();
             JsonObject medalsInvObject = getAsJsonObject("medals_inv", object);
-            for (Map.Entry<String, JsonElement> entry: medalsInvObject.entrySet()) {
+            for (Map.Entry<String, JsonElement> entry : medalsInvObject.entrySet()) {
                 String string = entry.getKey();
                 medalsInv.put(string, getAsInteger(string, medalsInvObject));
             }
             this.perks = new HashMap<>();
             JsonObject perksObject = getAsJsonObject("perks", object);
-            for (Map.Entry<String, JsonElement> entry: perksObject.entrySet()) {
+            for (Map.Entry<String, JsonElement> entry : perksObject.entrySet()) {
                 String string = entry.getKey();
                 perks.put(string, getAsInteger(string, perksObject));
             }
@@ -2239,7 +2302,7 @@ public class SkyblockUtil {
             this.talked = getAsBoolean("talked", object);
             this.uniqueBrackets = new HashMap<>();
             JsonObject uniqueBracketsObject = getAsJsonObject("unique_brackets", object);
-            for (Map.Entry<String, JsonElement> entry: uniqueBracketsObject.entrySet()) {
+            for (Map.Entry<String, JsonElement> entry : uniqueBracketsObject.entrySet()) {
                 String string = entry.getKey();
                 uniqueBrackets.put(string, new ArrayList<>());
                 JsonArray stringArray = uniqueBracketsObject.getAsJsonArray(string);
@@ -2320,9 +2383,11 @@ public class SkyblockUtil {
             }
         }
     }
+
     public class ItemData {
         private final Integer soulflow;
         private final Integer favoriteArrow;
+
         public ItemData(JsonObject object) {
             this.soulflow = getAsInteger("soulflow", object);
             this.favoriteArrow = getAsInteger("favorite_arrow", object);
@@ -2336,6 +2401,7 @@ public class SkyblockUtil {
             return soulflow;
         }
     }
+
     public class Levelling {
         private final Integer experience;
         private final HashMap<String, Integer> completions;
@@ -2458,6 +2524,7 @@ public class SkyblockUtil {
             return migratedCompletions2;
         }
     }
+
     public class AccessoryBagStorage {
         private final Tuning tuning;
         private final String selectedPower;
@@ -2499,6 +2566,7 @@ public class SkyblockUtil {
 
         public class Tuning {
             private final HashMap<String, Integer> slot0;
+
             public Tuning(JsonObject object) {
                 this.slot0 = new HashMap<>();
                 JsonObject slot0Object = getAsJsonObject("slot_0", object);
@@ -2514,7 +2582,34 @@ public class SkyblockUtil {
         }
 
     }
+
     public class PetsData {
+        private final List<Pet> pets;
+        private final PetCare petCare;
+        private final AutoPet autoPet;
+
+        public PetsData(JsonObject object) {
+            this.petCare = new PetCare(getAsJsonObject("pet_care", object));
+            this.autoPet = new AutoPet(getAsJsonObject("autopet", object));
+            this.pets = new ArrayList<>();
+            JsonArray petsArray = getAsJsonArray("pets", object);
+            for (JsonElement jsonElement : petsArray) {
+                pets.add(new Pet(jsonElement.getAsJsonObject()));
+            }
+        }
+
+        public AutoPet getAutoPet() {
+            return autoPet;
+        }
+
+        public List<Pet> getPets() {
+            return pets;
+        }
+
+        public PetCare getPetCare() {
+            return petCare;
+        }
+
         public class PetCare {
             private final Double coinsSpent;
             private final List<String> petTypesSacrificed;
@@ -2536,6 +2631,7 @@ public class SkyblockUtil {
                 return petTypesSacrificed;
             }
         }
+
         public class AutoPet {
             private final Integer rulesLimit;
             private final List<AutoPetRule> autoPetRules;
@@ -2578,6 +2674,7 @@ public class SkyblockUtil {
                 private final List<AutoPetRuleException> autoPetRuleExceptions;
                 private final Boolean disabled;
                 private final HashMap<String, String> data;
+
                 public AutoPetRule(JsonObject object) {
                     this.uuid = fromString(getAsString("uuid", object));
                     this.id = getAsString("id", object);
@@ -2650,31 +2747,6 @@ public class SkyblockUtil {
                 }
             }
         }
-        private final List<Pet> pets;
-        private final PetCare petCare;
-        private final AutoPet autoPet;
-
-        public PetsData(JsonObject object) {
-            this.petCare = new PetCare(getAsJsonObject("pet_care", object));
-            this.autoPet = new AutoPet(getAsJsonObject("autopet", object));
-            this.pets = new ArrayList<>();
-            JsonArray petsArray = getAsJsonArray("pets", object);
-            for (JsonElement jsonElement : petsArray) {
-                pets.add(new Pet(jsonElement.getAsJsonObject()));
-            }
-        }
-
-        public AutoPet getAutoPet() {
-            return autoPet;
-        }
-
-        public List<Pet> getPets() {
-            return pets;
-        }
-
-        public PetCare getPetCare() {
-            return petCare;
-        }
 
         public class Pet {
             private final UUID uuid;
@@ -2736,6 +2808,7 @@ public class SkyblockUtil {
             }
         }
     }
+
     public class GardenPlayerData {
         private final Integer copper;
         private final Integer larvaConsumed;
@@ -2807,6 +2880,74 @@ public class SkyblockUtil {
                 this.rabbitRarityUpgrades = getAsInteger("rabbit_rarity_upgrades", object);
                 this.supremeChocolateBars = getAsInteger("supreme_chocolate_bars", object);
                 this.refinedDarkCacaoTruffles = getAsInteger("refined_dark_cacao_truffles", object);
+            }
+
+            public HashMap<String, Integer> getEmployees() {
+                return employees;
+            }
+
+            public int getChocolateLevel() {
+                return chocolateLevel;
+            }
+
+            public long getChocolate() {
+                return chocolate;
+            }
+
+            public int getChocolateMultiplierUpgrades() {
+                return chocolateMultiplierUpgrades;
+            }
+
+            public int getClickUpgrades() {
+                return clickUpgrades;
+            }
+
+            public int getRabbitBarnCapacityLevel() {
+                return rabbitBarnCapacityLevel;
+            }
+
+            public int getRabbitRarityUpgrades() {
+                return rabbitRarityUpgrades;
+            }
+
+            public int getRefinedDarkCacaoTruffles() {
+                return refinedDarkCacaoTruffles;
+            }
+
+            public int getSupremeChocolateBars() {
+                return supremeChocolateBars;
+            }
+
+            public long getChocolateSincePrestige() {
+                return chocolateSincePrestige;
+            }
+
+            public long getLastViewedChocolateFactory() {
+                return lastViewedChocolateFactory;
+            }
+
+            public long getTotalChocolate() {
+                return totalChocolate;
+            }
+
+            public Rabbits getRabbits() {
+                return rabbits;
+            }
+
+            public Shop getShop() {
+                return shop;
+            }
+
+            public String getRabbitFilter() {
+                return rabbitFilter;
+            }
+
+            public String getRabbitSort() {
+                return rabbitSort;
+            }
+
+            public TimeTower getTimeTower() {
+                return timeTower;
             }
 
             public class TimeTower {
@@ -2882,6 +3023,7 @@ public class SkyblockUtil {
                     return chocolateSpent;
                 }
             }
+
             public class Rabbits {
                 private final HashMap<String, Long> collectedEggs;
                 private final HashMap<String, List<String>> collectedLocations;
@@ -2912,74 +3054,6 @@ public class SkyblockUtil {
                 public HashMap<String, Long> getCollectedEggs() {
                     return collectedEggs;
                 }
-            }
-
-            public HashMap<String, Integer> getEmployees() {
-                return employees;
-            }
-
-            public int getChocolateLevel() {
-                return chocolateLevel;
-            }
-
-            public long getChocolate() {
-                return chocolate;
-            }
-
-            public int getChocolateMultiplierUpgrades() {
-                return chocolateMultiplierUpgrades;
-            }
-
-            public int getClickUpgrades() {
-                return clickUpgrades;
-            }
-
-            public int getRabbitBarnCapacityLevel() {
-                return rabbitBarnCapacityLevel;
-            }
-
-            public int getRabbitRarityUpgrades() {
-                return rabbitRarityUpgrades;
-            }
-
-            public int getRefinedDarkCacaoTruffles() {
-                return refinedDarkCacaoTruffles;
-            }
-
-            public int getSupremeChocolateBars() {
-                return supremeChocolateBars;
-            }
-
-            public long getChocolateSincePrestige() {
-                return chocolateSincePrestige;
-            }
-
-            public long getLastViewedChocolateFactory() {
-                return lastViewedChocolateFactory;
-            }
-
-            public long getTotalChocolate() {
-                return totalChocolate;
-            }
-
-            public Rabbits getRabbits() {
-                return rabbits;
-            }
-
-            public Shop getShop() {
-                return shop;
-            }
-
-            public String getRabbitFilter() {
-                return rabbitFilter;
-            }
-
-            public String getRabbitSort() {
-                return rabbitSort;
-            }
-
-            public TimeTower getTimeTower() {
-                return timeTower;
             }
         }
     }
@@ -3052,17 +3126,6 @@ public class SkyblockUtil {
             return key;
         }
     }
-    public static UUID fromString(String uuid) {
-        if (uuid == null) return null;
-        if (!uuid.contains("-")) {
-            return fixMalformed(uuid);
-        }
-        return UUID.fromString(uuid);
-    }
-
-    public static UUID fixMalformed(String uuid) {
-        return fromString(uuid.substring(0, 8) + "-" + uuid.substring(8, 12) + "-" + uuid.substring(12,16) + "-" + uuid.substring(16, 20) + "-" + uuid.substring(20));
-    }
 
         /*
     public JsonObject getCurrentProfile(UUID uuid) {
@@ -3094,35 +3157,5 @@ public class SkyblockUtil {
     }
 
          */
-
-
-    public synchronized void requestUpdate(boolean force) {
-        meloMod.apiUtil
-                    .newHypixelApiRequest("skyblock/profiles")
-                    .queryArgument("uuid", Minecraft.getMinecraft().thePlayer.getUniqueID().toString().replace("-", ""))
-                    .requestJson()
-                    .thenAccept(this::updateInformation);
-
-    }
-
-    public void updateInformation(JsonObject object) {
-
-        JsonArray profiles = object.get("profiles").getAsJsonArray();
-        for (JsonElement profile : profiles) {
-            JsonObject profileObject = profile.getAsJsonObject();
-            if (profileObject.get("selected").getAsBoolean()) {
-                meloMod.setPlayerProfile(new SkyblockProfile(profileObject));
-                System.out.println(Minecraft.getMinecraft().thePlayer.getUniqueID().toString().replace("-", ""));
-
-                HashMap<String, Integer> kills = meloMod.getPlayerProfile().getMembers().get(Minecraft.getMinecraft().thePlayer.getUniqueID().toString().replace("-", "")).getBestiary().getKills();
-                for (Map.Entry<String, Integer> entry : kills.entrySet()) {
-                    String string = entry.getKey();
-                    ChatEvent.seaCreatureSession.put(ChatEvent.SeaCreature.convertBestiaryMob(string), entry.getValue());
-                }
-                return;
-            }
-        }
-
-    }
 
 }

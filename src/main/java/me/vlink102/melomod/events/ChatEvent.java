@@ -1,14 +1,21 @@
 package me.vlink102.melomod.events;
 
+import cc.polyfrost.oneconfig.config.annotations.Switch;
 import cc.polyfrost.oneconfig.events.EventManager;
 import cc.polyfrost.oneconfig.events.event.ChatReceiveEvent;
 import cc.polyfrost.oneconfig.events.event.ChatSendEvent;
 import cc.polyfrost.oneconfig.libs.eventbus.Subscribe;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import me.vlink102.melomod.MeloMod;
 import me.vlink102.melomod.config.ChatConfig;
+import me.vlink102.melomod.events.chatcooldownmanager.ServerTracker;
+import me.vlink102.melomod.events.chatcooldownmanager.TickHandler;
+import me.vlink102.melomod.mixin.PlayerUtil;
 import me.vlink102.melomod.mixin.SkyblockUtil;
+import me.vlink102.melomod.util.ApiUtil;
 import me.vlink102.melomod.util.StringUtils;
 import me.vlink102.melomod.util.Utils;
 import me.vlink102.melomod.util.math.DoubleEvaluator;
@@ -16,7 +23,9 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.IChatComponent;
+import org.apache.commons.lang3.RandomUtils;
 import org.apache.commons.lang3.text.WordUtils;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -24,13 +33,23 @@ import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
+import java.security.SecureRandom;
 import java.util.*;
 import java.util.concurrent.*;
+import java.util.function.Supplier;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class ChatEvent {
 
+    public synchronized void getChessMove(String fen) {
+        JsonObject body = new JsonObject();
+        body.addProperty("fen", fen);
+        body.addProperty("depth", 10);
+        mod.apiUtil.requestServer("https://chess-api.com/v1", body, object -> TickHandler.addToQueue("/pc »»» " + object.get("text").getAsString() + " «««"));
+    }
+
+    /*
     public CompletableFuture<Void> getChessMove(String fen) {
         return CompletableFuture.runAsync(() -> {
             try {
@@ -39,6 +58,7 @@ public class ChatEvent {
                 con.setRequestMethod("POST");
                 con.setRequestProperty("Content-Type", "application/json");
                 con.setRequestProperty("Accept", "application/json");
+
                 con.setDoOutput(true);
                 String jsonInputString = "{\"fen\": \"" + fen + "\", \"depth\": 10}";
                 try(OutputStream os = con.getOutputStream()) {
@@ -53,21 +73,25 @@ public class ChatEvent {
                         response.append(responseLine.trim());
                     }
                     JsonObject object = new JsonParser().parse(response.toString()).getAsJsonObject();
-                    Minecraft.getMinecraft().thePlayer.sendChatMessage("/pc »»» " + object.get("text").getAsString() + " «««");
+
                 }
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
         });
     }
+
+
+     */
     private final MeloMod mod;
+
+    private final RandomUtils random;
 
     public ChatEvent(MeloMod mod) {
         this.mod = mod;
+        this.random = new RandomUtils();
         EventManager.INSTANCE.register(this);
     }
-
-    private static final ThreadLocalRandom random = ThreadLocalRandom.current();
 
     public enum SeaCreature {
         SQUID("pond_squid", "pond_squid_1"),
@@ -205,21 +229,19 @@ public class ChatEvent {
         return Utils.prettyTime(millis);
     }
 
-    public static void updateLastCaught(SeaCreature caught, boolean doubleHook) {
+    public void updateLastCaught(SeaCreature caught, boolean doubleHook) {
         seaCreatureSession.put(caught, seaCreatureSession.getOrDefault(caught, 0) + (doubleHook ? 2 : 1));
         if (!lastCaught.containsKey(caught) && !lastCaughtTimeStamp.containsKey(caught)) {
             if (ChatConfig.fishingChat) {
-                Minecraft.getMinecraft().thePlayer.sendChatMessage("/pc " + (doubleHook ? "‹⚓› ‼ DOUBLE HOOK ‼ " : "‹☂› ") + "☆ Caught a " + WordUtils.capitalizeFully(caught.toString().replaceAll("_", " ")) + "! ◆ First Catch in Session! ☆");
+                sendLaterParty("/pc " + (doubleHook ? "‹⚓› ‼ DOUBLE HOOK ‼ " : "‹☂› ") + "☆ Caught a " + WordUtils.capitalizeFully(caught.toString().replaceAll("_", " ")) + "! ◆ First Catch in Session! ☆");
             }
-            lastCaught.put(caught, 0);
-            lastCaughtTimeStamp.put(caught, System.currentTimeMillis());
         } else {
             if (ChatConfig.fishingChat) {
-                Minecraft.getMinecraft().thePlayer.sendChatMessage("/pc " + (doubleHook ? "‹⚓› ‼ DOUBLE HOOK ‼ " : "‹☂› ") + "☆ Caught a " + WordUtils.capitalizeFully(caught.toString().replaceAll("_", " ")) + "! ◆ Total: " + seaCreatureSession.get(caught) + " ◆ Since Last: " + lastCaught.get(caught) + " ◆ Last Caught: " + prettyTime(System.currentTimeMillis() - lastCaughtTimeStamp.get(caught)) + " ago. ☆");
+                sendLaterParty("/pc " + (doubleHook ? "‹⚓› ‼ DOUBLE HOOK ‼ " : "‹☂› ") + "☆ Caught a " + WordUtils.capitalizeFully(caught.toString().replaceAll("_", " ")) + "! ◆ Total: " + seaCreatureSession.get(caught) + " ◆ Since Last: " + lastCaught.get(caught) + " ◆ Last Caught: " + prettyTime(System.currentTimeMillis() - lastCaughtTimeStamp.get(caught)) + " ago. ☆");
             }
-            lastCaught.put(caught, 0);
-            lastCaughtTimeStamp.put(caught, System.currentTimeMillis());
         }
+        lastCaught.put(caught, 0);
+        lastCaughtTimeStamp.put(caught, System.currentTimeMillis());
         for (SeaCreature value : SeaCreature.values()) {
             if (value == caught) continue;
             if (lastCaught.containsKey(value)) {
@@ -237,17 +259,182 @@ public class ChatEvent {
         }
     }
 
-    public static void sendLater(String string) {
-        ScheduledExecutorService executorService = new ScheduledThreadPoolExecutor(1);
-        executorService.schedule(() -> Minecraft.getMinecraft().thePlayer.sendChatMessage(string), 200, TimeUnit.MILLISECONDS);
+    @Subscribe
+    public void onChatSend(ChatSendEvent event) {
+        TickHandler.ticksSinceLastChat = 0;
     }
 
+    public enum Commands {
+        GAY("gay", ChatConfig::isGay, optional("player", true)),
+        RACIST("racist", ChatConfig::isRacist, optional("player", true)),
+        DICEROLL("dice", ChatConfig::isDiceRoll, optional("amount", false)),
+        PRAY("pray", ChatConfig::isPray),
+        CHESSENGINE("chess", ChatConfig::isChessEngine, required("fen", false)),
+        MATHEVALUATION("eval", ChatConfig::isMathEvaluation, required("expression", false)),
+        GUILD("guild", ChatConfig::isGuild, optional("player", true)),
+        LOCATE("locate", ChatConfig::isLocate, optional("player", true)),
+        COINFLIP("coinflip", ChatConfig::isCoinFlip),
+        STALK("stalk", ChatConfig::isStalk, required("player", true)),
+        DISCORD("dc", ChatConfig::isSocialMedia, optional("player", true)),
+        YOUTUBE("youtube", ChatConfig::isSocialMedia, optional("player", true)),
+        TWITTER("twitter", ChatConfig::isSocialMedia, optional("player", true)),
+        TWITCH("twitch", ChatConfig::isSocialMedia, optional("player", true)),
+        TIKTOK("tiktok", ChatConfig::isSocialMedia, optional("player", true)),
+        FORUMS("forums", ChatConfig::isSocialMedia, optional("player", true)),
+        INSTAGRAM("instagram", ChatConfig::isSocialMedia, optional("player", true));
+
+        private final String command;
+        private final List<CommandParameter> params;
+        private final Supplier<Boolean> toggle;
+
+        Commands(String command, Supplier<Boolean> toggle, CommandParameter... params) {
+            this.command = command;
+            this.toggle = toggle;
+            this.params = Arrays.asList(params);
+        }
+
+        public boolean getToggle() {
+            return toggle.get();
+        }
+
+
+
+        public static class CommandParameter {
+            private final String paramName;
+            private final boolean required;
+            private final boolean isOther;
+
+            public CommandParameter(String paramName, boolean required, boolean isOther) {
+                this.paramName = paramName;
+                this.required = required;
+                this.isOther = isOther;
+            }
+
+            public boolean isOther() {
+                return isOther;
+            }
+
+            public String getParamName() {
+                return paramName;
+            }
+
+            public boolean isRequired() {
+                return required;
+            }
+        }
+
+        public static CommandParameter required(String paramName, boolean isOther) {
+            return new CommandParameter(paramName, true, isOther);
+        }
+
+        public static CommandParameter optional(String paramName, boolean isOther) {
+            return new CommandParameter(paramName, false, isOther);
+        }
+
+        public List<CommandParameter> getParams() {
+            return params;
+        }
+
+        public String getCommand() {
+            return command;
+        }
+
+        public String getString() {
+            StringJoiner joiner = new StringJoiner(" ");
+            joiner.add(ChatConfig.chatPrefix + getCommand());
+            for (CommandParameter param : params) {
+                if (param.isOther && !ChatConfig.runOthers) {
+                    continue;
+                }
+                if (param.required) {
+                    joiner.add("<" + param.getParamName() + ">");
+                } else {
+                    joiner.add("(" + param.getParamName() + ")");
+                }
+            }
+            return (joiner.toString());
+        }
+
+        public int getLength() {
+            return getString().length();
+        }
+    }
+
+    public static final HashMap<String, String> commands = new HashMap<>();
+
+    public static List<String> paginateHelp() {
+        List<String> help = new ArrayList<>();
+        String startString = "⭐ Available Commands (Page #): ";
+
+        HashMap<Integer, Integer> pages = getIntegerIntegerHashMap(startString);
+
+        int currentCommand = 0;
+        for (int i = 0; i < pages.size(); i++) {
+            int commandsAvailablePerPage = pages.get(i);
+            StringJoiner joiner = new StringJoiner(", ");
+            String s = startString.replaceAll("#", String.valueOf(i + 1));
+            joiner.setEmptyValue(s);
+
+            for (int j = 0; j < commandsAvailablePerPage; j++) {
+                Commands value = Commands.values()[currentCommand];
+                currentCommand ++;
+                joiner.add(value.getString());
+            }
+            help.add(s + joiner);
+        }
+        return help;
+    }
+
+    private static HashMap<Integer, Integer> getIntegerIntegerHashMap(String startString) {
+        int length = startString.length();
+        int page = 0;
+        int commands = 0;
+        HashMap<Integer, Integer> pages = new HashMap<>();
+        for (int i = 0; i < Commands.values().length; i++) {
+            Commands value = Commands.values()[i];
+
+            if (!value.getToggle()) continue;
+            if (length + value.getLength() >= 240) {
+
+                pages.put(page, commands);
+                page++;
+                commands = 1;
+                length = startString.length() + value.getLength();
+                continue;
+            }
+            commands++;
+            length += value.getLength();
+
+            if (i + 1 != Commands.values().length) {
+                length += 2;
+            }
+            if (length >= 240) {
+                pages.put(page, commands);
+                page++;
+                commands = 0;
+                length = startString.length();
+            } else if (i == Commands.values().length - 1) {
+                pages.put(page, commands);
+            }
+
+        }
+        return pages;
+    }
 
     @Subscribe
     public void onChatEvent(ChatReceiveEvent event) {
+        String fullMessage = event.message.getUnformattedText();
+        if (ServerTracker.testingRank) {
+            if (fullMessage.contains("You must be vip or higher to use this command!")) {
+                ServerTracker.testingRank = false;
+                ServerTracker.hasChatCooldown = true;
+                return;
+            }
+        }
         IChatComponent message = event.message;
         String unformatted = message.getUnformattedText();
         String stripped = StringUtils.cleanColour(unformatted);
+
 
         updateDoubleHook(stripped);
         SeaCreature creature = getSeaCreature(stripped);
@@ -258,30 +445,52 @@ public class ChatEvent {
         }
 
         if (stripped.startsWith("Party > ")) {
-            String chatMessage = stripped.split(": ")[1];
-            if (chatMessage.startsWith("-chess ")) {
-                String[] args = chatMessage.split("-chess ");
-                if (args.length > 1) {
-                    String fen = args[1];
-                    try {
-                        getChessMove(fen).get();
-                    } catch (InterruptedException e) {
-                        throw new RuntimeException(e);
-                    } catch (ExecutionException e) {
-                        throw new RuntimeException(e);
+            String chatMessage = stripped.split("Party\\s>.*?:\\s")[1];
+            if (chatMessage.equalsIgnoreCase(ChatConfig.chatPrefix + "help")) {
+                sendLaterParty("/pc " + paginateHelp().get(0));
+            }
+            if (chatMessage.startsWith(ChatConfig.chatPrefix + "help ")) {
+                String[] args = chatMessage.split("\\" + ChatConfig.chatPrefix + "help ");
+                if (args.length == 2) {
+                    String length = args[1];
+                    if (length.matches("\\d+?")) {
+                        List<String> paginated = paginateHelp();
+                        int lengthInt = Integer.parseInt(length);
+                        lengthInt = Math.max(1, lengthInt);
+                        lengthInt = Math.min(lengthInt, paginated.size());
+                        sendLaterParty("/pc " + paginated.get(lengthInt - 1));
                     }
-                    return;
+                }
+            }
+            if (ChatConfig.chessEngine) {
+                if (chatMessage.startsWith(ChatConfig.chatPrefix + "chess ")) {
+                    String[] args = chatMessage.split("\\" + ChatConfig.chatPrefix + "chess ");
+                    if (args.length > 1) {
+                        String fen = args[1];
+                        getChessMove(fen);
+                    }
                 }
             }
 
-            if (chatMessage.startsWith("-eval ")) {
-                String[] args = chatMessage.split("-eval ");
-                if (args.length > 1) {
-                    String expression = args[1];
-                    Minecraft.getMinecraft().thePlayer.sendChatMessage("/pc ⚡ Evaluated: ≈" + new DoubleEvaluator().evaluate(expression).toString());
-                    return;
+            if (ChatConfig.stalk) {
+                if (chatMessage.startsWith(ChatConfig.chatPrefix + "stalk ")) {
+                    String[] args = chatMessage.split("\\" + ChatConfig.chatPrefix + "stalk ");
+                    if (args.length > 1) {
+                        String player = args[1];
+                        lastLogin(player);
+                    }
                 }
             }
+            if (ChatConfig.mathEvaluation) {
+                if (chatMessage.startsWith(ChatConfig.chatPrefix + "eval ")) {
+                    String[] args = chatMessage.split("\\" + ChatConfig.chatPrefix + "eval ");
+                    if (args.length > 1) {
+                        String expression = args[1];
+                        sendLaterParty("/pc ⚡ Evaluated: ≈" + new DoubleEvaluator().evaluate(expression).toString());
+                    }
+                }
+            }
+
             String regex = "Party > (\\[.*?] )?(.*?):";
             Pattern pattern = Pattern.compile(regex);
             Matcher matcher = pattern.matcher(stripped);
@@ -291,100 +500,204 @@ public class ChatEvent {
             } else {
                 playerName = "?";
             }
-            if (ChatConfig.gay) {
-                if (chatMessage.equalsIgnoreCase("-gay")) {
-                    sendLater("/pc »»» " + playerName + " is " + random.nextInt(0, 101) + "% gay. «««");
+            if (ChatConfig.coinFlip) {
+                if (chatMessage.equalsIgnoreCase(ChatConfig.chatPrefix + "coinflip")) {
+                    sendLaterParty("/pc »»» " + playerName + " flipped a coin! It's " + (RandomUtils.nextInt(0, 2) == 0 ? "Heads!" : "Tails!") + " «««");
+                }
+            }
+            if (ChatConfig.socialMedia) {
+                if (chatMessage.equalsIgnoreCase(ChatConfig.chatPrefix + "dc")) {
+                    playerSocials(playerName, "dc");
                 }
                 if (ChatConfig.runOthers) {
-                    if (chatMessage.startsWith("-gay ")) {
+                    if (chatMessage.startsWith(ChatConfig.chatPrefix + "dc ")) {
+                        String[] args = chatMessage.split("\\" + ChatConfig.chatPrefix + "dc ");
+                        if (args.length > 1) {
+                            String player = args[1];
+                            playerSocials(player, "dc");
+                            return;
+                        }
+                    }
+                }
+                if (chatMessage.equalsIgnoreCase(ChatConfig.chatPrefix + "twitter")) {
+                    playerSocials(playerName, "twitter");
+                }
+                if (ChatConfig.runOthers) {
+                    if (chatMessage.startsWith(ChatConfig.chatPrefix + "twitter ")) {
+                        String[] args = chatMessage.split("\\" + ChatConfig.chatPrefix + "twitter ");
+                        if (args.length > 1) {
+                            String player = args[1];
+                            playerSocials(player, "twitter");
+                            return;
+                        }
+                    }
+                }
+                if (chatMessage.equalsIgnoreCase(ChatConfig.chatPrefix + "twitch")) {
+                    playerSocials(playerName, "twitch");
+                }
+                if (ChatConfig.runOthers) {
+                    if (chatMessage.startsWith(ChatConfig.chatPrefix + "twitch ")) {
+                        String[] args = chatMessage.split("\\" + ChatConfig.chatPrefix + "twitch ");
+                        if (args.length > 1) {
+                            String player = args[1];
+                            playerSocials(player, "twitch");
+                            return;
+                        }
+                    }
+                }
+                if (chatMessage.equalsIgnoreCase(ChatConfig.chatPrefix + "instagram")) {
+                    playerSocials(playerName, "instagram");
+                }
+                if (ChatConfig.runOthers) {
+                    if (chatMessage.startsWith(ChatConfig.chatPrefix + "instagram ")) {
+                        String[] args = chatMessage.split("\\" + ChatConfig.chatPrefix + "instagram ");
+                        if (args.length > 1) {
+                            String player = args[1];
+                            playerSocials(player, "instagram");
+                            return;
+                        }
+                    }
+                }
+                if (chatMessage.equalsIgnoreCase(ChatConfig.chatPrefix + "youtube")) {
+                    playerSocials(playerName, "youtube");
+                }
+                if (ChatConfig.runOthers) {
+                    if (chatMessage.startsWith(ChatConfig.chatPrefix + "youtube ")) {
+                        String[] args = chatMessage.split("\\" + ChatConfig.chatPrefix + "youtube ");
+                        if (args.length > 1) {
+                            String player = args[1];
+                            playerSocials(player, "youtube");
+                            return;
+                        }
+                    }
+                }
+                if (chatMessage.equalsIgnoreCase(ChatConfig.chatPrefix + "tiktok")) {
+                    playerSocials(playerName, "tiktok");
+                }
+                if (ChatConfig.runOthers) {
+                    if (chatMessage.startsWith(ChatConfig.chatPrefix + "tiktok ")) {
+                        String[] args = chatMessage.split("\\" + ChatConfig.chatPrefix + "tiktok ");
+                        if (args.length > 1) {
+                            String player = args[1];
+                            playerSocials(player, "tiktok");
+                            return;
+                        }
+                    }
+                }
+                if (chatMessage.equalsIgnoreCase(ChatConfig.chatPrefix + "forums")) {
+                    playerSocials(playerName, "forums");
+                }
+                if (ChatConfig.runOthers) {
+                    if (chatMessage.startsWith(ChatConfig.chatPrefix + "forums ")) {
+                        String[] args = chatMessage.split("\\" + ChatConfig.chatPrefix + "forums ");
+                        if (args.length > 1) {
+                            String player = args[1];
+                            playerSocials(player, "forums");
+                            return;
+                        }
+                    }
+                }
+            }
+            if (ChatConfig.gay) {
+                if (chatMessage.equalsIgnoreCase(ChatConfig.chatPrefix + "gay")) {
+                    sendLaterParty("/pc »»» " + playerName + " is " + RandomUtils.nextInt(0, 101) + "% gay. «««");
+                    return;
+                }
+                if (ChatConfig.runOthers) {
+                    if (chatMessage.startsWith(ChatConfig.chatPrefix + "gay ")) {
                         String[] args = chatMessage.split(" ");
                         if (args.length > 1) {
                             String gay = args[1];
-                            sendLater("/pc »»» " + gay + " is " + random.nextInt(0, 101) + "% gay. «««");
+                            sendLaterParty("/pc »»» " + gay + " is " + RandomUtils.nextInt(0, 101) + "% gay. «««");
+                            return;
                         }
                     }
                 }
             }
 
             if (ChatConfig.racist) {
-                if (chatMessage.equalsIgnoreCase("-racist")) {
-                    sendLater("/pc »»» " + playerName + " is " + random.nextInt(0, 101) + "% racist. «««");
+                if (chatMessage.equalsIgnoreCase(ChatConfig.chatPrefix + "racist")) {
+                    sendLaterParty("/pc »»» " + playerName + " is " + RandomUtils.nextInt(0, 101) + "% racist. «««");
+                    return;
                 }
                 if (ChatConfig.runOthers) {
-                    if (chatMessage.startsWith("-racist ")) {
+                    if (chatMessage.startsWith(ChatConfig.chatPrefix + "racist ")) {
                         String[] args = chatMessage.split(" ");
                         if (args.length > 1) {
                             String racist = args[1];
-                            sendLater("/pc »»» " + racist + " is " + random.nextInt(0, 101) + "% racist. «««");
+                            sendLaterParty("/pc »»» " + racist + " is " + RandomUtils.nextInt(0, 101) + "% racist. «««");
+                            return;
                         }
                     }
                 }
             }
 
             if (ChatConfig.pray) {
-                if (chatMessage.equalsIgnoreCase("-pray")) {
-                    sendLater("/pc »»» " + playerName + " prayed to RNGesus! (+" + random.nextInt(0, 501) + "% ✯ Magic Find) «««");
+                if (chatMessage.equalsIgnoreCase(ChatConfig.chatPrefix + "pray")) {
+                    sendLaterParty("/pc »»» " + playerName + " prayed to RNGesus! (+" + RandomUtils.nextInt(0, 501) + "% ✯ Magic Find) «««");
+                    return;
                 }
             }
             if (ChatConfig.diceRoll) {
-                if (chatMessage.equalsIgnoreCase("-dice")) {
-                    int roll = random.nextInt(1, 7);
-                    sendLater("/pc »»» " + playerName + " rolled a " + roll + "! " + getDice(roll) + " «««");
+                if (chatMessage.equalsIgnoreCase(ChatConfig.chatPrefix + "dice")) {
+                    int roll = RandomUtils.nextInt(1, 7);
+                    sendLaterParty("/pc »»» " + playerName + " rolled a " + roll + "! " + getDice(roll) + " «««");
+                    return;
                 }
             }
-            if (ChatConfig.doubleDiceRoll) {
-                if (chatMessage.equalsIgnoreCase("-dice2")) {
-                    int roll = random.nextInt(1, 7);
-                    int roll2 = random.nextInt(1, 7);
-                    sendLater("/pc »»» " + playerName + " rolled a " + roll + " and a " + roll2 + "! Total: " + (roll+roll2) + "! " + getDice(roll) + getDice(roll2) + " «««");
+            if (ChatConfig.multiDiceRoll) {
+                if (chatMessage.startsWith(ChatConfig.chatPrefix + "dice ")) {
+                    String[] args = chatMessage.split(" ");
+                    if (args.length == 2) {
+                        String rollCount = args[1];
+                        if (rollCount.matches("\\d+?")) {
+                            int roll = Integer.parseInt(rollCount);
+                            if (roll < 1) roll = 1;
+                            if (roll > 10) roll = 10;
+                            int total = 0;
+                            StringBuilder builder = new StringBuilder();
+                            for (int i = 0; i < roll; i++) {
+                                int diceRoll = RandomUtils.nextInt(1, 7);
+                                total += diceRoll;
+                                builder.append(getDice(diceRoll));
+                            }
+                            sendLaterParty("/pc »»» " + playerName + " rolled " + roll + " dice! Total: " + total + "! " + builder + " «««");
+                            return;
+                        }
+                    }
                 }
             }
 
             if (ChatConfig.guild) {
-                if (chatMessage.equalsIgnoreCase("-guild")) {
-                    JsonObject guildObj = MeloMod.internalLocraw.getGuildInformation(fromName(playerName));
-                    SkyblockUtil.Guild guild = new SkyblockUtil.Guild(guildObj);
-                    sendLater("/pc ✿ Guild: [" + guild.getTag() + "] " + guild.getName() + " (" + guild.getGuildID() + ") ✿");
+                if (chatMessage.equalsIgnoreCase(ChatConfig.chatPrefix + "guild")) {
+                    sayGuildInformation(playerName);
+                    return;
                 }
                 if (ChatConfig.runOthers) {
-                    if (chatMessage.startsWith("-guild ")) {
+                    if (chatMessage.startsWith(ChatConfig.chatPrefix + "guild ")) {
                         String[] args = chatMessage.split(" ");
                         if (args.length > 1) {
                             String player = args[1];
-                            JsonObject guildObj = MeloMod.internalLocraw.getGuildInformation(fromName(player));
-                            SkyblockUtil.Guild guild = new SkyblockUtil.Guild(guildObj);
-                            sendLater("/pc ✿ «" + playerName + "» Guild: [" + guild.getTag() + "] " + guild.getName() + " (" + guild.getGuildID() + ") ✿");
+                            sayGuildInformation(player);
+                            return;
                         }
                     }
                 }
             }
 
             if (ChatConfig.locate) {
-                if (chatMessage.equalsIgnoreCase("-locate")) {
-                    SkyblockUtil.Location info = InternalLocraw.getLocation();
-                    Minecraft.getMinecraft().thePlayer.sendChatMessage("/pc ◇ Server: " + InternalLocraw.getServerID() + " ⚑ Island: " + WordUtils.capitalizeFully(info.toString().replaceAll("_", " ")) + " ◇");
+                if (chatMessage.equalsIgnoreCase(ChatConfig.chatPrefix + "locate")) {
+                    sayPlayerStatus(playerName);
+                    return;
                 }
                 if (ChatConfig.runOthers) {
-                    if (chatMessage.startsWith("-locate ")) {
-                        String[] args = chatMessage.split("-locate ");
+                    if (chatMessage.startsWith(ChatConfig.chatPrefix + "locate ")) {
+                        String[] args = chatMessage.split("\\" + ChatConfig.chatPrefix + "locate ");
                         if (args.length > 1) {
                             String playerToLocate = args[1];
                             if (playerToLocate.contains(" ")) return;
-                            JsonObject jsonObject = mod.internalLocraw.getPlayerStatus(fromName(playerToLocate));
-                            if (!jsonObject.get("online").getAsBoolean()) {
-                                Minecraft.getMinecraft().thePlayer.sendChatMessage("/pc ◇ " + playerName + " is not currently online! ◇");
-                            } else {
-                                boolean onCurrent = false;
-                                for (EntityPlayer playerEntity : Minecraft.getMinecraft().theWorld.playerEntities) {
-                                    if (playerEntity.getName().equals(playerToLocate)) {
-                                        onCurrent = true;
-                                        break;
-                                    }
-                                }
-
-                                Minecraft.getMinecraft().thePlayer.sendChatMessage("/pc ◇ «" + playerToLocate + "» Server: " + (onCurrent ? InternalLocraw.getServerID() : "Unknown") + " ◇ Game: " + WordUtils.capitalizeFully(jsonObject.get("gameType").getAsString().replaceAll("_", " ")) + " ⚑ Mode: " + WordUtils.capitalizeFully(jsonObject.get("mode").getAsString().replaceAll("_", " ")) + " ◇");
-                            }
-
+                            sayPlayerStatus(playerToLocate);
+                            return;
                         }
                     }
                 }
@@ -394,6 +707,127 @@ public class ChatEvent {
 
     public static UUID fromName(String name) {
         return MinecraftServer.getServer().getPlayerProfileCache().getGameProfileForUsername(name).getId();
+    }
+
+    public void sendLaterParty(String message) {
+        TickHandler.addToQueue(message);
+    }
+
+
+
+    public synchronized void sayPlayerStatus(String player) {
+        UUID parsed = fromName(player);
+        mod.apiUtil.requestAPI(
+                ApiUtil.HypixelEndpoint.STATUS,
+                object -> {
+                    if (parsed.equals(MeloMod.playerUUID)) {
+                        SkyblockUtil.Location info = InternalLocraw.getLocation();
+                        sendLaterParty("/pc ◇ Server: " + InternalLocraw.getServerID() + " ⚑ Island: " + WordUtils.capitalizeFully(info.toString().replaceAll("_", " ")) + " ◇");
+                    } else {
+                        JsonObject session = SkyblockUtil.getAsJsonObject("session", object);
+                        if (session != null) {
+                            if (!session.get("online").getAsBoolean()) {
+                                sendLaterParty("/pc ◇ " + player + " is not currently online! ◇");
+                            } else {
+                                boolean onCurrent = false;
+                                for (EntityPlayer playerEntity : Minecraft.getMinecraft().theWorld.playerEntities) {
+                                    if (playerEntity.getName().equals(player)) {
+                                        onCurrent = true;
+                                        break;
+                                    }
+                                }
+
+                                sendLaterParty("/pc ◇ «" + player + "» Server: " + (onCurrent ? InternalLocraw.getServerID() : "Unknown") + " ◇ Game: " + WordUtils.capitalizeFully(SkyblockUtil.getAsString("gameType", session).replaceAll("_", " ")) + " ⚑ Mode: " + WordUtils.capitalizeFully(SkyblockUtil.getAsString("mode", session).replaceAll("_", " ")) + " ◇");
+                            }
+                        }
+
+
+                    }
+                },
+                ApiUtil.HypixelEndpoint.FilledEndpointArgument.uuid(parsed)
+        );
+    }
+
+    public synchronized void sayGuildInformation(String player) {
+        UUID parsed = fromName(player);
+        mod.apiUtil.requestAPI(
+                ApiUtil.HypixelEndpoint.GUILD,
+                object -> {
+                    if (object.has("guild") && object.get("guild").isJsonObject()) {
+                        SkyblockUtil.Guild guild = new SkyblockUtil.Guild(object.get("guild").getAsJsonObject());
+
+                        if (parsed.equals(MeloMod.playerUUID)) {
+                            sendLaterParty("/pc ✿ Guild: [" + guild.getTag() + "] " + guild.getName() + " (" + guild.getGuildID() + ") ✿");
+                        } else {
+                            sendLaterParty("/pc ✿ «" + player + "» Guild: [" + guild.getTag() + "] " + guild.getName() + " (" + guild.getGuildID() + ") ✿");
+                        }
+                    }
+                },
+                ApiUtil.HypixelEndpoint.FilledEndpointArgument.from("player", "" + parsed)
+        );
+    }
+
+    public synchronized void playerSocials(String player, String request) {
+        UUID parsed = fromName(player);
+        mod.apiUtil.requestAPI(
+                ApiUtil.HypixelEndpoint.PLAYER,
+                object -> {
+                    if (object.has("player") && object.get("player").isJsonObject()) {
+                        PlayerUtil.Player playerProfile = new PlayerUtil.Player(SkyblockUtil.getAsJsonObject("player", object));
+                        switch (request) {
+                            case "dc":
+                                sendLaterParty("/pc »»» " + player + "'s DC: " + playerProfile.getDiscord() + " «««");
+                                break;
+                            case "twitch":
+                                sendLaterParty("/pc »»» " + player + "'s Twitch: " + playerProfile.getTwitch() + " «««");
+                                break;
+                            case "twitter":
+                                sendLaterParty("/pc »»» " + player + "'s Twitter: " + playerProfile.getTwitter() + " «««");
+                                break;
+                            case "instagram":
+                                sendLaterParty("/pc »»» " + player + "'s Instagram: " + playerProfile.getInstagram() + " «««");
+                                break;
+                            case "youtube":
+                                sendLaterParty("/pc »»» " + player + "'s YouTube: " + playerProfile.getYoutube() + " «««");
+                                break;
+                            case "forums":
+                                sendLaterParty("/pc »»» " + player + "'s Forum Profile: " + playerProfile.getForums() + " «««");
+                                break;
+                            case "tiktok":
+                                sendLaterParty("/pc »»» " + player + "'s TikTok: " + playerProfile.getTiktok() + " «««");
+                                break;
+                        }
+                    }
+
+                },
+                ApiUtil.HypixelEndpoint.FilledEndpointArgument.from("uuid", "" + parsed)
+        );
+    }
+
+    public synchronized void lastLogin(String player) {
+        mod.apiUtil.requestSkyCrypt(
+                ApiUtil.SkyCryptEndpoint.PROFILE,
+                player,
+                null,
+                object -> {
+                    if (object.has("profiles")) {
+                        JsonObject profiles = object.get("profiles").getAsJsonObject();
+                        for (Map.Entry<String, JsonElement> entry : profiles.entrySet()) {
+                            String string = entry.getKey();
+                            JsonObject profile = SkyblockUtil.getAsJsonObject(string, profiles);
+                            if (SkyblockUtil.getAsBoolean("current", profile)) {
+                                JsonObject currentArea = SkyblockUtil.getAsJsonObject("current_area", SkyblockUtil.getAsJsonObject("user_data", SkyblockUtil.getAsJsonObject("data", profile)));
+                                String currentAreaString = SkyblockUtil.getAsString("current_area", currentArea);
+                                if (currentAreaString == null) {
+                                    currentAreaString = "Unknown";
+                                }
+                                Boolean currentAreaUpdated = SkyblockUtil.getAsBoolean("current_area_updated", currentArea);
+                                sendLaterParty("/pc ℹ «" + player + "» Last Area: " + currentAreaString + " (Updated: " + currentAreaUpdated + ") ℹ");
+                            }
+                        }
+                    }
+                }
+        );
     }
 
 /*

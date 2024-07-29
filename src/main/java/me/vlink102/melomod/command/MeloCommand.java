@@ -4,7 +4,10 @@ import cc.polyfrost.oneconfig.utils.commands.annotations.SubCommand;
 import me.vlink102.melomod.MeloMod;
 import cc.polyfrost.oneconfig.utils.commands.annotations.Command;
 import cc.polyfrost.oneconfig.utils.commands.annotations.Main;
+import me.vlink102.melomod.util.ApiUtil;
 import net.minecraft.client.Minecraft;
+
+import java.util.concurrent.ExecutionException;
 
 /**
  * An example command implementing the Command api of OneConfig.
@@ -24,7 +27,11 @@ public class MeloCommand {
 
     @SubCommand(description = "Reload the mod and refresh Hypixel API")
     private void reloadAPI() {
-        mod.skyblockUtil.requestUpdate(false);
+        mod.apiUtil.requestAPI(
+                ApiUtil.HypixelEndpoint.SKYBLOCK_PROFILES,
+                object -> mod.skyblockUtil.updateInformation(object),
+                ApiUtil.HypixelEndpoint.FilledEndpointArgument.uuid()
+        );
     }
 
     @Main

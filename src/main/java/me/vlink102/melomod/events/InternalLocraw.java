@@ -9,6 +9,7 @@ import cc.polyfrost.oneconfig.utils.hypixel.LocrawUtil;
 import com.google.gson.JsonObject;
 import me.vlink102.melomod.MeloMod;
 import me.vlink102.melomod.mixin.SkyblockUtil;
+import me.vlink102.melomod.util.ApiUtil;
 import net.minecraft.client.Minecraft;
 import net.minecraft.util.BlockPos;
 import net.minecraft.world.EnumSkyBlock;
@@ -18,6 +19,9 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
+import java.util.function.Consumer;
 
 public class InternalLocraw {
     private final MeloMod mod;
@@ -74,41 +78,12 @@ public class InternalLocraw {
         serverID = event.info.getServerId();
 
         if (mod.getPlayerProfile() == null) {
-
-            mod.skyblockUtil.requestUpdate(false);
-
+            mod.apiUtil.requestAPI(
+                    ApiUtil.HypixelEndpoint.SKYBLOCK_PROFILES,
+                    object -> mod.skyblockUtil.updateInformation(object),
+                    ApiUtil.HypixelEndpoint.FilledEndpointArgument.uuid()
+            );
         }
     }
 
-    public synchronized JsonObject getGuildInformation(UUID uuid) {
-        mod.apiUtil
-                .newHypixelApiRequest("guild")
-                .queryArgument("player", "" + uuid)
-                .requestJson()
-                .handle((jsonObject, ex) -> {
-                    if (jsonObject != null && jsonObject.has("success") && jsonObject.get("success").getAsBoolean()) {
-                        if (!jsonObject.has("guild")) return null;
-
-                        return jsonObject.get("guild").getAsJsonObject();
-                    }
-                    return null;
-                });
-        return null;
-    }
-
-    public synchronized JsonObject getPlayerStatus(UUID uuid) {
-        HashMap<String, String> args = new HashMap<>();
-        args.put("uuid", "" + uuid);
-        mod.apiUtil
-                .newHypixelApiRequest("status")
-                .queryArgument("uuid", "" + uuid)
-                .requestJson()
-                .handle((jsonObject, ex) -> {
-                    if (jsonObject != null && jsonObject.has("success") && jsonObject.get("success").getAsBoolean()) {
-                        return jsonObject.get("session").getAsJsonObject();
-                    }
-                    return null;
-                });
-        return null;
-    }
 }
