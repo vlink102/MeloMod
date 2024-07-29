@@ -39,13 +39,20 @@ import java.util.function.Supplier;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import static me.vlink102.melomod.util.ApiUtil.sendLaterParty;
+import static me.vlink102.melomod.util.StringUtils.paginateHelp;
+
 public class ChatEvent {
 
     public synchronized void getChessMove(String fen) {
         JsonObject body = new JsonObject();
         body.addProperty("fen", fen);
         body.addProperty("depth", 10);
-        mod.apiUtil.requestServer("https://chess-api.com/v1", body, object -> TickHandler.addToQueue("/pc »»» " + object.get("text").getAsString() + " «««"));
+        mod.apiUtil.requestServer("https://chess-api.com/v1", body, object -> {
+            if (object.isJsonObject()) {
+                TickHandler.addToQueue("/pc »»» " + object.getAsJsonObject().get("text").getAsString() + " «««");
+            }
+        });
     }
 
     public List<String> party = new ArrayList<>();
@@ -366,102 +373,6 @@ public class ChatEvent {
 
     public static final HashMap<String, String> commands = new HashMap<>();
 
-    public static List<String> paginateHelp() {
-        List<String> helpMenu = new ArrayList<>();
-        String startString = "⭐ Available Commands (Page #): ";
-
-        HashMap<Integer, Integer> pages = getIntegerHashMap(startString);
-
-        int currentCommand = 0;
-        for (int i = 0; i < pages.size(); i++) {
-            int commands = pages.get(i);
-            StringJoiner joiner = new StringJoiner(", ");
-            String s = startString.replaceAll("#", String.valueOf(i + 1));
-            joiner.setEmptyValue(s);
-            for (int j = 0; j < commands; j++) {
-                Commands command = Commands.values()[currentCommand];
-                joiner.add(command.getString());
-                currentCommand ++;
-            }
-            helpMenu.add(s + joiner);
-        }
-        return helpMenu;
-    }
-
-    public static List<String> paginate(String prefix, Object... objects) {
-        return paginate(prefix, Arrays.asList(objects));
-    }
-
-    public static List<String> paginate(String prefix, List<String> strings) {
-        List<String> helpMenu = new ArrayList<>();
-        HashMap<Integer, Integer> pages = getPaginatedMap(prefix, strings);
-        System.out.println(pages);
-
-        int currentElement = 0;
-        for (int i = 0; i < pages.size(); i++) {
-            int elementCount = pages.get(i);
-            StringJoiner joiner = new StringJoiner(", ");
-            String s = prefix.replaceAll("#", String.valueOf(i + 1));
-            joiner.setEmptyValue(s);
-            for (int j = 0; j < elementCount; j++) {
-                String command = strings.get(currentElement);
-                joiner.add(command);
-                currentElement ++;
-            }
-            helpMenu.add(s + joiner);
-        }
-        return helpMenu;
-    }
-
-    private static HashMap<Integer, Integer> getPaginatedMap(String prefix, List<String> strings) {
-        int limit = 254 - prefix.length(); // 2 less since i want to add the symbol at the end
-        int page = 0;
-        int commands = 0;
-        HashMap<Integer, Integer> pages = new HashMap<>();
-        StringJoiner joiner = new StringJoiner(", ").setEmptyValue(prefix);
-        for (int i = 0; i < strings.size(); i++) {
-            String command = strings.get(i);
-
-            if (joiner.length() + command.length() + 2 >= limit) {
-                pages.put(page, commands);
-                page++;
-                joiner = new StringJoiner(", ").setEmptyValue(prefix);
-                commands = 0;
-            }
-            joiner.add(command);
-            commands++;
-            if (i + 1 == strings.size()) {
-                pages.put(page, commands);
-            }
-        }
-        return pages;
-    }
-
-    private static HashMap<Integer, Integer> getIntegerHashMap(String start) {
-        int limit = 254 - start.length(); // 2 less since i want to add the symbol at the end
-        int page = 0;
-        int commands = 0;
-        HashMap<Integer, Integer> pages = new HashMap<>();
-        StringJoiner joiner = new StringJoiner(", ").setEmptyValue(start);
-        for (int i = 0; i < Commands.values().length; i++) {
-            Commands command = Commands.values()[i];
-            if (!command.getToggle()) continue;
-
-            if (joiner.length() + command.getString().length() + 2 >= limit) {
-                pages.put(page, commands);
-                page++;
-                joiner = new StringJoiner(", ").setEmptyValue(start);
-                commands = 0;
-            }
-            joiner.add(command.getString());
-            commands++;
-            if (i + 1 == Commands.values().length) {
-                pages.put(page, commands);
-            }
-        }
-        return pages;
-    }
-
     private int memberCount = -1;
 
     private static final HashMap<String, Integer[]> hidden = new HashMap<String, Integer[]>() {{
@@ -572,7 +483,7 @@ public class ChatEvent {
                     String[] args = chatMessage.split("\\" + ChatConfig.chatPrefix + Commands.STALK.getCommand() + " ");
                     if (args.length > 1) {
                         String player = args[1];
-                        lastLogin(player);
+                        mod.apiUtil.lastLogin(player);
                     }
                 }
             }
@@ -597,7 +508,7 @@ public class ChatEvent {
             }
             if (ChatConfig.userNameHistory) {
                 if (chatMessage.equalsIgnoreCase(ChatConfig.chatPrefix + Commands.HISTORY.getCommand())) {
-                    getPlayerPastNames(playerName, 1);
+                    mod.apiUtil.getPlayerPastNames(playerName, 1);
                 }
                 if (ChatConfig.runOthers) {
                     if (chatMessage.startsWith(ChatConfig.chatPrefix + Commands.HISTORY.getCommand() + " ")) {
@@ -606,16 +517,16 @@ public class ChatEvent {
                             String player = args[1];
                             if (args[1].matches("\\d+?")) {
                                 int page = Integer.parseInt(args[1]);
-                                getPlayerPastNames(player, page);
+                                mod.apiUtil.getPlayerPastNames(player, page);
                             } else {
-                                getPlayerPastNames(player, 1);
+                                mod.apiUtil.getPlayerPastNames(player, 1);
                             }
                         }
                         if (args.length == 3) {
                             String player = args[1];
                             if (args[2].matches("\\d+?")) {
                                 int page = Integer.parseInt(args[2]);
-                                getPlayerPastNames(player, page);
+                                mod.apiUtil.getPlayerPastNames(player, page);
                             }
                         }
                     }
@@ -623,28 +534,28 @@ public class ChatEvent {
             }
             if (ChatConfig.secret) {
                 if (chatMessage.equalsIgnoreCase(ChatConfig.chatPrefix + Commands.SECRET.getCommand())) {
-                    sayPlayerSecrets(playerName);
+                    mod.apiUtil.sayPlayerSecrets(playerName);
                 }
                 if (ChatConfig.runOthers) {
                     if (chatMessage.startsWith(ChatConfig.chatPrefix + Commands.SECRET.getCommand() + " ")) {
                         String[] args = chatMessage.split("\\" + ChatConfig.chatPrefix + Commands.SECRET.getCommand() + " ");
                         if (args.length == 2) {
                             String player = args[1];
-                            sayPlayerSecrets(player);
+                            mod.apiUtil.sayPlayerSecrets(player);
                         }
                     }
                 }
             }
             if (ChatConfig.networth) {
                 if (chatMessage.equalsIgnoreCase(ChatConfig.chatPrefix + Commands.NETWORTH)) {
-                    sayPlayerNetworth(playerName);
+                    mod.apiUtil.sayPlayerNetworth(playerName);
                 }
                 if (ChatConfig.runOthers) {
                     if (chatMessage.startsWith(ChatConfig.chatPrefix + Commands.NETWORTH.getCommand() + " ")) {
                         String[] args = chatMessage.split("\\" + ChatConfig.chatPrefix + Commands.NETWORTH.getCommand() + " ");
                         if (args.length == 2) {
                             String check = args[1];
-                            sayPlayerNetworth(check);
+                            mod.apiUtil.sayPlayerNetworth(check);
                         }
                     }
                 }
@@ -656,92 +567,92 @@ public class ChatEvent {
             }
             if (ChatConfig.socialMedia) {
                 if (chatMessage.equalsIgnoreCase(ChatConfig.chatPrefix + Commands.DISCORD.getCommand())) {
-                    playerSocials(playerName, "dc");
+                    mod.apiUtil.playerSocials(playerName, "dc");
                 }
                 if (ChatConfig.runOthers) {
                     if (chatMessage.startsWith(ChatConfig.chatPrefix + "dc ")) {
                         String[] args = chatMessage.split("\\" + ChatConfig.chatPrefix + Commands.DISCORD.getCommand() + " ");
                         if (args.length > 1) {
                             String player = args[1];
-                            playerSocials(player, "dc");
+                            mod.apiUtil.playerSocials(player, "dc");
                             return;
                         }
                     }
                 }
                 if (chatMessage.equalsIgnoreCase(ChatConfig.chatPrefix + Commands.TWITTER.getCommand())) {
-                    playerSocials(playerName, "twitter");
+                    mod.apiUtil.playerSocials(playerName, "twitter");
                 }
                 if (ChatConfig.runOthers) {
                     if (chatMessage.startsWith(ChatConfig.chatPrefix + Commands.TWITTER.getCommand() + " ")) {
                         String[] args = chatMessage.split("\\" + ChatConfig.chatPrefix + Commands.TWITTER.getCommand() + " ");
                         if (args.length > 1) {
                             String player = args[1];
-                            playerSocials(player, "twitter");
+                            mod.apiUtil.playerSocials(player, "twitter");
                             return;
                         }
                     }
                 }
                 if (chatMessage.equalsIgnoreCase(ChatConfig.chatPrefix + Commands.TWITCH.getCommand())) {
-                    playerSocials(playerName, "twitch");
+                    mod.apiUtil.playerSocials(playerName, "twitch");
                 }
                 if (ChatConfig.runOthers) {
                     if (chatMessage.startsWith(ChatConfig.chatPrefix + Commands.TWITCH.getCommand() + " ")) {
                         String[] args = chatMessage.split("\\" + ChatConfig.chatPrefix + Commands.TWITCH.getCommand() + " ");
                         if (args.length > 1) {
                             String player = args[1];
-                            playerSocials(player, "twitch");
+                            mod.apiUtil.playerSocials(player, "twitch");
                             return;
                         }
                     }
                 }
                 if (chatMessage.equalsIgnoreCase(ChatConfig.chatPrefix + Commands.INSTAGRAM.getCommand())) {
-                    playerSocials(playerName, "instagram");
+                    mod.apiUtil.playerSocials(playerName, "instagram");
                 }
                 if (ChatConfig.runOthers) {
                     if (chatMessage.startsWith(ChatConfig.chatPrefix + Commands.INSTAGRAM.getCommand() + " ")) {
                         String[] args = chatMessage.split("\\" + ChatConfig.chatPrefix + Commands.INSTAGRAM.getCommand() + " ");
                         if (args.length > 1) {
                             String player = args[1];
-                            playerSocials(player, "instagram");
+                            mod.apiUtil.playerSocials(player, "instagram");
                             return;
                         }
                     }
                 }
                 if (chatMessage.equalsIgnoreCase(ChatConfig.chatPrefix + Commands.YOUTUBE.getCommand())) {
-                    playerSocials(playerName, "youtube");
+                    mod.apiUtil.playerSocials(playerName, "youtube");
                 }
                 if (ChatConfig.runOthers) {
                     if (chatMessage.startsWith(ChatConfig.chatPrefix + Commands.YOUTUBE.getCommand() + " ")) {
                         String[] args = chatMessage.split("\\" + ChatConfig.chatPrefix + Commands.YOUTUBE.getCommand() + " ");
                         if (args.length > 1) {
                             String player = args[1];
-                            playerSocials(player, "youtube");
+                            mod.apiUtil.playerSocials(player, "youtube");
                             return;
                         }
                     }
                 }
                 if (chatMessage.equalsIgnoreCase(ChatConfig.chatPrefix + Commands.TIKTOK.getCommand())) {
-                    playerSocials(playerName, "tiktok");
+                    mod.apiUtil.playerSocials(playerName, "tiktok");
                 }
                 if (ChatConfig.runOthers) {
                     if (chatMessage.startsWith(ChatConfig.chatPrefix + Commands.TIKTOK.getCommand() + " ")) {
                         String[] args = chatMessage.split("\\" + ChatConfig.chatPrefix + Commands.TIKTOK.getCommand() + " ");
                         if (args.length > 1) {
                             String player = args[1];
-                            playerSocials(player, "tiktok");
+                            mod.apiUtil.playerSocials(player, "tiktok");
                             return;
                         }
                     }
                 }
                 if (chatMessage.equalsIgnoreCase(ChatConfig.chatPrefix + Commands.FORUMS.getCommand())) {
-                    playerSocials(playerName, "forums");
+                    mod.apiUtil.playerSocials(playerName, "forums");
                 }
                 if (ChatConfig.runOthers) {
                     if (chatMessage.startsWith(ChatConfig.chatPrefix + Commands.FORUMS.getCommand() + " ")) {
                         String[] args = chatMessage.split("\\" + ChatConfig.chatPrefix + Commands.FORUMS.getCommand() + " ");
                         if (args.length > 1) {
                             String player = args[1];
-                            playerSocials(player, "forums");
+                            mod.apiUtil.playerSocials(player, "forums");
                             return;
                         }
                     }
@@ -794,7 +705,7 @@ public class ChatEvent {
                     String[] args = chatMessage.split("\\" + ChatConfig.chatPrefix + Commands.AI.getCommand() + " ");
                     if (args.length == 2) {
                         String prompt = args[1];
-                        getAI(prompt);
+                        mod.apiUtil.getAI(prompt);
                     }
                 }
             }
@@ -804,7 +715,7 @@ public class ChatEvent {
                     String[] args = chatMessage.split("\\" + ChatConfig.chatPrefix + Commands.LASTONLINE.getCommand() + " ");
                     if (args.length == 2) {
                         String player = args[1];
-                        getPlayerLastLogin(player);
+                        mod.apiUtil.getPlayerLastLogin(player);
                     }
                 }
             }
@@ -873,7 +784,7 @@ public class ChatEvent {
 
             if (ChatConfig.guild) {
                 if (chatMessage.equalsIgnoreCase(ChatConfig.chatPrefix + Commands.GUILD.getCommand())) {
-                    sayGuildInformation(playerName);
+                    mod.apiUtil.sayGuildInformation(playerName);
                     return;
                 }
                 if (ChatConfig.runOthers) {
@@ -881,7 +792,7 @@ public class ChatEvent {
                         String[] args = chatMessage.split(" ");
                         if (args.length > 1) {
                             String player = args[1];
-                            sayGuildInformation(player);
+                            mod.apiUtil.sayGuildInformation(player);
                             return;
                         }
                     }
@@ -890,7 +801,7 @@ public class ChatEvent {
 
             if (ChatConfig.locate) {
                 if (chatMessage.equalsIgnoreCase(ChatConfig.chatPrefix + Commands.LOCATE.getCommand())) {
-                    sayPlayerStatus(playerName);
+                    mod.apiUtil.sayPlayerStatus(playerName);
                     return;
                 }
                 if (ChatConfig.runOthers) {
@@ -899,7 +810,7 @@ public class ChatEvent {
                         if (args.length > 1) {
                             String playerToLocate = args[1];
                             if (playerToLocate.contains(" ")) return;
-                            sayPlayerStatus(playerToLocate);
+                            mod.apiUtil.sayPlayerStatus(playerToLocate);
                             return;
                         }
                     }
@@ -908,274 +819,50 @@ public class ChatEvent {
         }
     }
 
-    public static UUID fromName(String name) {
-        return MinecraftServer.getServer().getPlayerProfileCache().getGameProfileForUsername(name).getId();
-    }
 
-    public void sendLaterParty(String message) {
-        TickHandler.addToQueue(message);
-        System.out.println(message);
-    }
 
-    public synchronized void sayAllPlayerSecrets() {
-        for (String s : party) {
-            sayPlayerSecrets(s);
+
+
+/*
+    public synchronized UUID fromName(String name) {
+        ApiUtil.Request request = new ApiUtil.Request().url("https://api.minecraftservices.com/minecraft/profile/lookup/bulk/byname").method("POST");
+        JsonArray object = new JsonArray();
+        object.add(new JsonPrimitive(name));
+        CompletableFuture<JsonElement> completableFuture = request.requestJsonAnon(object);
+        UUID requested = null;
+
+        try {
+            JsonElement jsonElement = completableFuture.get();
+            if (jsonElement.isJsonArray()) {
+                JsonArray array = jsonElement.getAsJsonArray();
+                for (JsonElement element : array) {
+                    JsonObject jsonObject = element.getAsJsonObject();
+                    requested = SkyblockUtil.fixMalformed(SkyblockUtil.getAsString("id", jsonObject));
+                }
+            }
+        } catch (InterruptedException | ExecutionException e) {
+            throw new RuntimeException(e);
         }
+        return requested;
     }
 
-    /**
-     * <a href="https://laby.net/api/v3/user/1871dfae-0a6a-4486-8366-6bc0131d370e/profile">LabyMod Endpoint (92/94)</a>
-     * <a href="https://api.crafty.gg/api/v2/players/swageater34">Crafty Endpoint (67/94)</a>
+ */
+
+    /*
+    public UUID fromName(String name) {
+        return EntityPlayer.getOfflineUUID(name);
+    }
+
      */
-    public synchronized void getPlayerPastNames(String player, int page) {
-        UUID parsed = fromName(player);
-        mod.apiUtil.requestServer(
-                "https://laby.net/api/v3/user/" + parsed + "/profile",
-                /*
-                object -> {
-                    System.out.println(player);
-                    JsonObject data = SkyblockUtil.getAsJsonObject("data", object);
-                    JsonArray usernames = SkyblockUtil.getAsJsonArray("usernames", data);
-                    System.out.println(usernames);
-                    List<String> strings = new ArrayList<>();
-                    for (JsonElement usernameElement : usernames) {
-                        JsonObject username = usernameElement.getAsJsonObject();
-                        String oldUser = username.get("username").getAsString();
-                        strings.add(oldUser);
-                    }
-                    List<String> usernameList = paginate("❄ " + player + "'s Username History (Page #): ", strings);
-
-                    sendLaterParty(usernameList.get(page - 1) + " ❄");
-                }
-                 */
-                object -> {
-                    JsonArray userNameHistory = SkyblockUtil.getAsJsonArray("username_history", object);
-                    List<String> names = new ArrayList<>();
-                    for (JsonElement jsonElement : userNameHistory) {
-                        JsonObject nameChange = jsonElement.getAsJsonObject();
-                        names.add(SkyblockUtil.getAsString("username", nameChange));
-                    }
-                    Collections.reverse(names);
-                    List<String> usernameList = paginate("❄ " + player + "'s Username History (Page #): ", names);
-
-                    sendLaterParty(usernameList.get(page - 1) + " ❄");
-                }
-                );
-
-    }
-
-    public synchronized void sayPlayerNetworth(String player) {
-        UUID uuid = fromName(player);
-        mod.apiUtil.requestSkyCrypt(
-                ApiUtil.SkyCryptEndpoint.PROFILE,
-                player, null,
-                object -> {
-                    JsonObject profiles = SkyblockUtil.getAsJsonObject("profiles", object);
-                    for (Map.Entry<String, JsonElement> entry : profiles.entrySet()) {
-                        String string = entry.getKey();
-                        JsonObject profile = SkyblockUtil.getAsJsonObject(string, profiles);
-                        if (SkyblockUtil.getAsBoolean("current", profile)) {
-                            JsonObject data = SkyblockUtil.getAsJsonObject("data", profile);
-                            JsonObject networth = SkyblockUtil.getAsJsonObject("networth", data);
-                            Double networthDouble = SkyblockUtil.getAsDouble("networth", networth);
-                            if (uuid.equals(MeloMod.playerUUID)) {
-                                sendLaterParty("/pc ⛀⛁ Networth: $" + String.format("%,.0f", networthDouble) + " ⛃⛂");
-                            } else {
-                                sendLaterParty("/pc ⛀⛁ " + player + "'s Networth: $" + String.format("%,.0f", networthDouble) + " ⛃⛂");
-                            }
-                        }
-                    }
-                }
-        );
-    }
-
-    public synchronized void getPlayerLastLogin(String playerName) {
-        UUID parsed = fromName(playerName);
-        mod.apiUtil.requestAPI(
-                ApiUtil.HypixelEndpoint.PLAYER,
-                object -> {
-                    PlayerUtil.Player player = new PlayerUtil.Player(SkyblockUtil.getAsJsonObject("player", object));
-                    Long lastLogin = player.getLastLogin();
-                    Long lastLogout = player.getLastLogout();
-                    String lastLoginTime = DurationFormatUtils.formatDurationWords(System.currentTimeMillis() - lastLogin, true, true);
-                    String lastLogoutTime = DurationFormatUtils.formatDurationWords(System.currentTimeMillis() - lastLogout, true, true);
-
-                    sendLaterParty("/pc ❣ «" + playerName + "» Last Logout: " + lastLogoutTime + " ◆ (Last Login: " + lastLoginTime + ") ❣");
-                },
-                ApiUtil.HypixelEndpoint.FilledEndpointArgument.uuid(parsed)
-        );
-    }
-
-    public synchronized void sayPlayerSecrets(String player) {
-        UUID parsed = fromName(player);
-        mod.apiUtil.requestAPI(
-                ApiUtil.HypixelEndpoint.SKYBLOCK_PROFILES,
-                object -> {
-                    JsonArray profiles = object.get("profiles").getAsJsonArray();
-                    for (JsonElement profile : profiles) {
-                        JsonObject profileObject = profile.getAsJsonObject();
-                        if (profileObject.get("selected").getAsBoolean()) {
-                           SkyblockUtil.SkyblockProfile sbProfile = new SkyblockUtil.SkyblockProfile(profileObject);
-                           Integer secrets = sbProfile.getMembers().get(parsed.toString().replaceAll("-", "")).getDungeons().getSecrets();
-                           sendLaterParty("/pc ☠ " + player + "'s secrets: " + secrets + " ☠");
-                        }
-                    }
-                },
-                ApiUtil.HypixelEndpoint.FilledEndpointArgument.uuid(parsed)
-        );
-    }
-
-    public synchronized void sayPlayerStatus(String player) {
-        UUID parsed = fromName(player);
-        mod.apiUtil.requestAPI(
-                ApiUtil.HypixelEndpoint.STATUS,
-                object -> {
-                    if (parsed.equals(MeloMod.playerUUID)) {
-                        SkyblockUtil.Location info = InternalLocraw.getLocation();
-                        sendLaterParty("/pc ◇ Server: " + InternalLocraw.getServerID() + " ⚑ Island: " + WordUtils.capitalizeFully(info.toString().replaceAll("_", " ")) + " ◇");
-                    } else {
-                        JsonObject session = SkyblockUtil.getAsJsonObject("session", object);
-                        if (session != null) {
-                            if (!session.get("online").getAsBoolean()) {
-                                sendLaterParty("/pc ◇ " + player + " is not currently online! ◇");
-                            } else {
-                                boolean onCurrent = false;
-                                for (EntityPlayer playerEntity : Minecraft.getMinecraft().theWorld.playerEntities) {
-                                    if (playerEntity.getName().equals(player)) {
-                                        onCurrent = true;
-                                        break;
-                                    }
-                                }
-
-                                sendLaterParty("/pc ◇ «" + player + "» Server: " + (onCurrent ? InternalLocraw.getServerID() : "Unknown") + " ◇ Game: " + WordUtils.capitalizeFully(SkyblockUtil.getAsString("gameType", session).replaceAll("_", " ")) + " ⚑ Mode: " + WordUtils.capitalizeFully(SkyblockUtil.getAsString("mode", session).replaceAll("_", " ")) + " ◇");
-                            }
-                        }
 
 
-                    }
-                },
-                ApiUtil.HypixelEndpoint.FilledEndpointArgument.uuid(parsed)
-        );
-    }
 
-    public synchronized void sayGuildInformation(String player) {
-        UUID parsed = fromName(player);
-        mod.apiUtil.requestAPI(
-                ApiUtil.HypixelEndpoint.GUILD,
-                object -> {
-                    if (object.has("guild") && object.get("guild").isJsonObject()) {
-                        SkyblockUtil.Guild guild = new SkyblockUtil.Guild(object.get("guild").getAsJsonObject());
 
-                        if (parsed.equals(MeloMod.playerUUID)) {
-                            sendLaterParty("/pc ✿ Guild: [" + guild.getTag() + "] " + guild.getName() + " (" + guild.getGuildID() + ") ✿");
-                        } else {
-                            sendLaterParty("/pc ✿ «" + player + "» Guild: [" + guild.getTag() + "] " + guild.getName() + " (" + guild.getGuildID() + ") ✿");
-                        }
-                    }
-                },
-                ApiUtil.HypixelEndpoint.FilledEndpointArgument.from("player", "" + parsed)
-        );
-    }
 
-    public synchronized void playerSocials(String player, String request) {
-        UUID parsed = fromName(player);
-        mod.apiUtil.requestAPI(
-                ApiUtil.HypixelEndpoint.PLAYER,
-                object -> {
-                    if (object.has("player") && object.get("player").isJsonObject()) {
-                        PlayerUtil.Player playerProfile = new PlayerUtil.Player(SkyblockUtil.getAsJsonObject("player", object));
-                        switch (request) {
-                            case "dc":
-                                sendLaterParty("/pc »»» " + player + "'s DC: " + playerProfile.getDiscord() + " «««");
-                                break;
-                            case "twitch":
-                                sendLaterParty("/pc »»» " + player + "'s Twitch: " + playerProfile.getTwitch() + " «««");
-                                break;
-                            case "twitter":
-                                sendLaterParty("/pc »»» " + player + "'s Twitter: " + playerProfile.getTwitter() + " «««");
-                                break;
-                            case "instagram":
-                                sendLaterParty("/pc »»» " + player + "'s Instagram: " + playerProfile.getInstagram() + " «««");
-                                break;
-                            case "youtube":
-                                sendLaterParty("/pc »»» " + player + "'s YouTube: " + playerProfile.getYoutube() + " «««");
-                                break;
-                            case "forums":
-                                sendLaterParty("/pc »»» " + player + "'s Forum Profile: " + playerProfile.getForums() + " «««");
-                                break;
-                            case "tiktok":
-                                sendLaterParty("/pc »»» " + player + "'s TikTok: " + playerProfile.getTiktok() + " «««");
-                                break;
-                        }
-                    }
 
-                },
-                ApiUtil.HypixelEndpoint.FilledEndpointArgument.from("uuid", "" + parsed)
-        );
-    }
 
-    public static final List<String> models = new ArrayList<String>() {{
-        this.add("gemma2-9b-it");
-        this.add("gemma-7b-it");
-        this.add("llama-3.1-70b-versatile");
-        this.add("llama-3.1-8b-instant");
-        this.add("llama3-70b-8192");
-        this.add("llama3-8b-8192");
-        this.add("llama3-groq-70b-8192-tool-use-preview");
-        this.add("llama3-groq-8b-8192-tool-use-preview");
-        this.add("mixtral-8x7b-32768");
-    }};
 
-    public synchronized void getAI(String prompt) {
-        JsonObject object = new JsonObject();
-        JsonArray array = new JsonArray();
-        JsonObject message = new JsonObject();
-        message.addProperty("role", "user");
-        message.addProperty("content", prompt + "(WARN: Keep your response to LESS THAN 200 characters)");
-        array.add(message);
-        object.add("messages", array);
-        String model = models.get(ChatConfig.aiModel);
-        System.out.println(model);
-        object.addProperty("model", model);
-        mod.apiUtil.requestAI(
-                "https://api.groq.com/openai/v1/chat/completions",
-                object,
-                o -> {
-                    JsonArray choices = SkyblockUtil.getAsJsonArray("choices", o);
-                    for (JsonElement choice : choices) {
-                        JsonObject choiceObject = choice.getAsJsonObject();
-                        JsonObject messageObject = SkyblockUtil.getAsJsonObject("message", choiceObject);
-                        sendLaterParty("/pc ✉ AI: '" + messageObject.get("content").getAsString() + "'");
-                    }
-                }
-        );
-    }
 
-    public synchronized void lastLogin(String player) {
-        mod.apiUtil.requestSkyCrypt(
-                ApiUtil.SkyCryptEndpoint.PROFILE,
-                player,
-                null,
-                object -> {
-                    if (object.has("profiles")) {
-                        JsonObject profiles = object.get("profiles").getAsJsonObject();
-                        for (Map.Entry<String, JsonElement> entry : profiles.entrySet()) {
-                            String string = entry.getKey();
-                            JsonObject profile = SkyblockUtil.getAsJsonObject(string, profiles);
-                            if (SkyblockUtil.getAsBoolean("current", profile)) {
-                                JsonObject currentArea = SkyblockUtil.getAsJsonObject("current_area", SkyblockUtil.getAsJsonObject("user_data", SkyblockUtil.getAsJsonObject("data", profile)));
-                                String currentAreaString = SkyblockUtil.getAsString("current_area", currentArea);
-                                if (currentAreaString == null) {
-                                    currentAreaString = "Unknown";
-                                }
-                                Boolean currentAreaUpdated = SkyblockUtil.getAsBoolean("current_area_updated", currentArea);
-                                sendLaterParty("/pc ℹ «" + player + "» Last Area: " + currentAreaString + " (Updated: " + currentAreaUpdated + ") ℹ");
-                            }
-                        }
-                    }
-                }
-        );
-    }
 
 /*
     public void getGuild(String playerName) {

@@ -1,14 +1,21 @@
 package me.vlink102.melomod.util;
 
 
-import com.google.gson.Gson;
-import com.google.gson.JsonObject;
+import com.google.gson.*;
 import me.vlink102.melomod.MeloMod;
 import me.vlink102.melomod.config.ChatConfig;
 import me.vlink102.melomod.config.MeloConfiguration;
+import me.vlink102.melomod.events.InternalLocraw;
+import me.vlink102.melomod.events.chatcooldownmanager.TickHandler;
+import me.vlink102.melomod.mixin.PlayerUtil;
+import me.vlink102.melomod.mixin.SkyblockUtil;
 import net.minecraft.client.Minecraft;
+import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.ChatComponentText;
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.text.WordUtils;
+import org.apache.commons.lang3.time.DurationFormatUtils;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.utils.URIBuilder;
 import org.apache.http.message.BasicNameValuePair;
@@ -24,13 +31,12 @@ import java.net.URL;
 import java.net.URLConnection;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.concurrent.*;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.zip.GZIPInputStream;
+
+import static me.vlink102.melomod.util.StringUtils.paginate;
 
 public class ApiUtil {
     private static final Gson gson = new Gson();
@@ -41,6 +47,7 @@ public class ApiUtil {
     public interface Endpoint {
         String getEndpoint();
     }
+
     public static class Request {
 
         private final List<NameValuePair> queryArguments = new ArrayList<>();
@@ -145,13 +152,16 @@ public class ApiUtil {
         public <T> CompletableFuture<T> requestJson(Class<? extends T> clazz) {
             return requestString().thenApply(str -> gson.fromJson(str, clazz));
         }
-        public CompletableFuture<JsonObject> requestJsonAnon(JsonObject body) {
-            return requestJsonAnon(JsonObject.class, body);
+
+        public CompletableFuture<JsonElement> requestJsonAnon(JsonElement body) {
+            return requestJsonAnon(JsonElement.class, body);
         }
-        public <T> CompletableFuture<T> requestJsonAnon(Class<? extends T> clazz, JsonObject body) {
+
+        public <T> CompletableFuture<T> requestJsonAnon(Class<? extends T> clazz, JsonElement body) {
             return requestStringAnon(body).thenApply(str -> gson.fromJson(str, clazz));
         }
-        public CompletableFuture<String> requestStringAnon(JsonObject body) {
+
+        public CompletableFuture<String> requestStringAnon(JsonElement body) {
             return buildUrl().thenApplyAsync(url -> {
                 try {
                     InputStream inputStream = null;
@@ -167,7 +177,7 @@ public class ApiUtil {
 
                         conn.setDoOutput(true);
                         String jsonInputString = gson.toJson(body);
-                        try(OutputStream os = conn.getOutputStream()) {
+                        try (OutputStream os = conn.getOutputStream()) {
                             byte[] input = jsonInputString.getBytes(StandardCharsets.UTF_8);
                             os.write(input, 0, input.length);
                         }
@@ -224,7 +234,7 @@ public class ApiUtil {
 
                         conn.setDoOutput(true);
                         String jsonInputString = body.toString();
-                        try(OutputStream os = conn.getOutputStream()) {
+                        try (OutputStream os = conn.getOutputStream()) {
                             byte[] input = jsonInputString.getBytes(StandardCharsets.UTF_8);
                             os.write(input, 0, input.length);
                         }
@@ -266,13 +276,13 @@ public class ApiUtil {
         public CompletableFuture<JsonObject> requestAIAnon(JsonObject body) {
             return requestAIAnon(JsonObject.class, body);
         }
+
         public <T> CompletableFuture<T> requestAIAnon(Class<? extends T> clazz, JsonObject body) {
             return requestAIStringAnon(body).thenApply(str -> gson.fromJson(str, clazz));
         }
 
 
     }
-
 
 
     public synchronized void requestAI(String url, JsonObject body, Consumer<? super JsonObject> action) {
@@ -292,7 +302,344 @@ public class ApiUtil {
     }
 
 
+    public synchronized CompletableFuture<UUID> fromName(String name) {
+        return CompletableFuture.supplyAsync(() -> {
+            ApiUtil.Request request = new Request()
+                    .url("https://api.mojang.com/users/profiles/minecraft/" + name).method("GET");
+            CompletableFuture<JsonObject> object = request.requestJson();
+            try {
+                return SkyblockUtil.fixMalformed(object.get().get("id").getAsString());
+            } catch (InterruptedException | ExecutionException e) {
+                throw new RuntimeException(e);
+            }
+        }, executorService);
 
+    }
+
+    public synchronized void sayPlayerNetworth(String player) {
+        CompletableFuture.runAsync(() -> {
+            try {
+                UUID uuid = fromName(player).get();
+                requestSkyCrypt(
+                        ApiUtil.SkyCryptEndpoint.PROFILE,
+                        player, null,
+                        object -> {
+                            JsonObject profiles = SkyblockUtil.getAsJsonObject("profiles", object);
+                            for (Map.Entry<String, JsonElement> entry : profiles.entrySet()) {
+                                String string = entry.getKey();
+                                JsonObject profile = SkyblockUtil.getAsJsonObject(string, profiles);
+                                if (SkyblockUtil.getAsBoolean("current", profile)) {
+                                    JsonObject data = SkyblockUtil.getAsJsonObject("data", profile);
+                                    JsonObject networth = SkyblockUtil.getAsJsonObject("networth", data);
+                                    Double networthDouble = SkyblockUtil.getAsDouble("networth", networth);
+                                    if (uuid.equals(MeloMod.playerUUID)) {
+                                        sendLaterParty("/pc ⛀⛁ Networth: $" + String.format("%,.0f", networthDouble) + " ⛃⛂");
+                                    } else {
+                                        sendLaterParty("/pc ⛀⛁ " + player + "'s Networth: $" + String.format("%,.0f", networthDouble) + " ⛃⛂");
+                                    }
+                                }
+                            }
+                        }
+                );
+            } catch (InterruptedException | ExecutionException e) {
+                throw new RuntimeException(e);
+            }
+        }, executorService);
+
+
+    }
+
+    public synchronized void getPlayerLastLogin(String playerName) {
+
+        CompletableFuture.runAsync(() -> {
+            try {
+                UUID uuid = fromName(playerName).get();
+                requestAPI(
+                        ApiUtil.HypixelEndpoint.PLAYER,
+                        object -> {
+                            PlayerUtil.Player player = new PlayerUtil.Player(SkyblockUtil.getAsJsonObject("player", object));
+                            Long lastLogin = player.getLastLogin();
+                            Long lastLogout = player.getLastLogout();
+                            String lastLoginTime = DurationFormatUtils.formatDurationWords(System.currentTimeMillis() - lastLogin, true, true);
+                            String lastLogoutTime = DurationFormatUtils.formatDurationWords(System.currentTimeMillis() - lastLogout, true, true);
+
+                            sendLaterParty("/pc ❣ «" + playerName + "» Last Logout: " + lastLogoutTime + " ◆ (Last Login: " + lastLoginTime + ") ❣");
+                        },
+                        ApiUtil.HypixelEndpoint.FilledEndpointArgument.uuid(uuid)
+                );
+            } catch (InterruptedException | ExecutionException e) {
+                throw new RuntimeException(e);
+            }
+        }, executorService);
+
+
+    }
+
+    public synchronized void sayPlayerSecrets(String player) {
+        CompletableFuture.runAsync(() -> {
+            try {
+                UUID uuid = fromName(player).get();
+                requestAPI(
+                        ApiUtil.HypixelEndpoint.SKYBLOCK_PROFILES,
+                        object -> {
+                            JsonArray profiles = object.get("profiles").getAsJsonArray();
+                            for (JsonElement profile : profiles) {
+                                JsonObject profileObject = profile.getAsJsonObject();
+                                if (profileObject.get("selected").getAsBoolean()) {
+                                    SkyblockUtil.SkyblockProfile sbProfile = new SkyblockUtil.SkyblockProfile(profileObject);
+                                    Integer secrets = sbProfile.getMembers().get(uuid.toString().replaceAll("-", "")).getDungeons().getSecrets();
+                                    sendLaterParty("/pc ☠ " + player + "'s secrets: " + secrets + " ☠");
+                                }
+                            }
+                        },
+                        ApiUtil.HypixelEndpoint.FilledEndpointArgument.uuid(uuid)
+                );
+            } catch (InterruptedException | ExecutionException e) {
+                throw new RuntimeException(e);
+            }
+        }, executorService);
+
+
+    }
+
+    public synchronized void sayPlayerStatus(String player) {
+        CompletableFuture.runAsync(() -> {
+            try {
+                UUID uuid = fromName(player).get();
+                requestAPI(
+                        ApiUtil.HypixelEndpoint.STATUS,
+                        object -> {
+                            if (uuid.equals(MeloMod.playerUUID)) {
+                                SkyblockUtil.Location info = InternalLocraw.getLocation();
+                                sendLaterParty("/pc ◇ Server: " + InternalLocraw.getServerID() + " ⚑ Island: " + WordUtils.capitalizeFully(info.toString().replaceAll("_", " ")) + " ◇");
+                            } else {
+                                JsonObject session = SkyblockUtil.getAsJsonObject("session", object);
+                                if (session != null) {
+                                    if (!session.get("online").getAsBoolean()) {
+                                        sendLaterParty("/pc ◇ " + player + " is not currently online! ◇");
+                                    } else {
+                                        boolean onCurrent = false;
+                                        for (EntityPlayer playerEntity : Minecraft.getMinecraft().theWorld.playerEntities) {
+                                            if (playerEntity.getName().equals(player)) {
+                                                onCurrent = true;
+                                                break;
+                                            }
+                                        }
+
+                                        sendLaterParty("/pc ◇ «" + player + "» Server: " + (onCurrent ? InternalLocraw.getServerID() : "Unknown") + " ◇ Game: " + WordUtils.capitalizeFully(SkyblockUtil.getAsString("gameType", session).replaceAll("_", " ")) + " ⚑ Mode: " + WordUtils.capitalizeFully(SkyblockUtil.getAsString("mode", session).replaceAll("_", " ")) + " ◇");
+                                    }
+                                }
+
+
+                            }
+                        },
+                        ApiUtil.HypixelEndpoint.FilledEndpointArgument.uuid(uuid)
+                );
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            } catch (ExecutionException e) {
+                throw new RuntimeException(e);
+            }
+        }, executorService);
+
+
+    }
+
+    public synchronized void sayGuildInformation(String player) {
+
+        CompletableFuture.runAsync(() -> {
+            try {
+                UUID uuid = fromName(player).get();
+                requestAPI(
+                        ApiUtil.HypixelEndpoint.GUILD,
+                        object -> {
+                            if (object.has("guild") && object.get("guild").isJsonObject()) {
+                                SkyblockUtil.Guild guild = new SkyblockUtil.Guild(object.get("guild").getAsJsonObject());
+
+                                if (uuid.equals(MeloMod.playerUUID)) {
+                                    sendLaterParty("/pc ✿ Guild: [" + guild.getTag() + "] " + guild.getName() + " (" + guild.getGuildID() + ") ✿");
+                                } else {
+                                    sendLaterParty("/pc ✿ «" + player + "» Guild: [" + guild.getTag() + "] " + guild.getName() + " (" + guild.getGuildID() + ") ✿");
+                                }
+                            }
+                        },
+                        ApiUtil.HypixelEndpoint.FilledEndpointArgument.from("player", "" + uuid)
+                );
+            } catch (InterruptedException | ExecutionException e) {
+                throw new RuntimeException(e);
+            }
+        }, executorService);
+
+
+    }
+
+
+    public static final List<String> models = new ArrayList<String>() {{
+        this.add("gemma2-9b-it");
+        this.add("gemma-7b-it");
+        this.add("llama-3.1-70b-versatile");
+        this.add("llama-3.1-8b-instant");
+        this.add("llama3-70b-8192");
+        this.add("llama3-8b-8192");
+        this.add("llama3-groq-70b-8192-tool-use-preview");
+        this.add("llama3-groq-8b-8192-tool-use-preview");
+        this.add("mixtral-8x7b-32768");
+    }};
+
+    public synchronized void getAI(String prompt) {
+        JsonObject object = new JsonObject();
+        JsonArray array = new JsonArray();
+        JsonObject message = new JsonObject();
+        message.addProperty("role", "user");
+        message.addProperty("content", prompt + "(WARN: Keep your response to LESS THAN 200 characters)");
+        array.add(message);
+        object.add("messages", array);
+        String model = models.get(ChatConfig.aiModel);
+        System.out.println(model);
+        object.addProperty("model", model);
+        requestAI(
+                "https://api.groq.com/openai/v1/chat/completions",
+                object,
+                o -> {
+                    JsonArray choices = SkyblockUtil.getAsJsonArray("choices", o);
+                    for (JsonElement choice : choices) {
+                        JsonObject choiceObject = choice.getAsJsonObject();
+                        JsonObject messageObject = SkyblockUtil.getAsJsonObject("message", choiceObject);
+                        sendLaterParty("/pc ✉ AI: '" + messageObject.get("content").getAsString() + "'");
+                    }
+                }
+        );
+    }
+
+    public static void sendLaterParty(String message) {
+        TickHandler.addToQueue(message);
+        System.out.println(message);
+    }
+
+    public synchronized void lastLogin(String player) {
+        CompletableFuture.runAsync(() -> {
+            requestSkyCrypt(
+                    ApiUtil.SkyCryptEndpoint.PROFILE,
+                    player,
+                    null,
+                    object -> {
+                        if (object.has("profiles")) {
+                            JsonObject profiles = object.get("profiles").getAsJsonObject();
+                            for (Map.Entry<String, JsonElement> entry : profiles.entrySet()) {
+                                String string = entry.getKey();
+                                JsonObject profile = SkyblockUtil.getAsJsonObject(string, profiles);
+                                if (SkyblockUtil.getAsBoolean("current", profile)) {
+                                    JsonObject currentArea = SkyblockUtil.getAsJsonObject("current_area", SkyblockUtil.getAsJsonObject("user_data", SkyblockUtil.getAsJsonObject("data", profile)));
+                                    String currentAreaString = SkyblockUtil.getAsString("current_area", currentArea);
+                                    if (currentAreaString == null) {
+                                        currentAreaString = "Unknown";
+                                    }
+                                    Boolean currentAreaUpdated = SkyblockUtil.getAsBoolean("current_area_updated", currentArea);
+                                    sendLaterParty("/pc ℹ «" + player + "» Last Area: " + currentAreaString + " (Updated: " + currentAreaUpdated + ") ℹ");
+                                }
+                            }
+                        }
+                    }
+            );
+        }, executorService);
+
+    }
+
+    public synchronized void playerSocials(String player, String request) {
+
+        CompletableFuture.runAsync(() -> {
+            try {
+                UUID uuid = fromName(player).get();
+                requestAPI(
+                        ApiUtil.HypixelEndpoint.PLAYER,
+                        object -> {
+                            if (object.has("player") && object.get("player").isJsonObject()) {
+                                PlayerUtil.Player playerProfile = new PlayerUtil.Player(SkyblockUtil.getAsJsonObject("player", object));
+                                switch (request) {
+                                    case "dc":
+                                        sendLaterParty("/pc »»» " + player + "'s DC: " + playerProfile.getDiscord() + " «««");
+                                        break;
+                                    case "twitch":
+                                        sendLaterParty("/pc »»» " + player + "'s Twitch: " + playerProfile.getTwitch() + " «««");
+                                        break;
+                                    case "twitter":
+                                        sendLaterParty("/pc »»» " + player + "'s Twitter: " + playerProfile.getTwitter() + " «««");
+                                        break;
+                                    case "instagram":
+                                        sendLaterParty("/pc »»» " + player + "'s Instagram: " + playerProfile.getInstagram() + " «««");
+                                        break;
+                                    case "youtube":
+                                        sendLaterParty("/pc »»» " + player + "'s YouTube: " + playerProfile.getYoutube() + " «««");
+                                        break;
+                                    case "forums":
+                                        sendLaterParty("/pc »»» " + player + "'s Forum Profile: " + playerProfile.getForums() + " «««");
+                                        break;
+                                    case "tiktok":
+                                        sendLaterParty("/pc »»» " + player + "'s TikTok: " + playerProfile.getTiktok() + " «««");
+                                        break;
+                                }
+                            }
+
+                        },
+                        ApiUtil.HypixelEndpoint.FilledEndpointArgument.from("uuid", "" + uuid)
+                );
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            } catch (ExecutionException e) {
+                throw new RuntimeException(e);
+            }
+        }, executorService);
+
+
+    }
+
+    /**
+     * <a href="https://laby.net/api/v3/user/1871dfae-0a6a-4486-8366-6bc0131d370e/profile">LabyMod Endpoint (92/94)</a>
+     * <a href="https://api.crafty.gg/api/v2/players/swageater34">Crafty Endpoint (67/94)</a>
+     */
+    public synchronized void getPlayerPastNames(String player, int page) {
+        CompletableFuture.runAsync(() -> {
+            try {
+                UUID uuid = fromName(player).get();
+                requestServer(
+                        "https://laby.net/api/v3/user/" + uuid + "/profile",
+                /*
+                object -> {
+                    System.out.println(player);
+                    JsonObject data = SkyblockUtil.getAsJsonObject("data", object);
+                    JsonArray usernames = SkyblockUtil.getAsJsonArray("usernames", data);
+                    System.out.println(usernames);
+                    List<String> strings = new ArrayList<>();
+                    for (JsonElement usernameElement : usernames) {
+                        JsonObject username = usernameElement.getAsJsonObject();
+                        String oldUser = username.get("username").getAsString();
+                        strings.add(oldUser);
+                    }
+                    List<String> usernameList = paginate("❄ " + player + "'s Username History (Page #): ", strings);
+
+                    sendLaterParty(usernameList.get(page - 1) + " ❄");
+                }
+                 */
+                        object -> {
+                            JsonArray userNameHistory = SkyblockUtil.getAsJsonArray("username_history", object);
+                            List<String> names = new ArrayList<>();
+                            for (JsonElement jsonElement : userNameHistory) {
+                                JsonObject nameChange = jsonElement.getAsJsonObject();
+                                names.add(SkyblockUtil.getAsString("username", nameChange));
+                            }
+                            Collections.reverse(names);
+                            List<String> usernameList = paginate("❄ " + player + "'s Username History (Page #): ", names);
+
+                            sendLaterParty(usernameList.get(page - 1) + " ❄");
+                        }
+                );
+            } catch (InterruptedException | ExecutionException e) {
+                throw new RuntimeException(e);
+            }
+        }, executorService);
+
+
+    }
 
     public synchronized void requestSkyCrypt(SkyCryptEndpoint endpoint, String playerName, String profileName, Consumer<? super JsonObject> action) {
         ApiUtil.Request request = newApiRequest(new SkyCryptEndpointClass(endpoint, playerName, profileName)).method("GET");
@@ -318,24 +665,25 @@ public class ApiUtil {
         object.thenAcceptAsync(action, executorService);
     }
 
-    public synchronized void requestServer(String url, JsonObject body, Consumer<? super JsonObject> action, HypixelEndpoint.FilledEndpointArgument... arguments) {
+    public synchronized void requestServer(String url, JsonObject body, Consumer<? super JsonElement> action, HypixelEndpoint.FilledEndpointArgument... arguments) {
         ApiUtil.Request request = new Request()
                 .url(url).method("GET");
         for (HypixelEndpoint.FilledEndpointArgument argument : arguments) {
             request.queryArgument(argument.getTag(), argument.getValue());
         }
 
-        CompletableFuture<JsonObject> object = request.requestJsonAnon(body);
+        CompletableFuture<JsonElement> object = request.requestJsonAnon(body);
         object.handle((jsonObject, ex) -> {
-            if (jsonObject != null && jsonObject.has("text")) {
-                return object.thenAcceptAsync(action, executorService);
+            if (jsonObject.isJsonObject()) {
+                JsonObject jsonObject1 = jsonObject.getAsJsonObject();
+                if (jsonObject1 != null && jsonObject1.has("text")) {
+                    return object.thenAcceptAsync(action, executorService);
+                }
             }
+
             return null;
         });
     }
-
-
-
 
     public enum SkyCryptEndpoint {
         PROFILE("profile/player_name"),
@@ -368,7 +716,6 @@ public class ApiUtil {
 
 
     }
-
 
 
     public enum HypixelEndpoint implements Endpoint {
@@ -454,6 +801,7 @@ public class ApiUtil {
             public static FilledEndpointArgument uuid() {
                 return new FilledEndpointArgument(RequiredEndPoint.uuid(), MeloMod.playerUUID.toString());
             }
+
             public static FilledEndpointArgument uuid(UUID uuid) {
                 return new FilledEndpointArgument(RequiredEndPoint.uuid(), uuid.toString());
             }
@@ -485,6 +833,7 @@ public class ApiUtil {
             public static EndPointArgument required(String tag) {
                 return new RequiredEndPoint(tag);
             }
+
             public static EndPointArgument uuid() {
                 return new RequiredEndPoint("uuid");
             }
