@@ -57,6 +57,10 @@ public class Packet implements PacketParser {
                 return new ClientBoundNotifyOnlinePacket(null, null).parse(json);
             case DISCONNECT:
                 return new PacketPlayOutDisconnect(null, null).parse(json);
+            case LOCRAW_PACKET:
+                return new ServerBoundLocrawPacket(null, null, null, null, null, null).parse(json);
+            case BAN_PACKET:
+                return new ClientBoundBanStatus(null, null).parse(json);
             default:
                 return null;
         }
@@ -103,6 +107,8 @@ public class Packet implements PacketParser {
          * PacketPlayOutDisconnect.class
          */
         DISCONNECT(0b1001, PacketType.RELAYED),
+        LOCRAW_PACKET(0b1010, PacketType.CLIENT_SERVER),
+        BAN_PACKET(0b1011, PacketType.SERVER_CLIENT),
         ERROR_PACKET(0xffffffff, null);
 
         private final int packetID;

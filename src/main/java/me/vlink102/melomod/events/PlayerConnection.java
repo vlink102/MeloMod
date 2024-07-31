@@ -3,9 +3,11 @@ package me.vlink102.melomod.events;
 import cc.polyfrost.oneconfig.events.EventManager;
 import cc.polyfrost.oneconfig.events.event.WorldLoadEvent;
 import cc.polyfrost.oneconfig.libs.eventbus.Subscribe;
+import cc.polyfrost.oneconfig.utils.hypixel.HypixelUtils;
 import me.vlink102.melomod.MeloMod;
 import me.vlink102.melomod.util.http.CommunicationHandler;
 import me.vlink102.melomod.util.http.packets.PacketPlayOutDisconnect;
+import me.vlink102.melomod.util.http.packets.ServerBoundLocrawPacket;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.Mod;
@@ -34,6 +36,10 @@ public class PlayerConnection {
         System.out.println("Joined world: " + event.toString());
         ScheduledExecutorService service = new ScheduledThreadPoolExecutor(1);
         service.schedule(() -> {
+            if (!HypixelUtils.INSTANCE.isHypixel()) {
+                ServerBoundLocrawPacket packet = new ServerBoundLocrawPacket(null, null, null, null, InternalLocraw.getType(), InternalLocraw.serverIP());
+                CommunicationHandler.thread.sendPacket(packet);
+            }
             if (!MeloMod.queue.isEmpty()) {
                 List<String> currentQueue = new ArrayList<>(MeloMod.queue);
                 List<String> worked = new ArrayList<>();
@@ -43,8 +49,9 @@ public class PlayerConnection {
                     }
                 }
                 MeloMod.queue.removeAll(worked);
+
             }
-        }, 5L, TimeUnit.SECONDS);
+        }, 2L, TimeUnit.SECONDS);
 
     }
 

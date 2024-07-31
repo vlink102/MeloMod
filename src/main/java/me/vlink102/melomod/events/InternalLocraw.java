@@ -3,11 +3,16 @@ package me.vlink102.melomod.events;
 import cc.polyfrost.oneconfig.events.EventManager;
 import cc.polyfrost.oneconfig.events.event.LocrawEvent;
 import cc.polyfrost.oneconfig.libs.eventbus.Subscribe;
+import cc.polyfrost.oneconfig.utils.hypixel.HypixelUtils;
+import cc.polyfrost.oneconfig.utils.hypixel.LocrawInfo;
 import me.vlink102.melomod.MeloMod;
 import me.vlink102.melomod.util.game.SkyblockUtil;
 import me.vlink102.melomod.util.http.ApiUtil;
+import me.vlink102.melomod.util.http.CommunicationHandler;
+import me.vlink102.melomod.util.http.packets.ServerBoundLocrawPacket;
 import net.minecraft.client.Minecraft;
 import net.minecraft.util.BlockPos;
+import net.minecraftforge.fml.common.network.FMLNetworkEvent;
 
 public class InternalLocraw {
     private final MeloMod mod;
@@ -57,11 +62,73 @@ public class InternalLocraw {
         return serverID;
     }
 
+    public static class LocrawInfo {
+        private final String serverID;
+        private final String gamemode;
+        private final String gametype;
+        private final String map;
+        private final String serverIP;
+        private final ServerBoundLocrawPacket.ServerType isHypixel;
+
+        public LocrawInfo(String serverID, String gamemode, String gametype, String map, String serverIP, ServerBoundLocrawPacket.ServerType isHypixel) {
+            this.serverID = serverID;
+            this.gamemode = gamemode;
+            this.gametype = gametype;
+            this.map = map;
+            this.serverIP = serverIP;
+            this.isHypixel = isHypixel;
+        }
+
+        public ServerBoundLocrawPacket.ServerType isHypixel() {
+            return isHypixel;
+        }
+
+        public String getServerIP() {
+            return serverIP;
+        }
+
+        public String getServerID() {
+            return serverID;
+        }
+
+        public String getGametype() {
+            return gametype;
+        }
+
+        public String getGamemode() {
+            return gamemode;
+        }
+
+        public String getMap() {
+            return map;
+        }
+    }
+
+    public static ServerBoundLocrawPacket.ServerType getType() {
+        if (Minecraft.getMinecraft().isSingleplayer()) {
+            return ServerBoundLocrawPacket.ServerType.SINGLEPLAYER;
+        }
+        if (HypixelUtils.INSTANCE.isHypixel()) {
+            return ServerBoundLocrawPacket.ServerType.HYPIXEL;
+        }
+        return ServerBoundLocrawPacket.ServerType.SERVER;
+    }
+
+    public static String serverIP() {
+        if (Minecraft.getMinecraft().isSingleplayer()) {
+            return Minecraft.getMinecraft().getIntegratedServer().getWorldName();
+        }
+        return Minecraft.getMinecraft().getCurrentServerData().serverIP;
+    }
 
     @Subscribe
     private void onServerTransfer(LocrawEvent event) {
-        gameMode = SkyblockUtil.Location.parseFromLocraw(event.info.getGameMode());
-        serverID = event.info.getServerId();
+        cc.polyfrost.oneconfig.utils.hypixel.LocrawInfo info = event.info;
+        gameMode = SkyblockUtil.Location.parseFromLocraw(info.getGameMode());
+        serverID = info.getServerId();
+
+        ServerBoundLocrawPacket packet = new ServerBoundLocrawPacket(info.getMapName(), info.getGameMode(), info.getRawGameType(), info.getServerId(), getType(), serverIP());
+        CommunicationHandler.thread.sendPacket(packet);
 
         if (mod.getPlayerProfile() == null) {
             mod.apiUtil.requestAPI(

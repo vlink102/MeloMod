@@ -31,6 +31,5 @@ public class MeloMsg {
     @Main
     public void handle(@Greedy String message) {
         CommunicationHandler.thread.sendPacket(new PacketPlayOutChat(message, MeloMod.playerUUID.toString(), MeloMod.playerName));
-        MeloMod.addMessage("§d[§bMM§d] §d§l" + MeloMod.playerName + "§r§7: " + message);
     }
 }

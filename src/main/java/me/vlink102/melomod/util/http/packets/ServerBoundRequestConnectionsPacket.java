@@ -4,6 +4,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import me.vlink102.melomod.util.http.Packet;
+import me.vlink102.melomod.util.game.SkyblockUtil;
 
 public class ServerBoundRequestConnectionsPacket extends Packet {
     private final int page;

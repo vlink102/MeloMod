@@ -2,7 +2,11 @@ package me.vlink102.melomod.util;
 
 import com.google.common.collect.Sets;
 import me.vlink102.melomod.events.ChatEvent;
+import me.vlink102.melomod.events.InternalLocraw;
+import me.vlink102.melomod.util.game.PlayerUtil;
 import me.vlink102.melomod.util.game.Utils;
+import me.vlink102.melomod.util.http.packets.ServerBoundLocrawPacket;
+import org.apache.commons.lang3.text.WordUtils;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
@@ -64,10 +68,11 @@ public class StringUtils {
         return helpMenu;
     }
 
-    public static List<String> paginateOnline(List<String> strings, int perLine) {
+    public static List<String> paginateOnline(HashMap<String, InternalLocraw.LocrawInfo> strings, int perLine) {
         List<String> menu = new ArrayList<>();
         HashMap<Integer, Integer> pages = getPaginatedMap(strings, perLine);
 
+        List<String> fromStrings = new ArrayList<>(strings.keySet());
         int currentElement = 0;
         for (int i = 0; i < pages.size(); i++) {
             int elementCount = pages.get(i);
@@ -75,8 +80,43 @@ public class StringUtils {
             builder.add("§9-----------------------------------------------------");
             builder.add(getCentredMessage("§6Online Players (Page " + (i + 1) + " of " + pages.size() + ")"));
             for (int j = 0; j < elementCount; j++) {
-                String command = strings.get(currentElement);
-                builder.add("§3" + command);
+                InternalLocraw.LocrawInfo command = strings.get(fromStrings.get(currentElement));
+                StringBuilder playing = new StringBuilder();
+                playing.append("§3").append(fromStrings.get(currentElement)).append(" §7is ");
+                switch (command.isHypixel()) {
+                    case HYPIXEL:
+                        playing.append("in §e");
+                        if (command.getGametype() != null) {
+                            playing.append(WordUtils.capitalizeFully(command.getGametype().replaceAll("[-_]", "")));
+                        } else {
+                            playing.append(command.getServerIP());
+                        }
+                        if (command.getGamemode() != null) {
+                            playing.append(" §6").append(command.getGamemode());
+                        }
+                        if (command.getMap() != null) {
+                            playing.append(" §7(Map: §b").append(command.getMap()).append("§7)");
+                        }
+                        if (command.getServerID() != null) {
+                            playing.append(" §8[§d").append(command.getServerID()).append("§8]");
+                        }
+                        builder.add(playing.toString());
+                        break;
+                    case SERVER:
+                        playing.append("in §e");
+                        playing.append(command.getServerIP());
+                        builder.add(playing.toString());
+                        break;
+                    case SINGLEPLAYER:
+                        playing.append("in §e");
+                        playing.append("§bSingleplayer: §7'").append(command.getServerIP()).append("'");
+                        builder.add(playing.toString());
+                        break;
+                    case OFFLINE:
+                        playing.append("§coffline§7.");
+                        builder.add(playing.toString());
+                        break;
+                }
                 currentElement++;
             }
             builder.add("§9-----------------------------------------------------");
@@ -118,7 +158,7 @@ public class StringUtils {
         }
         return sb + message;
     }
-    public static HashMap<Integer, Integer> getPaginatedMap(List<String> strings, int perPage) {
+    public static HashMap<Integer, Integer> getPaginatedMap(HashMap<String, InternalLocraw.LocrawInfo> strings, int perPage) {
         int length = strings.size();
         HashMap<Integer, Integer> pages = new HashMap<>();
         int page = 0;

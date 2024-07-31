@@ -3,6 +3,7 @@ package me.vlink102.melomod.util.http;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import me.vlink102.melomod.util.game.SkyblockUtil;
 
 import java.util.concurrent.TimeUnit;
 
@@ -40,9 +41,9 @@ public class Ban {
     }
 
     public static Ban parse(JsonObject object) {
-        String admin = object.get("admin").getAsString();
-        String reason = object.get("reason").getAsString();
-        String summary = object.get("summary").getAsString();
+        String admin = SkyblockUtil.getAsString("admin",object);
+        String reason = SkyblockUtil.getAsString("reason",object);
+        String summary = SkyblockUtil.getAsString("summary",object);
         Long timestamp = object.get("timestamp").getAsLong();
         Long duration = object.get("duration").getAsLong();
         Long expiry = object.get("expiry").getAsLong();

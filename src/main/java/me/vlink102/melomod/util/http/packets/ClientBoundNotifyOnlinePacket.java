@@ -4,6 +4,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import me.vlink102.melomod.util.http.Packet;
+import me.vlink102.melomod.util.game.SkyblockUtil;
 
 public class ClientBoundNotifyOnlinePacket extends Packet {
     private final Boolean online;
@@ -19,7 +20,7 @@ public class ClientBoundNotifyOnlinePacket extends Packet {
         JsonElement element = new JsonParser().parse(json);
         if (element.isJsonObject()) {
             JsonObject jsonObject = element.getAsJsonObject();
-            String name = jsonObject.get("online-name").getAsString();
+            String name = SkyblockUtil.getAsString("online-name",jsonObject);
             boolean online = jsonObject.get("online").getAsBoolean();
             return new ClientBoundNotifyOnlinePacket(online, name);
         }

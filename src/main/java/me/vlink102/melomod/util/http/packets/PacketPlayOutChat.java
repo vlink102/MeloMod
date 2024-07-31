@@ -4,6 +4,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import me.vlink102.melomod.util.http.Packet;
+import me.vlink102.melomod.util.game.SkyblockUtil;
 
 public class PacketPlayOutChat extends Packet {
     private final String contents;
@@ -36,9 +37,9 @@ public class PacketPlayOutChat extends Packet {
         JsonElement element = new JsonParser().parse(json);
         if (element.isJsonObject()) {
             JsonObject o = element.getAsJsonObject();
-            String contents = o.get("chat-message").getAsString();
-            String uuid = o.get("chat-uuid").getAsString();
-            String name = o.get("chat-name").getAsString();
+            String contents = SkyblockUtil.getAsString("chat-message",o);
+            String uuid = SkyblockUtil.getAsString("chat-uuid",o);
+            String name = SkyblockUtil.getAsString("chat-name",o);
             return new PacketPlayOutChat(contents, uuid, name);
         }
         return null;

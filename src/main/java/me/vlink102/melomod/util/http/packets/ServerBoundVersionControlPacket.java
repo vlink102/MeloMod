@@ -5,6 +5,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import me.vlink102.melomod.MeloMod;
 import me.vlink102.melomod.util.http.Packet;
+import me.vlink102.melomod.util.game.SkyblockUtil;
 
 public class ServerBoundVersionControlPacket extends Packet {
     private final String uuid;
@@ -39,8 +40,8 @@ public class ServerBoundVersionControlPacket extends Packet {
         JsonElement element = new JsonParser().parse(json);
         if (element.isJsonObject()) {
             JsonObject o = element.getAsJsonObject();
-            String uuid = o.get("uuid").getAsString();
-            String version = o.get("version").getAsString();
+            String uuid = SkyblockUtil.getAsString("uuid",o);
+            String version = SkyblockUtil.getAsString("version",o);
             return new ServerBoundVersionControlPacket(uuid, version);
         }
         return null;

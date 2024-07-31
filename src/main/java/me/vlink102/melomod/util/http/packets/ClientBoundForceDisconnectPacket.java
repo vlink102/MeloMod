@@ -5,6 +5,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import me.vlink102.melomod.util.http.Ban;
 import me.vlink102.melomod.util.http.Packet;
+import me.vlink102.melomod.util.game.SkyblockUtil;
 
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
@@ -71,9 +72,9 @@ public class ClientBoundForceDisconnectPacket extends Packet {
         JsonElement element = new JsonParser().parse(json);
         if (element.isJsonObject()) {
             JsonObject o = element.getAsJsonObject();
-            String closedID = o.get("closed-id").getAsString();
-            String reason = o.get("reason").getAsString();
-            String bannedBy = o.get("admin").getAsString();
+            String closedID = SkyblockUtil.getAsString("closed-id",o);
+            String reason = SkyblockUtil.getAsString("reason",o);
+            String bannedBy = SkyblockUtil.getAsString("admin",o);
             boolean isBan = o.get("is-ban").getAsBoolean();
             Ban banParsed = null;
             if (isBan) {

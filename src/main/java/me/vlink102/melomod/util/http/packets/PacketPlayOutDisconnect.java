@@ -4,6 +4,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import me.vlink102.melomod.util.http.Packet;
+import me.vlink102.melomod.util.game.SkyblockUtil;
 
 public class PacketPlayOutDisconnect extends Packet {
     private final String uuid;
@@ -36,8 +37,8 @@ public class PacketPlayOutDisconnect extends Packet {
         JsonElement element = new JsonParser().parse(json);
         if (element.isJsonObject()) {
             JsonObject object = element.getAsJsonObject();
-            String uuid = object.get("uuid").getAsString();
-            String name = object.get("name").getAsString();
+            String uuid = SkyblockUtil.getAsString("uuid",object);
+            String name = SkyblockUtil.getAsString("name",object);
             return new PacketPlayOutDisconnect(uuid, name);
         }
         return null;

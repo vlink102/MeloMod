@@ -181,8 +181,8 @@ public class ItemResolutionQuery {
         if (petInfo == null || petInfo.isEmpty()) return null;
         try {
             JsonObject petInfoObject = MeloMod.gson.fromJson(petInfo, JsonObject.class);
-            String petId = petInfoObject.get("type").getAsString();
-            String petTier = petInfoObject.get("tier").getAsString();
+            String petId = SkyblockUtil.getAsString("type",petInfoObject);
+            String petTier = SkyblockUtil.getAsString("tier",petInfoObject);
             int rarityIndex = PET_RARITIES.indexOf(petTier);
             return petId.toUpperCase(Locale.ROOT) + ";" + rarityIndex;
         } catch (JsonParseException | ClassCastException ex) {

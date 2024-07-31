@@ -3,6 +3,7 @@ package me.vlink102.melomod;
 import cc.polyfrost.oneconfig.utils.hypixel.LocrawUtil;
 import com.google.gson.Gson;
 import me.vlink102.melomod.command.MeloMsg;
+import me.vlink102.melomod.command.MeloOnline;
 import me.vlink102.melomod.config.MeloConfiguration;
 import me.vlink102.melomod.command.MeloCommand;
 import cc.polyfrost.oneconfig.events.event.InitializationEvent;
@@ -132,6 +133,7 @@ public class MeloMod {
         apiUtil = new ApiUtil();
         CommandManager.INSTANCE.registerCommand(new MeloCommand(this));
         CommandManager.INSTANCE.registerCommand(new MeloMsg(this));
+        CommandManager.INSTANCE.registerCommand(new MeloOnline());
         PlayerObjectUtil objectUtil = new PlayerObjectUtil(this);
         locrawUtil = new LocrawUtil();
         internalLocraw = new InternalLocraw(this);
@@ -140,8 +142,6 @@ public class MeloMod {
         MinecraftForge.EVENT_BUS.register(render);
         new PlayerConnection();
         //MinecraftForge.EVENT_BUS.register(internalLocraw);
-
-        System.out.println("Hi");
         handler = new CommunicationHandler();
         handler.beginKeepAlive(playerUUID, playerName);
     }

@@ -1,10 +1,12 @@
 package me.vlink102.melomod.util.http;
 
+import cc.polyfrost.oneconfig.libs.checker.units.qual.C;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import me.vlink102.melomod.MeloMod;
+import me.vlink102.melomod.events.InternalLocraw;
 import me.vlink102.melomod.util.StringUtils;
 import me.vlink102.melomod.util.game.Utils;
 import me.vlink102.melomod.util.http.packets.*;
@@ -105,18 +107,14 @@ public class DataThread extends Thread {
                                         break;
                                 }
                                 if (clientBoundVersionControlPacket.isBanned()) {
-                                    MeloMod.addMessage("\n§4[§cMM§4] §cUh-oh! You are currently banned from " + MeloMod.NAME + "!");
-                                    MeloMod.addMessage("§4[§cMM§4] §cThis only applies to chat.");
                                     Ban ban = clientBoundVersionControlPacket.getBanReason();
-                                    MeloMod.addMessage("\n§e  Summary: §7" + ban.getSummary());
-                                    MeloMod.addMessage("§e  Reason: §7" + ban.getReason());
-                                    MeloMod.addMessage("§e  Banned by: §7" + ban.getAdmin());
-                                    MeloMod.addMessage("§e  Ban Length: §7" + Utils.prettyTime(ban.getDuration()));
-                                    MeloMod.addMessage("§e  Issued: §7" + Utils.another(ban.getTimestamp()));
-                                    long expiry = ban.getExpiry();
-                                    MeloMod.addMessage("§e  Expires: §7" + Utils.another(expiry));
-                                    MeloMod.addMessage("§e  Time Left: §7" + Utils.prettyTime(expiry - System.currentTimeMillis()) + "\n");
+                                    printBan(ban);
                                 }
+                                break;
+                            case BAN_PACKET:
+                                ClientBoundBanStatus clientBoundBanStatus = (ClientBoundBanStatus) Packet.parseFrom(object.toString());
+                                Ban ban = clientBoundBanStatus.getBanReason();
+                                printBan(ban);
                                 break;
                             case NOTIFY_ONLINE:
                                 ClientBoundNotifyOnlinePacket clientBoundNotifyOnlinePacket = (ClientBoundNotifyOnlinePacket) Packet.parseFrom(object.toString());
@@ -135,18 +133,21 @@ public class DataThread extends Thread {
                                 break;
                             case CONNECTED_CLIENTS:
                                 ClientBoundConnectedClientsPacket clientBoundConnectedClientsPacket = (ClientBoundConnectedClientsPacket) Packet.parseFrom(object.toString());
-                                List<String> onlinePlayers = clientBoundConnectedClientsPacket.getPlayerList();
+                                HashMap<String, InternalLocraw.LocrawInfo> onlinePlayers = clientBoundConnectedClientsPacket.getPlayerList();
+                                System.out.println(onlinePlayers);
                                 int page = clientBoundConnectedClientsPacket.getPage();
                                 List<String> paginated = StringUtils.paginateOnline(onlinePlayers, 8);
-                                MeloMod.addMessage((paginated.get(page)));
+                                MeloMod.addMessage((paginated.get(page -1)));
                                 break;
                             case CHAT_MESSAGE:
                                 PacketPlayOutChat packetPlayOutChat = (PacketPlayOutChat) Packet.parseFrom(object.toString());
                                 String message = packetPlayOutChat.getContents();
                                 String uuid = packetPlayOutChat.getUuid();
                                 String messenger = packetPlayOutChat.getName();
-                                if (!uuid.equalsIgnoreCase(MeloMod.playerUUID.toString())) {
-                                    MeloMod.addMessage(("§d[§bMM§d] §d" + messenger + "§7: " + message));
+                                if (uuid.equalsIgnoreCase(MeloMod.playerUUID.toString())) {
+                                    MeloMod.addMessage(("§d[§bMM§d] §b" + messenger + "§r§7: " + message));
+                                } else {
+                                    MeloMod.addMessage(("§d[§bMM§d] §d" + messenger + "§r§7: " + message));
                                 }
                                 break;
                             case DISCONNECT:
@@ -158,6 +159,7 @@ public class DataThread extends Thread {
                                 }
 
                                 break;
+
                         }
 
                     }
@@ -178,6 +180,19 @@ public class DataThread extends Thread {
                 closeSocket(CloseReason.ERROR);
             }
         }
+    }
+
+    public void printBan(Ban ban) {
+        MeloMod.addMessage("\n§4[§cMM§4] §cUh-oh! You are currently banned from " + MeloMod.NAME + "!");
+        MeloMod.addMessage("§4[§cMM§4] §cThis only applies to chat.");
+        MeloMod.addMessage("\n§e  Summary: §7" + ban.getSummary());
+        MeloMod.addMessage("§e  Reason: §7" + ban.getReason());
+        MeloMod.addMessage("§e  Banned by: §7" + ban.getAdmin());
+        MeloMod.addMessage("§e  Ban Length: §7" + Utils.prettyTime(ban.getDuration()));
+        MeloMod.addMessage("§e  Issued: §7" + Utils.another(ban.getTimestamp()));
+        long expiry = ban.getExpiry();
+        MeloMod.addMessage("§e  Expires: §7" + Utils.another(expiry));
+        MeloMod.addMessage("§e  Time Left: §7" + Utils.prettyTime(expiry - System.currentTimeMillis()) + "\n");
     }
 
     public void sendPacket(Object packet) {

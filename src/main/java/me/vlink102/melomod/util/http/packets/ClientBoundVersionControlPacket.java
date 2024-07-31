@@ -7,6 +7,7 @@ import me.vlink102.melomod.util.game.SkyblockUtil;
 import me.vlink102.melomod.util.http.Ban;
 import me.vlink102.melomod.util.http.Packet;
 import me.vlink102.melomod.util.http.Version;
+import me.vlink102.melomod.util.game.SkyblockUtil;
 
 public class ClientBoundVersionControlPacket extends Packet {
     private final String correctVersion;

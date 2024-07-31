@@ -610,7 +610,7 @@ public class ApiUtil {
                     List<String> strings = new ArrayList<>();
                     for (JsonElement usernameElement : usernames) {
                         JsonObject username = usernameElement.getAsJsonObject();
-                        String oldUser = username.get("username").getAsString();
+                        String oldUser = SkyblockUtil.getAsString("username",username);
                         strings.add(oldUser);
                     }
                     List<String> usernameList = paginate("❄ " + player + "'s Username History (Page #): ", strings);

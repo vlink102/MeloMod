@@ -4,6 +4,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import me.vlink102.melomod.util.http.Packet;
+import me.vlink102.melomod.util.game.SkyblockUtil;
 
 public class ServerBoundNotifyOnlinePacket extends Packet {
     private final String uuid;
@@ -33,8 +34,8 @@ public class ServerBoundNotifyOnlinePacket extends Packet {
         JsonElement element = new JsonParser().parse(json);
         if (element.isJsonObject()) {
             JsonObject o = element.getAsJsonObject();
-            String onlineUuid = o.get("online_uuid").getAsString();
-            String prettyName = o.get("pretty_name").getAsString();
+            String onlineUuid = SkyblockUtil.getAsString("online_uuid",o);
+            String prettyName = SkyblockUtil.getAsString("pretty_name",o);
             return new ServerBoundNotifyOnlinePacket(onlineUuid, prettyName);
         }
         return null;
