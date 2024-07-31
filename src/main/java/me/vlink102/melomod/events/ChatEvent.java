@@ -27,13 +27,13 @@ import static me.vlink102.melomod.util.http.ApiUtil.sendLater;
 
 public class ChatEvent {
 
-    public synchronized void getChessMove(String fen) {
+    public synchronized void getChessMove(String fen, ApiUtil.ChatChannel chatChannel) {
         JsonObject body = new JsonObject();
         body.addProperty("fen", fen);
         body.addProperty("depth", 10);
         mod.apiUtil.requestServer("https://chess-api.com/v1", body, object -> {
             if (object.isJsonObject()) {
-                TickHandler.addToQueue("/pc »»» " + object.getAsJsonObject().get("text").getAsString() + " «««");
+                sendLater("»»» " + object.getAsJsonObject().get("text").getAsString() + " «««", chatChannel);
             }
         });
     }
@@ -363,15 +363,6 @@ public class ChatEvent {
     }};
 
     @Subscribe
-    public void onChatSend(ChatSendEvent event) {
-        if (event.message.startsWith("/")) {
-            TickHandler.ticksSinceLastCommand = 0;
-        } else {
-            TickHandler.ticksSinceLastChat = 0;
-        }
-    }
-
-    @Subscribe
     public void onChatEvent(ChatReceiveEvent event) {
         String fullMessage = event.message.getUnformattedText();
         if (ServerTracker.testingRank) {
@@ -507,7 +498,7 @@ public class ChatEvent {
                 String[] args = chatMessage.split("\\" + ChatConfig.chatPrefix + Commands.CHESSENGINE.getCommand() + " ");
                 if (args.length > 1) {
                     String fen = args[1];
-                    getChessMove(fen);
+                    getChessMove(fen, chatChannel);
                 }
             }
         }

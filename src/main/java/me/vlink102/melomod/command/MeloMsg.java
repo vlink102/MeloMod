@@ -14,11 +14,8 @@ import net.minecraft.util.ChatComponentText;
         description = "Chat with other " + MeloMod.NAME + " users.",
         aliases = {
                 "melomsg",
-                "vmsg",
-                "zmsg",
                 "melomodmsg",
                 "mm",
-                "mc"
         }
 )
 public class MeloMsg {
@@ -30,6 +27,6 @@ public class MeloMsg {
 
     @Main
     public void handle(@Greedy String message) {
-        CommunicationHandler.thread.sendPacket(new PacketPlayOutChat(message, MeloMod.playerUUID.toString(), MeloMod.playerName));
+        CommunicationHandler.thread.sendPacket(new PacketPlayOutChat(message, MeloMod.playerUUID.toString(), MeloMod.playerName, null));
     }
 }

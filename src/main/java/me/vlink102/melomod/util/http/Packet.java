@@ -42,7 +42,7 @@ public class Packet implements PacketParser {
             case REQUEST_CONNECTED:
                 return new ServerBoundRequestConnectionsPacket(-1).parse(json);
             case CHAT_MESSAGE:
-                return new PacketPlayOutChat(null, null, null).parse(json);
+                return new PacketPlayOutChat(null, null, null, null).parse(json);
             case OPENED_CONNECTION:
                 return new ServerBoundNotifyOnlinePacket(null, null).parse(json);
             case CLOSED_CONNECTION:

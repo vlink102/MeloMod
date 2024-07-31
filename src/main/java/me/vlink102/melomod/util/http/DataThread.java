@@ -146,13 +146,19 @@ public class DataThread extends Thread {
                                 String message = packetPlayOutChat.getContents();
                                 String uuid = packetPlayOutChat.getUuid();
                                 String messenger = packetPlayOutChat.getName();
-                                if (uuid.equalsIgnoreCase(MeloMod.playerUUID.toString())) {
-                                    MeloMod.addMessage(("§d[§bMM§d] §b" + messenger + "§r§7: " + message));
+                                String targetName = packetPlayOutChat.getTargetName();
+
+                                if (targetName != null) {
+                                    MeloMod.addMessage("§5[§dMM§5] §8(Private Message) §dFrom: §3" + messenger + "§r§7: " + message);
                                 } else {
-                                    MeloMod.addMessage(("§d[§bMM§d] §d" + messenger + "§r§7: " + message));
-                                }
-                                if (message.startsWith(ChatConfig.chatPrefix)) {
-                                    MeloMod.chatEvent.executeChatCommand(message, messenger, ApiUtil.ChatChannel.CUSTOM);
+                                    if (uuid.equalsIgnoreCase(MeloMod.playerUUID.toString())) {
+                                        MeloMod.addMessage(("§d[§bMM§d] §b" + messenger + "§r§7: " + message));
+                                    } else {
+                                        MeloMod.addMessage(("§d[§bMM§d] §d" + messenger + "§r§7: " + message));
+                                    }
+                                    if (message.startsWith(ChatConfig.chatPrefix)) {
+                                        MeloMod.chatEvent.executeChatCommand(message, messenger, ApiUtil.ChatChannel.CUSTOM);
+                                    }
                                 }
                                 break;
                             case DISCONNECT:

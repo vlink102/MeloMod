@@ -4,6 +4,7 @@ import cc.polyfrost.oneconfig.utils.hypixel.LocrawUtil;
 import com.google.gson.Gson;
 import me.vlink102.melomod.command.MeloMsg;
 import me.vlink102.melomod.command.MeloOnline;
+import me.vlink102.melomod.command.PrivateMessage;
 import me.vlink102.melomod.config.MeloConfiguration;
 import me.vlink102.melomod.command.MeloCommand;
 import cc.polyfrost.oneconfig.events.event.InitializationEvent;
@@ -134,6 +135,7 @@ public class MeloMod {
         CommandManager.INSTANCE.registerCommand(new MeloCommand(this));
         CommandManager.INSTANCE.registerCommand(new MeloMsg(this));
         CommandManager.INSTANCE.registerCommand(new MeloOnline());
+        CommandManager.INSTANCE.registerCommand(new PrivateMessage());
         PlayerObjectUtil objectUtil = new PlayerObjectUtil(this);
         locrawUtil = new LocrawUtil();
         internalLocraw = new InternalLocraw(this);

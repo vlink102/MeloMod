@@ -2,6 +2,7 @@ package me.vlink102.melomod.chatcooldownmanager;
 
 import me.vlink102.melomod.config.ChatConfig;
 import net.minecraft.client.Minecraft;
+import net.minecraft.network.play.client.C01PacketChatMessage;
 import net.minecraftforge.client.ClientCommandHandler;
 import net.minecraftforge.fml.common.eventhandler.EventPriority;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
@@ -25,7 +26,7 @@ public class TickHandler
 
     public static void addToQueue(String message) {
         if (message.matches("/[pgoca](chat|c).*")) {
-            scheduledChat.add(message);
+            scheduledChat.add(message.split("/[pgoca](chat|c) ")[1]);
         } else {
             if (message.startsWith("/")) {
                 scheduledCommands.add(message);
@@ -40,40 +41,43 @@ public class TickHandler
     @SubscribeEvent (priority = EventPriority.NORMAL, receiveCanceled = true)
     public void onEvent(TickEvent.ClientTickEvent tickEvent)
     {
-        if (isHypixel && hasChatCooldown) {
-            if (ticksSinceLastChat >= 160 && !scheduledChat.isEmpty()) {
-                sendChat(scheduledChat.remove(0));
+        if (tickEvent.phase == TickEvent.Phase.END) {
+            if (isHypixel && hasChatCooldown) {
+                if (ticksSinceLastChat >= 160 && !scheduledChat.isEmpty()) {
+                    sendChat(scheduledChat.remove(0));
 
+                }
+            } else if(!scheduledChat.isEmpty()) {
+                if (ticksSinceLastChat >= 20) {
+                    sendChat(scheduledChat.remove(0));
+                }
             }
-        } else if(!scheduledChat.isEmpty()) {
-            if (ticksSinceLastChat >= 20) {
-                sendChat(scheduledChat.remove(0));
-            }
-        }
 
-        if (isHypixel)
-        {
-            if (ticksSinceLastCommand > 20 && !scheduledCommands.isEmpty())
+            if (isHypixel)
             {
-                sendCommand(scheduledCommands.remove(0));
+                if (ticksSinceLastCommand >= 20 && !scheduledCommands.isEmpty())
+                {
+                    sendCommand(scheduledCommands.remove(0));
+
+                }
+            } else if (!scheduledCommands.isEmpty()) {
+                if (ticksSinceLastCommand >= 20) {
+                    sendCommand(scheduledCommands.remove(0));
+                }
 
             }
-        } else if (!scheduledCommands.isEmpty()) {
-            if (ticksSinceLastCommand >= 20) {
-                sendCommand(scheduledCommands.remove(0));
+
+            if (ticksSinceLastChat < 160)
+            {
+                ticksSinceLastChat++;
             }
 
+            if (ticksSinceLastCommand < 20)
+            {
+                ticksSinceLastCommand++;
+            }
         }
 
-        if (ticksSinceLastChat < 160)
-        {
-            ticksSinceLastChat++;
-        }
-
-        if (ticksSinceLastCommand < 20)
-        {
-            ticksSinceLastCommand++;
-        }
 
     }
     
@@ -84,8 +88,8 @@ public class TickHandler
             Minecraft.getMinecraft().ingameGUI.getChatGUI().addToSentMessages(message);
         }
         
-        //C01PacketChatMessage packet = new C01PacketChatMessage(message);
-        Minecraft.getMinecraft().thePlayer.sendChatMessage(message);
+        C01PacketChatMessage packet = new C01PacketChatMessage(message);
+        Minecraft.getMinecraft().thePlayer.sendQueue.addToSendQueue(packet);
         ticksSinceLastChat = 0;
     }
     
@@ -100,7 +104,8 @@ public class TickHandler
             return;
         }
 
-        Minecraft.getMinecraft().thePlayer.sendChatMessage(command);
+        C01PacketChatMessage packet = new C01PacketChatMessage(command);
+        Minecraft.getMinecraft().thePlayer.sendQueue.addToSendQueue(packet);
         ticksSinceLastCommand = 0;
     }
 }

@@ -5,6 +5,7 @@ import cc.polyfrost.oneconfig.events.event.WorldLoadEvent;
 import cc.polyfrost.oneconfig.libs.eventbus.Subscribe;
 import cc.polyfrost.oneconfig.utils.hypixel.HypixelUtils;
 import me.vlink102.melomod.MeloMod;
+import me.vlink102.melomod.chatcooldownmanager.ServerTracker;
 import me.vlink102.melomod.util.http.CommunicationHandler;
 import me.vlink102.melomod.util.http.packets.PacketPlayOutDisconnect;
 import me.vlink102.melomod.util.http.packets.ServerBoundLocrawPacket;
@@ -39,6 +40,9 @@ public class PlayerConnection {
             if (!HypixelUtils.INSTANCE.isHypixel()) {
                 ServerBoundLocrawPacket packet = new ServerBoundLocrawPacket(null, null, null, null, InternalLocraw.getType(), InternalLocraw.serverIP());
                 CommunicationHandler.thread.sendPacket(packet);
+                ServerTracker.isHypixel = false;
+            } else {
+                ServerTracker.isHypixel = true;
             }
             if (!MeloMod.queue.isEmpty()) {
                 List<String> currentQueue = new ArrayList<>(MeloMod.queue);
@@ -58,6 +62,7 @@ public class PlayerConnection {
     @SubscribeEvent
     public void onQuit(PlayerEvent.PlayerLoggedOutEvent event) {
         online = false;
+        ServerTracker.isHypixel = false;
         System.out.println("etaiotesio");
         PacketPlayOutDisconnect disconnect = new PacketPlayOutDisconnect(MeloMod.playerUUID.toString(), MeloMod.playerName);
         CommunicationHandler.thread.sendPacket(disconnect);

@@ -536,7 +536,7 @@ public class ApiUtil {
                 prefixCommand = "/oc";
                 break;
             case CUSTOM:
-                CommunicationHandler.thread.sendPacket(new PacketPlayOutChat(message, MeloMod.playerUUID.toString(), MeloMod.playerName));
+                CommunicationHandler.thread.sendPacket(new PacketPlayOutChat(message, MeloMod.playerUUID.toString(), MeloMod.playerName, null));
                 return;
         }
         String finalCommand = prefixCommand + " " + message;

@@ -1,26 +1,26 @@
 package me.vlink102.melomod.command;
 
+
 import cc.polyfrost.oneconfig.utils.commands.annotations.Command;
 import cc.polyfrost.oneconfig.utils.commands.annotations.Greedy;
 import cc.polyfrost.oneconfig.utils.commands.annotations.Main;
 import me.vlink102.melomod.MeloMod;
 import me.vlink102.melomod.util.http.CommunicationHandler;
 import me.vlink102.melomod.util.http.packets.PacketPlayOutChat;
-import me.vlink102.melomod.util.http.packets.ServerBoundRequestConnectionsPacket;
 
 @Command(
-        value = "mlist",
-        description = "List other " + MeloMod.NAME + " users.",
+        value = "mprivate",
+        description = "Chat with another " + MeloMod.NAME + " user privately.",
         aliases = {
-                "mmlist",
-                "melolist",
-                "monline",
-                "mo"
+                "mp",
+                "pm",
+                "melopriv",
+                "dm"
         }
 )
-public class MeloOnline {
+public class PrivateMessage {
     @Main
-    public void handle(int page) {
-        CommunicationHandler.thread.sendPacket(new ServerBoundRequestConnectionsPacket(page));
+    public void handle(String target, @Greedy String message) {
+        CommunicationHandler.thread.sendPacket(new PacketPlayOutChat(message, MeloMod.playerUUID.toString(), MeloMod.playerName, target));
     }
 }
