@@ -232,6 +232,36 @@ public class ChatConfig extends SubConfig {
     )
     public static String groqApiKey = "";
 
+    @Switch(
+            name = "Enable ALL chat"
+    )
+    public static boolean allChat = true;
+
+    @Switch(
+            name = "Enable PARTY chat"
+    )
+    public static boolean partyChat = true;
+
+    @Switch(
+            name = "Enable GUILD chat"
+    )
+    public static boolean guildChat = true;
+
+    @Switch(
+            name = "Enable " + MeloMod.MODID + " chat"
+    )
+    public static boolean modChat = true;
+
+    @Switch(
+            name = "Enable COOP chat"
+    )
+    public static boolean coopChat = true;
+
+    @Switch(
+            name = "Enable OFFICER chat"
+    )
+    public static boolean officerChat = true;
+
     public ChatConfig() {
         super("Chat", MeloMod.MODID + "/" + "chat" + ".json");
         initialize();

@@ -24,7 +24,7 @@ public class TickHandler
     public static int ticksSinceLastChat = 71;
 
     public static void addToQueue(String message) {
-        if (message.startsWith("/pc") || message.startsWith("/pchat") || message.startsWith("/partychat")) {
+        if (message.matches("/[pgoca](chat|c).*")) {
             scheduledChat.add(message);
         } else {
             if (message.startsWith("/")) {

@@ -6,6 +6,8 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import me.vlink102.melomod.MeloMod;
+import me.vlink102.melomod.config.ChatConfig;
+import me.vlink102.melomod.events.ChatEvent;
 import me.vlink102.melomod.events.InternalLocraw;
 import me.vlink102.melomod.util.StringUtils;
 import me.vlink102.melomod.util.game.Utils;
@@ -148,6 +150,9 @@ public class DataThread extends Thread {
                                     MeloMod.addMessage(("§d[§bMM§d] §b" + messenger + "§r§7: " + message));
                                 } else {
                                     MeloMod.addMessage(("§d[§bMM§d] §d" + messenger + "§r§7: " + message));
+                                }
+                                if (message.startsWith(ChatConfig.chatPrefix)) {
+                                    MeloMod.chatEvent.executeChatCommand(message, messenger, ApiUtil.ChatChannel.CUSTOM);
                                 }
                                 break;
                             case DISCONNECT:

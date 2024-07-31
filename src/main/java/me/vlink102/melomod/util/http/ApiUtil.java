@@ -9,6 +9,7 @@ import me.vlink102.melomod.events.InternalLocraw;
 import me.vlink102.melomod.chatcooldownmanager.TickHandler;
 import me.vlink102.melomod.util.game.PlayerUtil;
 import me.vlink102.melomod.util.game.SkyblockUtil;
+import me.vlink102.melomod.util.http.packets.PacketPlayOutChat;
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.util.ChatComponentText;
@@ -314,7 +315,7 @@ public class ApiUtil {
 
     }
 
-    public synchronized void sayPlayerNetworth(String player) {
+    public synchronized void sayPlayerNetworth(String player, ChatChannel chatChannel) {
         CompletableFuture.runAsync(() -> {
             try {
                 UUID uuid = fromName(player).get();
@@ -331,9 +332,9 @@ public class ApiUtil {
                                     JsonObject networth = SkyblockUtil.getAsJsonObject("networth", data);
                                     Double networthDouble = SkyblockUtil.getAsDouble("networth", networth);
                                     if (uuid.equals(MeloMod.playerUUID)) {
-                                        sendLaterParty("/pc ⛀⛁ Networth: $" + String.format("%,.0f", networthDouble) + " ⛃⛂");
+                                        sendLater("⛀⛁ Networth: $" + String.format("%,.0f", networthDouble) + " ⛃⛂", chatChannel);
                                     } else {
-                                        sendLaterParty("/pc ⛀⛁ " + player + "'s Networth: $" + String.format("%,.0f", networthDouble) + " ⛃⛂");
+                                        sendLater("⛀⛁ " + player + "'s Networth: $" + String.format("%,.0f", networthDouble) + " ⛃⛂", chatChannel);
                                     }
                                 }
                             }
@@ -347,7 +348,7 @@ public class ApiUtil {
 
     }
 
-    public synchronized void getPlayerLastLogin(String playerName) {
+    public synchronized void getPlayerLastLogin(String playerName, ChatChannel chatChannel) {
 
         CompletableFuture.runAsync(() -> {
             try {
@@ -361,7 +362,7 @@ public class ApiUtil {
                             String lastLoginTime = DurationFormatUtils.formatDurationWords(System.currentTimeMillis() - lastLogin, true, true);
                             String lastLogoutTime = DurationFormatUtils.formatDurationWords(System.currentTimeMillis() - lastLogout, true, true);
 
-                            sendLaterParty("/pc ❣ «" + playerName + "» Last Logout: " + lastLogoutTime + " ◆ (Last Login: " + lastLoginTime + ") ❣");
+                            sendLater("❣ «" + playerName + "» Last Logout: " + lastLogoutTime + " ◆ (Last Login: " + lastLoginTime + ") ❣", chatChannel);
                         },
                         ApiUtil.HypixelEndpoint.FilledEndpointArgument.uuid(uuid)
                 );
@@ -373,7 +374,7 @@ public class ApiUtil {
 
     }
 
-    public synchronized void sayPlayerSecrets(String player) {
+    public synchronized void sayPlayerSecrets(String player, ChatChannel chatChannel) {
         CompletableFuture.runAsync(() -> {
             try {
                 UUID uuid = fromName(player).get();
@@ -386,7 +387,7 @@ public class ApiUtil {
                                 if (profileObject.get("selected").getAsBoolean()) {
                                     SkyblockUtil.SkyblockProfile sbProfile = new SkyblockUtil.SkyblockProfile(profileObject);
                                     Integer secrets = sbProfile.getMembers().get(uuid.toString().replaceAll("-", "")).getDungeons().getSecrets();
-                                    sendLaterParty("/pc ☠ " + player + "'s secrets: " + secrets + " ☠");
+                                    sendLater("☠ " + player + "'s secrets: " + secrets + " ☠", chatChannel);
                                 }
                             }
                         },
@@ -400,7 +401,7 @@ public class ApiUtil {
 
     }
 
-    public synchronized void sayPlayerStatus(String player) {
+    public synchronized void sayPlayerStatus(String player, ChatChannel chatChannel) {
         CompletableFuture.runAsync(() -> {
             try {
                 UUID uuid = fromName(player).get();
@@ -409,12 +410,12 @@ public class ApiUtil {
                         object -> {
                             if (uuid.equals(MeloMod.playerUUID)) {
                                 SkyblockUtil.Location info = InternalLocraw.getLocation();
-                                sendLaterParty("/pc ◇ Server: " + InternalLocraw.getServerID() + " ⚑ Island: " + WordUtils.capitalizeFully(info.toString().replaceAll("_", " ")) + " ◇");
+                                sendLater("◇ Server: " + InternalLocraw.getServerID() + " ⚑ Island: " + WordUtils.capitalizeFully(info.toString().replaceAll("_", " ")) + " ◇", chatChannel);
                             } else {
                                 JsonObject session = SkyblockUtil.getAsJsonObject("session", object);
                                 if (session != null) {
                                     if (!session.get("online").getAsBoolean()) {
-                                        sendLaterParty("/pc ◇ " + player + " is not currently online! ◇");
+                                        sendLater("◇ " + player + " is not currently online! ◇", chatChannel);
                                     } else {
                                         boolean onCurrent = false;
                                         for (EntityPlayer playerEntity : Minecraft.getMinecraft().theWorld.playerEntities) {
@@ -424,7 +425,7 @@ public class ApiUtil {
                                             }
                                         }
 
-                                        sendLaterParty("/pc ◇ «" + player + "» Server: " + (onCurrent ? InternalLocraw.getServerID() : "Unknown") + " ◇ Game: " + WordUtils.capitalizeFully(SkyblockUtil.getAsString("gameType", session).replaceAll("_", " ")) + " ⚑ Mode: " + WordUtils.capitalizeFully(SkyblockUtil.getAsString("mode", session).replaceAll("_", " ")) + " ◇");
+                                        sendLater("◇ «" + player + "» Server: " + (onCurrent ? InternalLocraw.getServerID() : "Unknown") + " ◇ Game: " + WordUtils.capitalizeFully(SkyblockUtil.getAsString("gameType", session).replaceAll("_", " ")) + " ⚑ Mode: " + WordUtils.capitalizeFully(SkyblockUtil.getAsString("mode", session).replaceAll("_", " ")) + " ◇", chatChannel);
                                     }
                                 }
 
@@ -433,9 +434,7 @@ public class ApiUtil {
                         },
                         ApiUtil.HypixelEndpoint.FilledEndpointArgument.uuid(uuid)
                 );
-            } catch (InterruptedException e) {
-                throw new RuntimeException(e);
-            } catch (ExecutionException e) {
+            } catch (InterruptedException | ExecutionException e) {
                 throw new RuntimeException(e);
             }
         }, executorService);
@@ -443,7 +442,7 @@ public class ApiUtil {
 
     }
 
-    public synchronized void sayGuildInformation(String player) {
+    public synchronized void sayGuildInformation(String player, ChatChannel chatChannel) {
 
         CompletableFuture.runAsync(() -> {
             try {
@@ -455,9 +454,9 @@ public class ApiUtil {
                                 SkyblockUtil.Guild guild = new SkyblockUtil.Guild(object.get("guild").getAsJsonObject());
 
                                 if (uuid.equals(MeloMod.playerUUID)) {
-                                    sendLaterParty("/pc ✿ Guild: [" + guild.getTag() + "] " + guild.getName() + " (" + guild.getGuildID() + ") ✿");
+                                    sendLater("✿ Guild: [" + guild.getTag() + "] " + guild.getName() + " (" + guild.getGuildID() + ") ✿", chatChannel);
                                 } else {
-                                    sendLaterParty("/pc ✿ «" + player + "» Guild: [" + guild.getTag() + "] " + guild.getName() + " (" + guild.getGuildID() + ") ✿");
+                                    sendLater("✿ «" + player + "» Guild: [" + guild.getTag() + "] " + guild.getName() + " (" + guild.getGuildID() + ") ✿", chatChannel);
                                 }
                             }
                         },
@@ -484,7 +483,7 @@ public class ApiUtil {
         this.add("mixtral-8x7b-32768");
     }};
 
-    public synchronized void getAI(String prompt) {
+    public synchronized void getAI(String prompt, ChatChannel chatChannel) {
         JsonObject object = new JsonObject();
         JsonArray array = new JsonArray();
         JsonObject message = new JsonObject();
@@ -503,18 +502,48 @@ public class ApiUtil {
                     for (JsonElement choice : choices) {
                         JsonObject choiceObject = choice.getAsJsonObject();
                         JsonObject messageObject = SkyblockUtil.getAsJsonObject("message", choiceObject);
-                        sendLaterParty("/pc ✉ AI: '" + messageObject.get("content").getAsString() + "'");
+                        sendLater("✉ AI: '" + messageObject.get("content").getAsString() + "'", chatChannel);
                     }
                 }
         );
     }
 
-    public static void sendLaterParty(String message) {
-        TickHandler.addToQueue(message);
-        System.out.println(message);
+    public enum ChatChannel {
+        ALL, // TODO
+        GUILD, // TODO
+        OFFICER, // TODO
+        PARTY,
+        CUSTOM,
+        COOP // TODO
     }
 
-    public synchronized void lastLogin(String player) {
+    public static void sendLater(String message, ChatChannel chatChannel) {
+        String prefixCommand = "";
+        switch (chatChannel) {
+            case PARTY:
+                prefixCommand = "/pc";
+                break;
+            case ALL:
+                prefixCommand = "/ac";
+                break;
+            case COOP:
+                prefixCommand = "/cc";
+                break;
+            case GUILD:
+                prefixCommand = "/gc";
+                break;
+            case OFFICER:
+                prefixCommand = "/oc";
+                break;
+            case CUSTOM:
+                CommunicationHandler.thread.sendPacket(new PacketPlayOutChat(message, MeloMod.playerUUID.toString(), MeloMod.playerName));
+                return;
+        }
+        String finalCommand = prefixCommand + " " + message;
+        TickHandler.addToQueue(finalCommand);
+    }
+
+    public synchronized void lastLogin(String player, ChatChannel chatChannel) {
         CompletableFuture.runAsync(() -> {
             requestSkyCrypt(
                     ApiUtil.SkyCryptEndpoint.PROFILE,
@@ -533,7 +562,7 @@ public class ApiUtil {
                                         currentAreaString = "Unknown";
                                     }
                                     Boolean currentAreaUpdated = SkyblockUtil.getAsBoolean("current_area_updated", currentArea);
-                                    sendLaterParty("/pc ℹ «" + player + "» Last Area: " + currentAreaString + " (Updated: " + currentAreaUpdated + ") ℹ");
+                                    sendLater("ℹ «" + player + "» Last Area: " + currentAreaString + " (Updated: " + currentAreaUpdated + ") ℹ", chatChannel);
                                 }
                             }
                         }
@@ -543,7 +572,7 @@ public class ApiUtil {
 
     }
 
-    public synchronized void playerSocials(String player, String request) {
+    public synchronized void playerSocials(String player, String request, ChatChannel chatChannel) {
 
         CompletableFuture.runAsync(() -> {
             try {
@@ -555,25 +584,25 @@ public class ApiUtil {
                                 PlayerUtil.Player playerProfile = new PlayerUtil.Player(SkyblockUtil.getAsJsonObject("player", object));
                                 switch (request) {
                                     case "dc":
-                                        sendLaterParty("/pc »»» " + player + "'s DC: " + playerProfile.getDiscord() + " «««");
+                                        sendLater("»»» " + player + "'s DC: " + playerProfile.getDiscord() + " «««", chatChannel);
                                         break;
                                     case "twitch":
-                                        sendLaterParty("/pc »»» " + player + "'s Twitch: " + playerProfile.getTwitch() + " «««");
+                                        sendLater("»»» " + player + "'s Twitch: " + playerProfile.getTwitch() + " «««", chatChannel);
                                         break;
                                     case "twitter":
-                                        sendLaterParty("/pc »»» " + player + "'s Twitter: " + playerProfile.getTwitter() + " «««");
+                                        sendLater("»»» " + player + "'s Twitter: " + playerProfile.getTwitter() + " «««", chatChannel);
                                         break;
                                     case "instagram":
-                                        sendLaterParty("/pc »»» " + player + "'s Instagram: " + playerProfile.getInstagram() + " «««");
+                                        sendLater("»»» " + player + "'s Instagram: " + playerProfile.getInstagram() + " «««", chatChannel);
                                         break;
                                     case "youtube":
-                                        sendLaterParty("/pc »»» " + player + "'s YouTube: " + playerProfile.getYoutube() + " «««");
+                                        sendLater("»»» " + player + "'s YouTube: " + playerProfile.getYoutube() + " «««", chatChannel);
                                         break;
                                     case "forums":
-                                        sendLaterParty("/pc »»» " + player + "'s Forum Profile: " + playerProfile.getForums() + " «««");
+                                        sendLater("»»» " + player + "'s Forum Profile: " + playerProfile.getForums() + " «««", chatChannel);
                                         break;
                                     case "tiktok":
-                                        sendLaterParty("/pc »»» " + player + "'s TikTok: " + playerProfile.getTiktok() + " «««");
+                                        sendLater("»»» " + player + "'s TikTok: " + playerProfile.getTiktok() + " «««", chatChannel);
                                         break;
                                 }
                             }
@@ -595,7 +624,7 @@ public class ApiUtil {
      * <a href="https://laby.net/api/v3/user/1871dfae-0a6a-4486-8366-6bc0131d370e/profile">LabyMod Endpoint (92/94)</a>
      * <a href="https://api.crafty.gg/api/v2/players/swageater34">Crafty Endpoint (67/94)</a>
      */
-    public synchronized void getPlayerPastNames(String player, int page) {
+    public synchronized void getPlayerPastNames(String player, int page, ChatChannel chatChannel) {
         CompletableFuture.runAsync(() -> {
             try {
                 UUID uuid = fromName(player).get();
@@ -628,7 +657,7 @@ public class ApiUtil {
                             Collections.reverse(names);
                             List<String> usernameList = paginate("❄ " + player + "'s Username History (Page #): ", names);
 
-                            sendLaterParty(usernameList.get(page - 1) + " ❄");
+                            sendLater(usernameList.get(page - 1) + " ❄", chatChannel);
                         }
                 );
             } catch (InterruptedException | ExecutionException e) {

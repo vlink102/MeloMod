@@ -42,7 +42,7 @@ public class StringUtils {
                 joiner.add(command.getString());
                 currentCommand ++;
             }
-            helpMenu.add(s + joiner);
+            helpMenu.add(s + joiner + " ⭐");
         }
         return helpMenu;
     }

@@ -11,6 +11,7 @@ import me.vlink102.melomod.chatcooldownmanager.ServerTracker;
 import me.vlink102.melomod.chatcooldownmanager.TickHandler;
 import me.vlink102.melomod.util.StringUtils;
 import me.vlink102.melomod.util.game.Utils;
+import me.vlink102.melomod.util.http.ApiUtil;
 import me.vlink102.melomod.util.math.eval.DoubleEvaluator;
 import net.minecraft.util.IChatComponent;
 import org.apache.commons.lang3.RandomUtils;
@@ -21,8 +22,8 @@ import java.util.function.Supplier;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import static me.vlink102.melomod.util.http.ApiUtil.sendLaterParty;
 import static me.vlink102.melomod.util.StringUtils.paginateHelp;
+import static me.vlink102.melomod.util.http.ApiUtil.sendLater;
 
 public class ChatEvent {
 
@@ -219,15 +220,15 @@ public class ChatEvent {
         return Utils.prettyTime(millis);
     }
 
-    public void updateLastCaught(SeaCreature caught, boolean doubleHook) {
+    public void updateLastCaught(SeaCreature caught, boolean doubleHook, ApiUtil.ChatChannel chatChannel) {
         seaCreatureSession.put(caught, seaCreatureSession.getOrDefault(caught, 0) + (doubleHook ? 2 : 1));
         if (!lastCaught.containsKey(caught) && !lastCaughtTimeStamp.containsKey(caught)) {
             if (ChatConfig.fishingChat) {
-                sendLaterParty("/pc " + (doubleHook ? "‹⚓› ‼ DOUBLE HOOK ‼ " : "‹☂› ") + "☆ Caught a " + WordUtils.capitalizeFully(caught.toString().replaceAll("_", " ")) + "! ◆ First Catch in Session! ☆");
+                sendLater((doubleHook ? "‹⚓› ‼ DOUBLE HOOK ‼ " : "‹☂› ") + "☆ Caught a " + WordUtils.capitalizeFully(caught.toString().replaceAll("_", " ")) + "! ◆ First Catch in Session! ☆", chatChannel);
             }
         } else {
             if (ChatConfig.fishingChat) {
-                sendLaterParty("/pc " + (doubleHook ? "‹⚓› ‼ DOUBLE HOOK ‼ " : "‹☂› ") + "☆ Caught a " + WordUtils.capitalizeFully(caught.toString().replaceAll("_", " ")) + "! ◆ Total: " + seaCreatureSession.get(caught) + " ◆ Since Last: " + lastCaught.get(caught) + " ◆ Last Caught: " + prettyTime(System.currentTimeMillis() - lastCaughtTimeStamp.get(caught)) + " ago. ☆");
+                sendLater((doubleHook ? "‹⚓› ‼ DOUBLE HOOK ‼ " : "‹☂› ") + "☆ Caught a " + WordUtils.capitalizeFully(caught.toString().replaceAll("_", " ")) + "! ◆ Total: " + seaCreatureSession.get(caught) + " ◆ Since Last: " + lastCaught.get(caught) + " ◆ Last Caught: " + prettyTime(System.currentTimeMillis() - lastCaughtTimeStamp.get(caught)) + " ago. ☆", chatChannel);
             }
         }
         lastCaught.put(caught, 0);
@@ -388,7 +389,7 @@ public class ChatEvent {
         updateDoubleHook(stripped);
         SeaCreature creature = getSeaCreature(stripped);
         if (creature != SeaCreature.NOTHING) {
-            updateLastCaught(creature, doubleHook);
+            updateLastCaught(creature, doubleHook, ApiUtil.ChatChannel.PARTY);
             doubleHook = false;
             return;
         }
@@ -420,66 +421,24 @@ public class ChatEvent {
 
          */
 
-        if (stripped.startsWith("Party > ")) {
-            String chatMessage = stripped.split("Party\\s>.*?:\\s")[1];
-            if (chatMessage.equalsIgnoreCase(ChatConfig.chatPrefix + Commands.HELP.getCommand())) {
-                sendLaterParty("/pc " + paginateHelp().get(0));
-            }
-            if (chatMessage.startsWith(ChatConfig.chatPrefix + "help ")) {
-                String[] args = chatMessage.split("\\" + ChatConfig.chatPrefix + Commands.HELP.getCommand() + " ");
-                if (args.length == 2) {
-                    String length = args[1];
-                    if (length.matches("\\d+?")) {
-                        List<String> paginated = paginateHelp();
-                        int lengthInt = Integer.parseInt(length);
-                        if (lengthInt > paginated.size()) {
-                            lengthInt = paginated.size();
-                        }
-                        if (lengthInt < 1) {
-                            lengthInt = 1;
-                        }
-                        sendLaterParty("/pc " + paginated.get(lengthInt - 1));
-                    }
-                }
-            }
+        StringJoiner joiner = new StringJoiner("|");
+        if (ChatConfig.guildChat) {
+            joiner.add("Guild");
+        }
+        if (ChatConfig.partyChat) {
+            joiner.add("Party");
+        }
+        if (ChatConfig.officerChat) {
+            joiner.add("Officer");
+        }
+        if (ChatConfig.coopChat) {
+            joiner.add("Co-op");
+        }
+        String chatType = "(" + joiner + ")";
 
-
-
-            if (ChatConfig.wholePartySecret) {
-                if (chatMessage.equalsIgnoreCase(ChatConfig.chatPrefix + Commands.SECRET)) {
-                    sendLaterParty("/party list");
-                }
-            }
-            if (ChatConfig.chessEngine) {
-                if (chatMessage.startsWith(ChatConfig.chatPrefix + Commands.CHESSENGINE.getCommand() + " ")) {
-                    String[] args = chatMessage.split("\\" + ChatConfig.chatPrefix + Commands.CHESSENGINE.getCommand() + " ");
-                    if (args.length > 1) {
-                        String fen = args[1];
-                        getChessMove(fen);
-                    }
-                }
-            }
-
-            if (ChatConfig.stalk) {
-                if (chatMessage.startsWith(ChatConfig.chatPrefix + Commands.STALK.getCommand() + " ")) {
-                    String[] args = chatMessage.split("\\" + ChatConfig.chatPrefix + Commands.STALK.getCommand() + " ");
-                    if (args.length > 1) {
-                        String player = args[1];
-                        mod.apiUtil.lastLogin(player);
-                    }
-                }
-            }
-            if (ChatConfig.mathEvaluation) {
-                if (chatMessage.startsWith(ChatConfig.chatPrefix + Commands.MATHEVALUATION.getCommand() + " ")) {
-                    String[] args = chatMessage.split("\\" + ChatConfig.chatPrefix + Commands.MATHEVALUATION.getCommand() + " ");
-                    if (args.length > 1) {
-                        String expression = args[1];
-                        sendLaterParty("/pc ⚡ Evaluated: ≈" + new DoubleEvaluator().evaluate(expression).toString());
-                    }
-                }
-            }
-
-            String regex = "Party > (\\[.*?] )?(.*?):";
+        if (stripped.matches(chatType + " >\\s.*?:.*")) {
+            String chatMessage = stripped.split(chatType + "\\s>.*?:\\s")[1];
+            String regex = chatType + " > (?>\\[.*?] )?(.*?):";
             Pattern pattern = Pattern.compile(regex);
             Matcher matcher = pattern.matcher(stripped);
             String playerName;
@@ -488,321 +447,402 @@ public class ChatEvent {
             } else {
                 playerName = "?";
             }
-            if (ChatConfig.userNameHistory) {
-                if (chatMessage.equalsIgnoreCase(ChatConfig.chatPrefix + Commands.HISTORY.getCommand())) {
-                    mod.apiUtil.getPlayerPastNames(playerName, 1);
-                }
-                if (ChatConfig.runOthers) {
-                    if (chatMessage.startsWith(ChatConfig.chatPrefix + Commands.HISTORY.getCommand() + " ")) {
-                        String[] args = chatMessage.split(" ");
-                        if (args.length == 2) {
-                            String player = args[1];
-                            if (args[1].matches("\\d+?")) {
-                                int page = Integer.parseInt(args[1]);
-                                mod.apiUtil.getPlayerPastNames(player, page);
-                            } else {
-                                mod.apiUtil.getPlayerPastNames(player, 1);
-                            }
-                        }
-                        if (args.length == 3) {
-                            String player = args[1];
-                            if (args[2].matches("\\d+?")) {
-                                int page = Integer.parseInt(args[2]);
-                                mod.apiUtil.getPlayerPastNames(player, page);
-                            }
-                        }
-                    }
-                }
-            }
-            if (ChatConfig.secret) {
-                if (chatMessage.equalsIgnoreCase(ChatConfig.chatPrefix + Commands.SECRET.getCommand())) {
-                    mod.apiUtil.sayPlayerSecrets(playerName);
-                }
-                if (ChatConfig.runOthers) {
-                    if (chatMessage.startsWith(ChatConfig.chatPrefix + Commands.SECRET.getCommand() + " ")) {
-                        String[] args = chatMessage.split("\\" + ChatConfig.chatPrefix + Commands.SECRET.getCommand() + " ");
-                        if (args.length == 2) {
-                            String player = args[1];
-                            mod.apiUtil.sayPlayerSecrets(player);
-                        }
-                    }
-                }
-            }
-            if (ChatConfig.networth) {
-                if (chatMessage.equalsIgnoreCase(ChatConfig.chatPrefix + Commands.NETWORTH)) {
-                    mod.apiUtil.sayPlayerNetworth(playerName);
-                }
-                if (ChatConfig.runOthers) {
-                    if (chatMessage.startsWith(ChatConfig.chatPrefix + Commands.NETWORTH.getCommand() + " ")) {
-                        String[] args = chatMessage.split("\\" + ChatConfig.chatPrefix + Commands.NETWORTH.getCommand() + " ");
-                        if (args.length == 2) {
-                            String check = args[1];
-                            mod.apiUtil.sayPlayerNetworth(check);
-                        }
-                    }
-                }
-            }
-            if (ChatConfig.coinFlip) {
-                if (chatMessage.equalsIgnoreCase(ChatConfig.chatPrefix + Commands.COINFLIP.getCommand())) {
-                    sendLaterParty("/pc »»» " + playerName + " flipped a coin! It's " + (RandomUtils.nextInt(0, 2) == 0 ? "Heads!" : "Tails!") + " «««");
-                }
-            }
-            if (ChatConfig.socialMedia) {
-                if (chatMessage.equalsIgnoreCase(ChatConfig.chatPrefix + Commands.DISCORD.getCommand())) {
-                    mod.apiUtil.playerSocials(playerName, "dc");
-                }
-                if (ChatConfig.runOthers) {
-                    if (chatMessage.startsWith(ChatConfig.chatPrefix + "dc ")) {
-                        String[] args = chatMessage.split("\\" + ChatConfig.chatPrefix + Commands.DISCORD.getCommand() + " ");
-                        if (args.length > 1) {
-                            String player = args[1];
-                            mod.apiUtil.playerSocials(player, "dc");
-                            return;
-                        }
-                    }
-                }
-                if (chatMessage.equalsIgnoreCase(ChatConfig.chatPrefix + Commands.TWITTER.getCommand())) {
-                    mod.apiUtil.playerSocials(playerName, "twitter");
-                }
-                if (ChatConfig.runOthers) {
-                    if (chatMessage.startsWith(ChatConfig.chatPrefix + Commands.TWITTER.getCommand() + " ")) {
-                        String[] args = chatMessage.split("\\" + ChatConfig.chatPrefix + Commands.TWITTER.getCommand() + " ");
-                        if (args.length > 1) {
-                            String player = args[1];
-                            mod.apiUtil.playerSocials(player, "twitter");
-                            return;
-                        }
-                    }
-                }
-                if (chatMessage.equalsIgnoreCase(ChatConfig.chatPrefix + Commands.TWITCH.getCommand())) {
-                    mod.apiUtil.playerSocials(playerName, "twitch");
-                }
-                if (ChatConfig.runOthers) {
-                    if (chatMessage.startsWith(ChatConfig.chatPrefix + Commands.TWITCH.getCommand() + " ")) {
-                        String[] args = chatMessage.split("\\" + ChatConfig.chatPrefix + Commands.TWITCH.getCommand() + " ");
-                        if (args.length > 1) {
-                            String player = args[1];
-                            mod.apiUtil.playerSocials(player, "twitch");
-                            return;
-                        }
-                    }
-                }
-                if (chatMessage.equalsIgnoreCase(ChatConfig.chatPrefix + Commands.INSTAGRAM.getCommand())) {
-                    mod.apiUtil.playerSocials(playerName, "instagram");
-                }
-                if (ChatConfig.runOthers) {
-                    if (chatMessage.startsWith(ChatConfig.chatPrefix + Commands.INSTAGRAM.getCommand() + " ")) {
-                        String[] args = chatMessage.split("\\" + ChatConfig.chatPrefix + Commands.INSTAGRAM.getCommand() + " ");
-                        if (args.length > 1) {
-                            String player = args[1];
-                            mod.apiUtil.playerSocials(player, "instagram");
-                            return;
-                        }
-                    }
-                }
-                if (chatMessage.equalsIgnoreCase(ChatConfig.chatPrefix + Commands.YOUTUBE.getCommand())) {
-                    mod.apiUtil.playerSocials(playerName, "youtube");
-                }
-                if (ChatConfig.runOthers) {
-                    if (chatMessage.startsWith(ChatConfig.chatPrefix + Commands.YOUTUBE.getCommand() + " ")) {
-                        String[] args = chatMessage.split("\\" + ChatConfig.chatPrefix + Commands.YOUTUBE.getCommand() + " ");
-                        if (args.length > 1) {
-                            String player = args[1];
-                            mod.apiUtil.playerSocials(player, "youtube");
-                            return;
-                        }
-                    }
-                }
-                if (chatMessage.equalsIgnoreCase(ChatConfig.chatPrefix + Commands.TIKTOK.getCommand())) {
-                    mod.apiUtil.playerSocials(playerName, "tiktok");
-                }
-                if (ChatConfig.runOthers) {
-                    if (chatMessage.startsWith(ChatConfig.chatPrefix + Commands.TIKTOK.getCommand() + " ")) {
-                        String[] args = chatMessage.split("\\" + ChatConfig.chatPrefix + Commands.TIKTOK.getCommand() + " ");
-                        if (args.length > 1) {
-                            String player = args[1];
-                            mod.apiUtil.playerSocials(player, "tiktok");
-                            return;
-                        }
-                    }
-                }
-                if (chatMessage.equalsIgnoreCase(ChatConfig.chatPrefix + Commands.FORUMS.getCommand())) {
-                    mod.apiUtil.playerSocials(playerName, "forums");
-                }
-                if (ChatConfig.runOthers) {
-                    if (chatMessage.startsWith(ChatConfig.chatPrefix + Commands.FORUMS.getCommand() + " ")) {
-                        String[] args = chatMessage.split("\\" + ChatConfig.chatPrefix + Commands.FORUMS.getCommand() + " ");
-                        if (args.length > 1) {
-                            String player = args[1];
-                            mod.apiUtil.playerSocials(player, "forums");
-                            return;
-                        }
-                    }
-                }
-            }
-            if (ChatConfig.gay) {
-                if (chatMessage.equalsIgnoreCase(ChatConfig.chatPrefix + Commands.GAY.getCommand())) {
-                    int randomNum = RandomUtils.nextInt(0, 101);
-                    if (playerName.equalsIgnoreCase("kalabash")) randomNum = 100;
-                    sendLaterParty("/pc »»» " + playerName + " is " + randomNum + "% gay. «««");
-                    return;
-                }
-                if (ChatConfig.runOthers) {
-                    if (chatMessage.startsWith(ChatConfig.chatPrefix + Commands.GAY.getCommand() + " ")) {
-                        String[] args = chatMessage.split(" ");
-                        if (args.length > 1) {
-                            String gay = args[1];
-                            int randomNum = RandomUtils.nextInt(0, 101);
-                            if (gay.equalsIgnoreCase("kalabash")) randomNum = 100;
-                            sendLaterParty("/pc »»» " + gay + " is " + randomNum + "% gay. «««");
-                            return;
-                        }
-                    }
-                }
-            }
-            if (ChatConfig.nWordPass) {
-                if (chatMessage.equalsIgnoreCase(ChatConfig.chatPrefix + Commands.NPASS.getCommand())) {
-                    sendLaterParty("/pc »»» " + playerName + " was granted the N pass. «««");
-                }
-            }
-            if (ChatConfig.femboy) {
-                if (chatMessage.equalsIgnoreCase(ChatConfig.chatPrefix + Commands.FEMBOY.getCommand())) {
-                    sendLaterParty("/pc »»» " + playerName + " is " + RandomUtils.nextInt(0, 101) + "% femboy. «««");
-                    return;
-                }
-                if (ChatConfig.runOthers) {
-                    if (chatMessage.startsWith(ChatConfig.chatPrefix + Commands.FEMBOY.getCommand() + " ")) {
-                        String[] args = chatMessage.split(" ");
-                        if (args.length > 1) {
-                            String gay = args[1];
-                            sendLaterParty("/pc »»» " + gay + " is " + RandomUtils.nextInt(0, 101) + "% femboy. «««");
-                            return;
-                        }
-                    }
-                }
-            }
 
-            if (ChatConfig.ai) {
-                if (chatMessage.startsWith(ChatConfig.chatPrefix + Commands.AI.getCommand())) {
-                    String[] args = chatMessage.split("\\" + ChatConfig.chatPrefix + Commands.AI.getCommand() + " ");
-                    if (args.length == 2) {
-                        String prompt = args[1];
-                        mod.apiUtil.getAI(prompt);
-                    }
-                }
-            }
+            String chatChannel = matcher.group(1);
 
-            if (ChatConfig.lastOnlineInfo && ChatConfig.runOthers) {
-                if (chatMessage.startsWith(ChatConfig.chatPrefix + Commands.LASTONLINE.getCommand() + " ")) {
-                    String[] args = chatMessage.split("\\" + ChatConfig.chatPrefix + Commands.LASTONLINE.getCommand() + " ");
-                    if (args.length == 2) {
-                        String player = args[1];
-                        mod.apiUtil.getPlayerLastLogin(player);
-                    }
-                }
-            }
-            if (ChatConfig.racist) {
-                if (chatMessage.equalsIgnoreCase(ChatConfig.chatPrefix + Commands.RACIST.getCommand())) {
-                    int racistAmount = RandomUtils.nextInt(0, 101);
-                    if (playerName.equalsIgnoreCase("dedj")) {
-                        racistAmount = 100;
-                    }
-                    sendLaterParty("/pc »»» " + playerName + " is " + racistAmount + "% racist. «««");
-                    return;
-                }
-                if (ChatConfig.runOthers) {
-                    if (chatMessage.startsWith(ChatConfig.chatPrefix + Commands.RACIST.getCommand() + " ")) {
-                        String[] args = chatMessage.split(" ");
-                        if (args.length > 1) {
-                            String racist = args[1];
-                            int racistNumber = RandomUtils.nextInt(0, 101);
-                            if (racist.equalsIgnoreCase("dedj")) {
-                                racistNumber = 100;
-                            }
-                            sendLaterParty("/pc »»» " + racist + " is " + racistNumber + "% racist. «««");
-                            return;
-                        }
-                    }
-                }
-            }
+            ApiUtil.ChatChannel chatChannel1 = from(chatChannel);
 
-            if (ChatConfig.pray) {
-                if (chatMessage.equalsIgnoreCase(ChatConfig.chatPrefix + Commands.PRAY.getCommand())) {
-                    sendLaterParty("/pc »»» " + playerName + " prayed to RNGesus! (+" + RandomUtils.nextInt(0, 501) + "% ✯ Magic Find) «««");
-                    return;
+            System.out.println(chatChannel1 );
+
+            executeChatCommand(chatMessage, playerName, chatChannel1);
+        }
+    }
+
+    public static ApiUtil.ChatChannel from(String string) {
+        switch (string) {
+            case "Party":
+                return ApiUtil.ChatChannel.PARTY;
+            case "Officer":
+                return ApiUtil.ChatChannel.OFFICER;
+            case "Guild":
+                return ApiUtil.ChatChannel.GUILD;
+            case "Co-op":
+                return ApiUtil.ChatChannel.COOP;
+        }
+        return null;
+    }
+
+
+    public void executeChatCommand(String chatMessage, String playerName, ApiUtil.ChatChannel chatChannel) {
+        if (chatMessage.equalsIgnoreCase(ChatConfig.chatPrefix + Commands.HELP.getCommand())) {
+            sendLater(paginateHelp().get(0), chatChannel);
+        }
+        if (chatMessage.startsWith(ChatConfig.chatPrefix + "help ")) {
+            String[] args = chatMessage.split("\\" + ChatConfig.chatPrefix + Commands.HELP.getCommand() + " ");
+            if (args.length == 2) {
+                String length = args[1];
+                if (length.matches("\\d+?")) {
+                    List<String> paginated = paginateHelp();
+                    int lengthInt = Integer.parseInt(length);
+                    if (lengthInt > paginated.size()) {
+                        lengthInt = paginated.size();
+                    }
+                    if (lengthInt < 1) {
+                        lengthInt = 1;
+                    }
+                    sendLater(paginated.get(lengthInt - 1), chatChannel);
                 }
             }
-            if (ChatConfig.diceRoll) {
-                if (chatMessage.equalsIgnoreCase(ChatConfig.chatPrefix + Commands.DICEROLL.getCommand())) {
-                    int roll = RandomUtils.nextInt(1, 7);
-                    sendLaterParty("/pc »»» " + playerName + " rolled a " + roll + "! " + getDice(roll) + " «««");
-                    return;
+        }
+
+
+
+        if (ChatConfig.wholePartySecret) {
+            if (chatMessage.equalsIgnoreCase(ChatConfig.chatPrefix + Commands.SECRET)) {
+                //sendLater("/party list"); TODO
+            }
+        }
+        if (ChatConfig.chessEngine) {
+            if (chatMessage.startsWith(ChatConfig.chatPrefix + Commands.CHESSENGINE.getCommand() + " ")) {
+                String[] args = chatMessage.split("\\" + ChatConfig.chatPrefix + Commands.CHESSENGINE.getCommand() + " ");
+                if (args.length > 1) {
+                    String fen = args[1];
+                    getChessMove(fen);
                 }
             }
-            if (ChatConfig.multiDiceRoll) {
-                if (chatMessage.startsWith(ChatConfig.chatPrefix + Commands.DICEROLL.getCommand() + " ")) {
+        }
+
+        if (ChatConfig.stalk) {
+            if (chatMessage.startsWith(ChatConfig.chatPrefix + Commands.STALK.getCommand() + " ")) {
+                String[] args = chatMessage.split("\\" + ChatConfig.chatPrefix + Commands.STALK.getCommand() + " ");
+                if (args.length > 1) {
+                    String player = args[1];
+                    mod.apiUtil.lastLogin(player, chatChannel);
+                }
+            }
+        }
+        if (ChatConfig.mathEvaluation) {
+            if (chatMessage.startsWith(ChatConfig.chatPrefix + Commands.MATHEVALUATION.getCommand() + " ")) {
+                String[] args = chatMessage.split("\\" + ChatConfig.chatPrefix + Commands.MATHEVALUATION.getCommand() + " ");
+                if (args.length > 1) {
+                    String expression = args[1];
+                    sendLater("⚡ Evaluated: ≈" + new DoubleEvaluator().evaluate(expression).toString(), chatChannel);
+                }
+            }
+        }
+
+
+        if (ChatConfig.userNameHistory) {
+            if (chatMessage.equalsIgnoreCase(ChatConfig.chatPrefix + Commands.HISTORY.getCommand())) {
+                mod.apiUtil.getPlayerPastNames(playerName, 1, chatChannel);
+            }
+            if (ChatConfig.runOthers) {
+                if (chatMessage.startsWith(ChatConfig.chatPrefix + Commands.HISTORY.getCommand() + " ")) {
                     String[] args = chatMessage.split(" ");
                     if (args.length == 2) {
-                        String rollCount = args[1];
-                        if (rollCount.matches("\\d+?")) {
-                            int roll = Integer.parseInt(rollCount);
-                            if (roll < 1) roll = 1;
-                            if (roll > 10) roll = 10;
-                            int total = 0;
-                            StringBuilder builder = new StringBuilder();
-                            for (int i = 0; i < roll; i++) {
-                                int diceRoll = RandomUtils.nextInt(1, 7);
-                                total += diceRoll;
-                                builder.append(getDice(diceRoll));
-                            }
-                            sendLaterParty("/pc »»» " + playerName + " rolled " + roll + " dice! Total: " + total + "! " + builder + " «««");
-                            return;
+                        String player = args[1];
+                        if (args[1].matches("\\d+?")) {
+                            int page = Integer.parseInt(args[1]);
+                            mod.apiUtil.getPlayerPastNames(player, page, chatChannel);
+                        } else {
+                            mod.apiUtil.getPlayerPastNames(player, 1, chatChannel);
                         }
                     }
-                }
-            }
-
-
-
-            if (ChatConfig.guild) {
-                if (chatMessage.equalsIgnoreCase(ChatConfig.chatPrefix + Commands.GUILD.getCommand())) {
-                    mod.apiUtil.sayGuildInformation(playerName);
-                    return;
-                }
-                if (ChatConfig.runOthers) {
-                    if (chatMessage.startsWith(ChatConfig.chatPrefix + Commands.GUILD.getCommand() + " ")) {
-                        String[] args = chatMessage.split(" ");
-                        if (args.length > 1) {
-                            String player = args[1];
-                            mod.apiUtil.sayGuildInformation(player);
-                            return;
-                        }
-                    }
-                }
-            }
-
-            if (ChatConfig.locate) {
-                if (chatMessage.equalsIgnoreCase(ChatConfig.chatPrefix + Commands.LOCATE.getCommand())) {
-                    mod.apiUtil.sayPlayerStatus(playerName);
-                    return;
-                }
-                if (ChatConfig.runOthers) {
-                    if (chatMessage.startsWith(ChatConfig.chatPrefix + "locate ")) {
-                        String[] args = chatMessage.split("\\" + ChatConfig.chatPrefix + Commands.LOCATE.getCommand() + " ");
-                        if (args.length > 1) {
-                            String playerToLocate = args[1];
-                            if (playerToLocate.contains(" ")) return;
-                            mod.apiUtil.sayPlayerStatus(playerToLocate);
-                            return;
+                    if (args.length == 3) {
+                        String player = args[1];
+                        if (args[2].matches("\\d+?")) {
+                            int page = Integer.parseInt(args[2]);
+                            mod.apiUtil.getPlayerPastNames(player, page, chatChannel);
                         }
                     }
                 }
             }
         }
+        if (ChatConfig.secret) {
+            if (chatMessage.equalsIgnoreCase(ChatConfig.chatPrefix + Commands.SECRET.getCommand())) {
+                mod.apiUtil.sayPlayerSecrets(playerName, chatChannel);
+            }
+            if (ChatConfig.runOthers) {
+                if (chatMessage.startsWith(ChatConfig.chatPrefix + Commands.SECRET.getCommand() + " ")) {
+                    String[] args = chatMessage.split("\\" + ChatConfig.chatPrefix + Commands.SECRET.getCommand() + " ");
+                    if (args.length == 2) {
+                        String player = args[1];
+                        mod.apiUtil.sayPlayerSecrets(player, chatChannel);
+                    }
+                }
+            }
+        }
+        if (ChatConfig.networth) {
+            if (chatMessage.equalsIgnoreCase(ChatConfig.chatPrefix + Commands.NETWORTH)) {
+                mod.apiUtil.sayPlayerNetworth(playerName, chatChannel);
+            }
+            if (ChatConfig.runOthers) {
+                if (chatMessage.startsWith(ChatConfig.chatPrefix + Commands.NETWORTH.getCommand() + " ")) {
+                    String[] args = chatMessage.split("\\" + ChatConfig.chatPrefix + Commands.NETWORTH.getCommand() + " ");
+                    if (args.length == 2) {
+                        String check = args[1];
+                        mod.apiUtil.sayPlayerNetworth(check, chatChannel);
+                    }
+                }
+            }
+        }
+        if (ChatConfig.coinFlip) {
+            if (chatMessage.equalsIgnoreCase(ChatConfig.chatPrefix + Commands.COINFLIP.getCommand())) {
+                sendLater("»»» " + playerName + " flipped a coin! It's " + (RandomUtils.nextInt(0, 2) == 0 ? "Heads!" : "Tails!") + " «««", chatChannel);
+            }
+        }
+        if (ChatConfig.socialMedia) {
+            if (chatMessage.equalsIgnoreCase(ChatConfig.chatPrefix + Commands.DISCORD.getCommand())) {
+                mod.apiUtil.playerSocials(playerName, "dc", chatChannel);
+            }
+            if (ChatConfig.runOthers) {
+                if (chatMessage.startsWith(ChatConfig.chatPrefix + "dc ")) {
+                    String[] args = chatMessage.split("\\" + ChatConfig.chatPrefix + Commands.DISCORD.getCommand() + " ");
+                    if (args.length > 1) {
+                        String player = args[1];
+                        mod.apiUtil.playerSocials(player, "dc", chatChannel);
+                        return;
+                    }
+                }
+            }
+            if (chatMessage.equalsIgnoreCase(ChatConfig.chatPrefix + Commands.TWITTER.getCommand())) {
+                mod.apiUtil.playerSocials(playerName, "twitter", chatChannel);
+            }
+            if (ChatConfig.runOthers) {
+                if (chatMessage.startsWith(ChatConfig.chatPrefix + Commands.TWITTER.getCommand() + " ")) {
+                    String[] args = chatMessage.split("\\" + ChatConfig.chatPrefix + Commands.TWITTER.getCommand() + " ");
+                    if (args.length > 1) {
+                        String player = args[1];
+                        mod.apiUtil.playerSocials(player, "twitter", chatChannel);
+                        return;
+                    }
+                }
+            }
+            if (chatMessage.equalsIgnoreCase(ChatConfig.chatPrefix + Commands.TWITCH.getCommand())) {
+                mod.apiUtil.playerSocials(playerName, "twitch", chatChannel);
+            }
+            if (ChatConfig.runOthers) {
+                if (chatMessage.startsWith(ChatConfig.chatPrefix + Commands.TWITCH.getCommand() + " ")) {
+                    String[] args = chatMessage.split("\\" + ChatConfig.chatPrefix + Commands.TWITCH.getCommand() + " ");
+                    if (args.length > 1) {
+                        String player = args[1];
+                        mod.apiUtil.playerSocials(player, "twitch", chatChannel);
+                        return;
+                    }
+                }
+            }
+            if (chatMessage.equalsIgnoreCase(ChatConfig.chatPrefix + Commands.INSTAGRAM.getCommand())) {
+                mod.apiUtil.playerSocials(playerName, "instagram", chatChannel);
+            }
+            if (ChatConfig.runOthers) {
+                if (chatMessage.startsWith(ChatConfig.chatPrefix + Commands.INSTAGRAM.getCommand() + " ")) {
+                    String[] args = chatMessage.split("\\" + ChatConfig.chatPrefix + Commands.INSTAGRAM.getCommand() + " ");
+                    if (args.length > 1) {
+                        String player = args[1];
+                        mod.apiUtil.playerSocials(player, "instagram", chatChannel);
+                        return;
+                    }
+                }
+            }
+            if (chatMessage.equalsIgnoreCase(ChatConfig.chatPrefix + Commands.YOUTUBE.getCommand())) {
+                mod.apiUtil.playerSocials(playerName, "youtube", chatChannel);
+            }
+            if (ChatConfig.runOthers) {
+                if (chatMessage.startsWith(ChatConfig.chatPrefix + Commands.YOUTUBE.getCommand() + " ")) {
+                    String[] args = chatMessage.split("\\" + ChatConfig.chatPrefix + Commands.YOUTUBE.getCommand() + " ");
+                    if (args.length > 1) {
+                        String player = args[1];
+                        mod.apiUtil.playerSocials(player, "youtube", chatChannel);
+                        return;
+                    }
+                }
+            }
+            if (chatMessage.equalsIgnoreCase(ChatConfig.chatPrefix + Commands.TIKTOK.getCommand())) {
+                mod.apiUtil.playerSocials(playerName, "tiktok", chatChannel);
+            }
+            if (ChatConfig.runOthers) {
+                if (chatMessage.startsWith(ChatConfig.chatPrefix + Commands.TIKTOK.getCommand() + " ")) {
+                    String[] args = chatMessage.split("\\" + ChatConfig.chatPrefix + Commands.TIKTOK.getCommand() + " ");
+                    if (args.length > 1) {
+                        String player = args[1];
+                        mod.apiUtil.playerSocials(player, "tiktok", chatChannel);
+                        return;
+                    }
+                }
+            }
+            if (chatMessage.equalsIgnoreCase(ChatConfig.chatPrefix + Commands.FORUMS.getCommand())) {
+                mod.apiUtil.playerSocials(playerName, "forums", chatChannel);
+            }
+            if (ChatConfig.runOthers) {
+                if (chatMessage.startsWith(ChatConfig.chatPrefix + Commands.FORUMS.getCommand() + " ")) {
+                    String[] args = chatMessage.split("\\" + ChatConfig.chatPrefix + Commands.FORUMS.getCommand() + " ");
+                    if (args.length > 1) {
+                        String player = args[1];
+                        mod.apiUtil.playerSocials(player, "forums", chatChannel);
+                        return;
+                    }
+                }
+            }
+        }
+        if (ChatConfig.gay) {
+            if (chatMessage.equalsIgnoreCase(ChatConfig.chatPrefix + Commands.GAY.getCommand())) {
+                int randomNum = RandomUtils.nextInt(0, 101);
+                if (playerName.equalsIgnoreCase("kalabash")) randomNum = 100;
+                sendLater("»»» " + playerName + " is " + randomNum + "% gay. «««", chatChannel);
+                return;
+            }
+            if (ChatConfig.runOthers) {
+                if (chatMessage.startsWith(ChatConfig.chatPrefix + Commands.GAY.getCommand() + " ")) {
+                    String[] args = chatMessage.split(" ");
+                    if (args.length > 1) {
+                        String gay = args[1];
+                        int randomNum = RandomUtils.nextInt(0, 101);
+                        if (gay.equalsIgnoreCase("kalabash")) randomNum = 100;
+                        sendLater("»»» " + gay + " is " + randomNum + "% gay. «««", chatChannel);
+                        return;
+                    }
+                }
+            }
+        }
+        if (ChatConfig.nWordPass) {
+            if (chatMessage.equalsIgnoreCase(ChatConfig.chatPrefix + Commands.NPASS.getCommand())) {
+                sendLater("»»» " + playerName + " was granted the N pass. «««", chatChannel);
+            }
+        }
+        if (ChatConfig.femboy) {
+            if (chatMessage.equalsIgnoreCase(ChatConfig.chatPrefix + Commands.FEMBOY.getCommand())) {
+                sendLater("»»» " + playerName + " is " + RandomUtils.nextInt(0, 101) + "% femboy. «««", chatChannel);
+                return;
+            }
+            if (ChatConfig.runOthers) {
+                if (chatMessage.startsWith(ChatConfig.chatPrefix + Commands.FEMBOY.getCommand() + " ")) {
+                    String[] args = chatMessage.split(" ");
+                    if (args.length > 1) {
+                        String gay = args[1];
+                        sendLater("»»» " + gay + " is " + RandomUtils.nextInt(0, 101) + "% femboy. «««", chatChannel);
+                        return;
+                    }
+                }
+            }
+        }
+
+        if (ChatConfig.ai) {
+            if (chatMessage.startsWith(ChatConfig.chatPrefix + Commands.AI.getCommand())) {
+                String[] args = chatMessage.split("\\" + ChatConfig.chatPrefix + Commands.AI.getCommand() + " ");
+                if (args.length == 2) {
+                    String prompt = args[1];
+                    mod.apiUtil.getAI(prompt, chatChannel);
+                }
+            }
+        }
+
+        if (ChatConfig.lastOnlineInfo && ChatConfig.runOthers) {
+            if (chatMessage.startsWith(ChatConfig.chatPrefix + Commands.LASTONLINE.getCommand() + " ")) {
+                String[] args = chatMessage.split("\\" + ChatConfig.chatPrefix + Commands.LASTONLINE.getCommand() + " ");
+                if (args.length == 2) {
+                    String player = args[1];
+                    mod.apiUtil.getPlayerLastLogin(player, chatChannel);
+                }
+            }
+        }
+        if (ChatConfig.racist) {
+            if (chatMessage.equalsIgnoreCase(ChatConfig.chatPrefix + Commands.RACIST.getCommand())) {
+                int racistAmount = RandomUtils.nextInt(0, 101);
+                if (playerName.equalsIgnoreCase("dedj")) {
+                    racistAmount = 100;
+                }
+                sendLater("»»» " + playerName + " is " + racistAmount + "% racist. «««", chatChannel);
+                return;
+            }
+            if (ChatConfig.runOthers) {
+                if (chatMessage.startsWith(ChatConfig.chatPrefix + Commands.RACIST.getCommand() + " ")) {
+                    String[] args = chatMessage.split(" ");
+                    if (args.length > 1) {
+                        String racist = args[1];
+                        int racistNumber = RandomUtils.nextInt(0, 101);
+                        if (racist.equalsIgnoreCase("dedj")) {
+                            racistNumber = 100;
+                        }
+                        sendLater("»»» " + racist + " is " + racistNumber + "% racist. «««", chatChannel);
+                        return;
+                    }
+                }
+            }
+        }
+
+        if (ChatConfig.pray) {
+            if (chatMessage.equalsIgnoreCase(ChatConfig.chatPrefix + Commands.PRAY.getCommand())) {
+                sendLater("»»» " + playerName + " prayed to RNGesus! (+" + RandomUtils.nextInt(0, 501) + "% ✯ Magic Find) «««", chatChannel);
+                return;
+            }
+        }
+        if (ChatConfig.diceRoll) {
+            if (chatMessage.equalsIgnoreCase(ChatConfig.chatPrefix + Commands.DICEROLL.getCommand())) {
+                int roll = RandomUtils.nextInt(1, 7);
+                sendLater("»»» " + playerName + " rolled a " + roll + "! " + getDice(roll) + " «««", chatChannel);
+                return;
+            }
+        }
+        if (ChatConfig.multiDiceRoll) {
+            if (chatMessage.startsWith(ChatConfig.chatPrefix + Commands.DICEROLL.getCommand() + " ")) {
+                String[] args = chatMessage.split(" ");
+                if (args.length == 2) {
+                    String rollCount = args[1];
+                    if (rollCount.matches("\\d+?")) {
+                        int roll = Integer.parseInt(rollCount);
+                        if (roll < 1) roll = 1;
+                        if (roll > 10) roll = 10;
+                        int total = 0;
+                        StringBuilder builder = new StringBuilder();
+                        for (int i = 0; i < roll; i++) {
+                            int diceRoll = RandomUtils.nextInt(1, 7);
+                            total += diceRoll;
+                            builder.append(getDice(diceRoll));
+                        }
+                        sendLater("»»» " + playerName + " rolled " + roll + " dice! Total: " + total + "! " + builder + " «««", chatChannel);
+                        return;
+                    }
+                }
+            }
+        }
+
+
+
+        if (ChatConfig.guild) {
+            if (chatMessage.equalsIgnoreCase(ChatConfig.chatPrefix + Commands.GUILD.getCommand())) {
+                mod.apiUtil.sayGuildInformation(playerName, chatChannel);
+                return;
+            }
+            if (ChatConfig.runOthers) {
+                if (chatMessage.startsWith(ChatConfig.chatPrefix + Commands.GUILD.getCommand() + " ")) {
+                    String[] args = chatMessage.split(" ");
+                    if (args.length > 1) {
+                        String player = args[1];
+                        mod.apiUtil.sayGuildInformation(player, chatChannel);
+                        return;
+                    }
+                }
+            }
+        }
+
+        if (ChatConfig.locate) {
+            if (chatMessage.equalsIgnoreCase(ChatConfig.chatPrefix + Commands.LOCATE.getCommand())) {
+                mod.apiUtil.sayPlayerStatus(playerName, chatChannel);
+                return;
+            }
+            if (ChatConfig.runOthers) {
+                if (chatMessage.startsWith(ChatConfig.chatPrefix + "locate ")) {
+                    String[] args = chatMessage.split("\\" + ChatConfig.chatPrefix + Commands.LOCATE.getCommand() + " ");
+                    if (args.length > 1) {
+                        String playerToLocate = args[1];
+                        if (playerToLocate.contains(" ")) return;
+                        mod.apiUtil.sayPlayerStatus(playerToLocate, chatChannel);
+                        return;
+                    }
+                }
+            }
+        }
     }
-
-
-
 
 
 /*
