@@ -22,5 +22,6 @@ public class PrivateMessage {
     @Main
     public void handle(String target, @Greedy String message) {
         CommunicationHandler.thread.sendPacket(new PacketPlayOutChat(message, MeloMod.playerUUID.toString(), MeloMod.playerName, target));
+
     }
 }

@@ -149,7 +149,12 @@ public class DataThread extends Thread {
                                 String targetName = packetPlayOutChat.getTargetName();
 
                                 if (targetName != null) {
-                                    MeloMod.addMessage("§5[§dMM§5] §8(Private Message) §dFrom: §3" + messenger + "§r§7: " + message);
+                                    if (uuid.equalsIgnoreCase(MeloMod.playerUUID.toString())) {
+                                        // is relaying own message
+                                        MeloMod.addMessage("§5[§dMM§5] §8(Private Message) §dTo: §3" + targetName + "§r§7: " + message);
+                                    } else {
+                                        MeloMod.addMessage("§5[§dMM§5] §8(Private Message) §dFrom: §3" + messenger + "§r§7: " + message);
+                                    }
                                 } else {
                                     if (uuid.equalsIgnoreCase(MeloMod.playerUUID.toString())) {
                                         MeloMod.addMessage(("§d[§bMM§d] §b" + messenger + "§r§7: " + message));
