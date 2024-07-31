@@ -1,22 +1,17 @@
 package me.vlink102.melomod.config;
 
-import cc.polyfrost.oneconfig.config.Config;
 import cc.polyfrost.oneconfig.config.annotations.*;
 import cc.polyfrost.oneconfig.config.core.OneColor;
-import cc.polyfrost.oneconfig.config.data.Mod;
-import cc.polyfrost.oneconfig.config.data.OptionSize;
 import cc.polyfrost.oneconfig.config.elements.SubConfig;
 import cc.polyfrost.oneconfig.hud.TextHud;
-import cc.polyfrost.oneconfig.libs.checker.fenum.qual.AwtColorSpace;
 import cc.polyfrost.oneconfig.utils.hypixel.HypixelUtils;
 import me.vlink102.melomod.MeloMod;
 import me.vlink102.melomod.events.InternalLocraw;
-import me.vlink102.melomod.mixin.PlayerObjectUtil;
-import me.vlink102.melomod.mixin.SkyblockUtil;
+import me.vlink102.melomod.util.game.PlayerObjectUtil;
+import me.vlink102.melomod.util.game.SkyblockUtil;
 import net.minecraft.client.Minecraft;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.BlockPos;
-import net.minecraftforge.fml.client.config.ConfigGuiType;
 
 import java.util.List;
 

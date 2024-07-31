@@ -4,10 +4,9 @@ import cc.polyfrost.oneconfig.utils.commands.annotations.SubCommand;
 import me.vlink102.melomod.MeloMod;
 import cc.polyfrost.oneconfig.utils.commands.annotations.Command;
 import cc.polyfrost.oneconfig.utils.commands.annotations.Main;
-import me.vlink102.melomod.util.ApiUtil;
-import net.minecraft.client.Minecraft;
-
-import java.util.concurrent.ExecutionException;
+import me.vlink102.melomod.util.http.ApiUtil;
+import me.vlink102.melomod.util.http.CommunicationHandler;
+import me.vlink102.melomod.util.http.packets.ServerBoundRequestConnectionsPacket;
 
 /**
  * An example command implementing the Command api of OneConfig.
@@ -26,12 +25,19 @@ public class MeloCommand {
     }
 
     @SubCommand(description = "Reload the mod and refresh Hypixel API")
-    private void reloadAPI() {
+    private void reload() {
         mod.apiUtil.requestAPI(
                 ApiUtil.HypixelEndpoint.SKYBLOCK_PROFILES,
                 object -> mod.skyblockUtil.updateInformation(object),
                 ApiUtil.HypixelEndpoint.FilledEndpointArgument.uuid()
         );
+    }
+
+    @SubCommand(
+            description = "View online users"
+    )
+    private void online(int page) {
+        CommunicationHandler.thread.sendPacket(new ServerBoundRequestConnectionsPacket(page));
     }
 
     @Main

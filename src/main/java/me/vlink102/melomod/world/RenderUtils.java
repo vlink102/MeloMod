@@ -1,7 +1,7 @@
 package me.vlink102.melomod.world;
 
 import me.vlink102.melomod.config.MeloConfiguration;
-import me.vlink102.melomod.util.SpecialColour;
+import me.vlink102.melomod.util.game.SpecialColour;
 import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.Minecraft;

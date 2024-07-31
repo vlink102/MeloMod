@@ -2,8 +2,7 @@ package me.vlink102.melomod.util;
 
 import com.google.common.collect.Sets;
 import me.vlink102.melomod.events.ChatEvent;
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.FontRenderer;
+import me.vlink102.melomod.util.game.Utils;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
@@ -65,7 +64,81 @@ public class StringUtils {
         return helpMenu;
     }
 
-    private static HashMap<Integer, Integer> getPaginatedMap(String prefix, List<String> strings) {
+    public static List<String> paginateOnline(List<String> strings, int perLine) {
+        List<String> menu = new ArrayList<>();
+        HashMap<Integer, Integer> pages = getPaginatedMap(strings, perLine);
+
+        int currentElement = 0;
+        for (int i = 0; i < pages.size(); i++) {
+            int elementCount = pages.get(i);
+            StringJoiner builder = new StringJoiner("\n");
+            builder.add("§9-----------------------------------------------------");
+            builder.add(getCentredMessage("§6Online Players (Page " + (i + 1) + " of " + pages.size() + ")"));
+            for (int j = 0; j < elementCount; j++) {
+                String command = strings.get(currentElement);
+                builder.add("§3" + command);
+                currentElement++;
+            }
+            builder.add("§9-----------------------------------------------------");
+            menu.add(builder.toString());
+        }
+        return menu;
+    }
+
+    public static String getCentredMessage(String message) {
+        if(message == null || message.equals("")) {
+            return "";
+        }
+
+        int messagePxSize = 0;
+        boolean previousCode = false;
+        boolean isBold = false;
+
+        for(char c : message.toCharArray()){
+            if(c == '§'){
+                previousCode = true;
+            }else if(previousCode){
+                previousCode = false;
+                isBold = c == 'l' || c == 'L';
+            }else{
+                DefaultFontInfo dFI = DefaultFontInfo.getDefaultFontInfo(c);
+                messagePxSize += isBold ? dFI.getBoldLength() : dFI.getLength();
+                messagePxSize++;
+            }
+        }
+        int CENTER_PX = 154;
+        int halvedMessageSize = messagePxSize / 2;
+        int toCompensate = CENTER_PX - halvedMessageSize;
+        int spaceLength = DefaultFontInfo.SPACE.getLength() + 1;
+        int compensated = 0;
+        StringBuilder sb = new StringBuilder();
+        while(compensated < toCompensate){
+            sb.append(" ");
+            compensated += spaceLength;
+        }
+        return sb + message;
+    }
+    public static HashMap<Integer, Integer> getPaginatedMap(List<String> strings, int perPage) {
+        int length = strings.size();
+        HashMap<Integer, Integer> pages = new HashMap<>();
+        int page = 0;
+        if (length < perPage) {
+            pages.put(page, length);
+            return pages;
+        }
+        int pageDiv = length / perPage;
+        for (int i = 0; i < pageDiv; i++) {
+            page++;
+            pages.put(page, length);
+        }
+        if (length % perPage != 0) {
+            page++;
+            pages.put(page, length % perPage);
+        }
+        return pages;
+    }
+
+    public static HashMap<Integer, Integer> getPaginatedMap(String prefix, List<String> strings) {
         int limit = 254 - prefix.length(); // 2 less since i want to add the symbol at the end
         int page = 0;
         int commands = 0;

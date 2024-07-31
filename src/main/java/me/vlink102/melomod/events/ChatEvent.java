@@ -1,6 +1,5 @@
 package me.vlink102.melomod.events;
 
-import cc.polyfrost.oneconfig.config.annotations.Switch;
 import cc.polyfrost.oneconfig.events.EventManager;
 import cc.polyfrost.oneconfig.events.event.ChatReceiveEvent;
 import cc.polyfrost.oneconfig.events.event.ChatSendEvent;
@@ -8,38 +7,21 @@ import cc.polyfrost.oneconfig.libs.eventbus.Subscribe;
 import com.google.gson.*;
 import me.vlink102.melomod.MeloMod;
 import me.vlink102.melomod.config.ChatConfig;
-import me.vlink102.melomod.events.chatcooldownmanager.ServerTracker;
-import me.vlink102.melomod.events.chatcooldownmanager.TickHandler;
-import me.vlink102.melomod.mixin.PlayerUtil;
-import me.vlink102.melomod.mixin.SkyblockUtil;
-import me.vlink102.melomod.util.ApiUtil;
+import me.vlink102.melomod.chatcooldownmanager.ServerTracker;
+import me.vlink102.melomod.chatcooldownmanager.TickHandler;
 import me.vlink102.melomod.util.StringUtils;
-import me.vlink102.melomod.util.Utils;
-import me.vlink102.melomod.util.math.DoubleEvaluator;
-import net.minecraft.client.Minecraft;
-import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.server.MinecraftServer;
+import me.vlink102.melomod.util.game.Utils;
+import me.vlink102.melomod.util.math.eval.DoubleEvaluator;
 import net.minecraft.util.IChatComponent;
 import org.apache.commons.lang3.RandomUtils;
 import org.apache.commons.lang3.text.WordUtils;
-import org.apache.commons.lang3.time.DurationFormatUtils;
-import org.lwjgl.Sys;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.OutputStream;
-import java.net.HttpURLConnection;
-import java.net.URL;
-import java.nio.charset.StandardCharsets;
-import java.security.SecureRandom;
 import java.util.*;
-import java.util.concurrent.*;
 import java.util.function.Supplier;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import static me.vlink102.melomod.util.ApiUtil.sendLaterParty;
+import static me.vlink102.melomod.util.http.ApiUtil.sendLaterParty;
 import static me.vlink102.melomod.util.StringUtils.paginateHelp;
 
 public class ChatEvent {

@@ -1,13 +1,13 @@
 {
   "compatibilityLevel": "JAVA_8",
   "minVersion": "0.7",
-  "package": "org.polyfrost.example.mixin",
+  "package": "me.vlink102.melomod.mixin",
   "refmap": "mixins.${id}.refmap.json",
   "injectors": {
     "maxShiftBy": 5
   },
   "client": [
-    "me.vlink102.melomod.mixin.MinecraftMixin"
+    "MinecraftMixin"
   ],
   "verbose": true
 }

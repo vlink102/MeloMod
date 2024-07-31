@@ -3,25 +3,11 @@ package me.vlink102.melomod.events;
 import cc.polyfrost.oneconfig.events.EventManager;
 import cc.polyfrost.oneconfig.events.event.LocrawEvent;
 import cc.polyfrost.oneconfig.libs.eventbus.Subscribe;
-import cc.polyfrost.oneconfig.utils.hypixel.HypixelUtils;
-import cc.polyfrost.oneconfig.utils.hypixel.LocrawInfo;
-import cc.polyfrost.oneconfig.utils.hypixel.LocrawUtil;
-import com.google.gson.JsonObject;
 import me.vlink102.melomod.MeloMod;
-import me.vlink102.melomod.mixin.SkyblockUtil;
-import me.vlink102.melomod.util.ApiUtil;
+import me.vlink102.melomod.util.game.SkyblockUtil;
+import me.vlink102.melomod.util.http.ApiUtil;
 import net.minecraft.client.Minecraft;
 import net.minecraft.util.BlockPos;
-import net.minecraft.world.EnumSkyBlock;
-
-import javax.xml.bind.annotation.XmlElement;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
-import java.util.UUID;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
-import java.util.function.Consumer;
 
 public class InternalLocraw {
     private final MeloMod mod;

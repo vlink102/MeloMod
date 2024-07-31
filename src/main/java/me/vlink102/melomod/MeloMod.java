@@ -1,31 +1,32 @@
 package me.vlink102.melomod;
 
-import cc.polyfrost.oneconfig.libs.checker.units.qual.A;
-import cc.polyfrost.oneconfig.utils.hypixel.HypixelUtils;
 import cc.polyfrost.oneconfig.utils.hypixel.LocrawUtil;
 import com.google.gson.Gson;
-import com.google.gson.JsonObject;
-import com.mojang.authlib.yggdrasil.request.JoinMinecraftServerRequest;
+import me.vlink102.melomod.command.MeloMsg;
 import me.vlink102.melomod.config.MeloConfiguration;
 import me.vlink102.melomod.command.MeloCommand;
 import cc.polyfrost.oneconfig.events.event.InitializationEvent;
 import me.vlink102.melomod.events.ChatEvent;
 import me.vlink102.melomod.events.InternalLocraw;
-import me.vlink102.melomod.events.chatcooldownmanager.ServerTracker;
-import me.vlink102.melomod.events.chatcooldownmanager.TickHandler;
-import me.vlink102.melomod.mixin.PlayerObjectUtil;
-import me.vlink102.melomod.mixin.SkyblockUtil;
-import me.vlink102.melomod.util.ApiUtil;
+import me.vlink102.melomod.chatcooldownmanager.ServerTracker;
+import me.vlink102.melomod.chatcooldownmanager.TickHandler;
+import me.vlink102.melomod.events.PlayerConnection;
+import me.vlink102.melomod.util.game.PlayerObjectUtil;
+import me.vlink102.melomod.util.game.SkyblockUtil;
+import me.vlink102.melomod.util.http.ApiUtil;
+import me.vlink102.melomod.util.http.CommunicationHandler;
+import me.vlink102.melomod.util.http.Version;
 import me.vlink102.melomod.world.Render;
 import net.minecraft.client.Minecraft;
-import net.minecraft.entity.Entity;
-import net.minecraftforge.client.MinecraftForgeClient;
+import net.minecraft.util.ChatComponentText;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.common.Mod;
 import cc.polyfrost.oneconfig.utils.commands.CommandManager;
 import net.minecraftforge.fml.common.event.FMLInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 /**
@@ -76,6 +77,9 @@ public class MeloMod {
     public static final String MODID = "@ID@";
     public static final String NAME = "@NAME@";
     public static final String VERSION = "@VER@";
+
+    public static Version VERSION_NEW;
+
     @Mod.Instance(MODID)
     public static MeloMod INSTANCE; // Adds the instance of the mod, so we can access other variables.
     public static MeloConfiguration config;
@@ -86,6 +90,7 @@ public class MeloMod {
     public static LocrawUtil locrawUtil;
 
     public static UUID playerUUID;
+    public static String playerName;
 
     private SkyblockUtil.SkyblockProfile skyblockProfile = null;
     public SkyblockUtil skyblockUtil;
@@ -109,10 +114,16 @@ public class MeloMod {
         isObfuscated = isObfuscated();
     }
 
+    public CommunicationHandler handler;
+
     // Register the config and commands.
     @Mod.EventHandler
     public void onInit(FMLInitializationEvent event) {
         playerUUID = Minecraft.getMinecraft().getSession().getProfile().getId();
+        playerName = Minecraft.getMinecraft().getSession().getUsername();
+
+        VERSION_NEW = Version.parse(VERSION);
+
         config = new MeloConfiguration();
         gson = new Gson();
         MinecraftForge.EVENT_BUS.register(new ServerTracker());
@@ -120,13 +131,41 @@ public class MeloMod {
         skyblockUtil = new SkyblockUtil(this);
         apiUtil = new ApiUtil();
         CommandManager.INSTANCE.registerCommand(new MeloCommand(this));
+        CommandManager.INSTANCE.registerCommand(new MeloMsg(this));
         PlayerObjectUtil objectUtil = new PlayerObjectUtil(this);
         locrawUtil = new LocrawUtil();
         internalLocraw = new InternalLocraw(this);
         chatEvent = new ChatEvent(this);
         Render render = new Render();
         MinecraftForge.EVENT_BUS.register(render);
+        new PlayerConnection();
         //MinecraftForge.EVENT_BUS.register(internalLocraw);
+
+        System.out.println("Hi");
+        handler = new CommunicationHandler();
+        handler.beginKeepAlive(playerUUID, playerName);
+    }
+
+    public static boolean isOnline() {
+        return Minecraft.getMinecraft().thePlayer != null;
+    }
+
+    public static List<String> queue = new ArrayList<>();
+
+    public static boolean addMessage(String message) {
+        try {
+            if (isOnline() && Minecraft.getMinecraft().ingameGUI != null) {
+                Minecraft.getMinecraft().thePlayer.addChatMessage(new ChatComponentText(message));
+                return true;
+            } else {
+                queue.add(message);
+                System.out.println("Queued: " + message);
+            }
+        } catch (NullPointerException e) {
+            System.out.println("Failed to add message: " + e.getMessage());
+            queue.add(message);
+        }
+        return false;
     }
 
     private static boolean isObfuscated()

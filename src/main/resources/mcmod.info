@@ -6,13 +6,13 @@
     "version": "${version}",
     "mcversion": "${mcVersionStr}",
     "url": "",
-    "updateUrl": "",
+    "updateUrl": "https://github.com/vlink102/MeloMod/releases/latest",
     "authorList": [
       "Melo",
       "vlink102"
     ],
     "credits": "",
-    "logoFile": "",
+    "logoFile": "703ab98cf301a4df30ecb2185ac1c7f8.png",
     "screenshots": [],
     "dependencies": []
   }

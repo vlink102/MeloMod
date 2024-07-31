@@ -1,9 +1,9 @@
 package me.vlink102.melomod.world;
 
 import me.vlink102.melomod.config.MiningHelper;
-import me.vlink102.melomod.mixin.SkyblockUtil;
-import me.vlink102.melomod.util.MathUtils;
-import me.vlink102.melomod.util.SpecialColour;
+import me.vlink102.melomod.util.game.SkyblockUtil;
+import me.vlink102.melomod.util.math.MathUtils;
+import me.vlink102.melomod.util.game.SpecialColour;
 import net.minecraft.block.*;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.Minecraft;
