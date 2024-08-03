@@ -1,5 +1,9 @@
 package me.vlink102.melomod.util.http;
 
+import me.vlink102.melomod.MeloMod;
+
+import javax.swing.*;
+
 public class Version {
     private final int majorVersion;
     private final int minorVersion;
@@ -11,10 +15,33 @@ public class Version {
         this.patchVersion = patchVersion;
     }
 
+    // todo add outdated minor and outdated patch (green, yellow, orange, red)
     public enum VersionStability {
-        UP_TO_DATE,
-        OUTDATED,
-        INCOMPATIBLE
+        UP_TO_DATE(MeloMod.AbstractColor.GREEN, '✔', "&2Up to date"),
+        OUTDATED(MeloMod.AbstractColor.YELLOW, '⚠', "&6Outdated"),
+        INCOMPATIBLE(MeloMod.AbstractColor.RED, '❌', "&4Incompatible");
+
+        private final MeloMod.AbstractColor color;
+        private final char icon;
+        private final String pretty;
+
+        VersionStability(MeloMod.AbstractColor color, final char icon, final String pretty) {
+            this.color = color;
+            this.icon = icon;
+            this.pretty = pretty;
+        }
+
+        public String getPretty() {
+            return pretty;
+        }
+
+        public MeloMod.AbstractColor getColor() {
+            return color;
+        }
+
+        public char getIcon() {
+            return icon;
+        }
     }
 
     public static Version parse(String versionString) {

@@ -443,7 +443,7 @@ public class ChatEvent {
 
             ApiUtil.ChatChannel chatChannel1 = from(chatChannel);
 
-            System.out.println(chatChannel1 );
+            MeloMod.addDebug("&7Using chat channel: &8" + chatChannel1);
 
             executeChatCommand(chatMessage, playerName, chatChannel1);
         }

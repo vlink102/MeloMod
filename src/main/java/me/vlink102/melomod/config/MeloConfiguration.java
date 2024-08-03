@@ -25,6 +25,16 @@ public class MeloConfiguration extends Config {
     @SubConfig
     public static ChatConfig chatConfig = new ChatConfig();
 
+    @Switch(
+            name = "Debug messages",
+            description = "Debug messages will print in chat (developer)"
+    )
+    public static boolean debugMessages = true;
+
+    @Text(
+            name = "Mod chat prefix"
+    )
+    public static String modChatPrefix = "MM";
      // The default value for the boolean Switch.
 
     /*
