@@ -34,7 +34,7 @@ public class PlayerConnection {
     @Subscribe
     public void onJoin(WorldLoadEvent event) {
         online = true;
-        System.out.println("Joined world: " + event.toString());
+        MeloMod.addDebug("§eSuccessfully joined world: §7" + event.toString());
         ScheduledExecutorService service = new ScheduledThreadPoolExecutor(1);
         service.schedule(() -> {
             if (!HypixelUtils.INSTANCE.isHypixel()) {
@@ -43,6 +43,7 @@ public class PlayerConnection {
                 ServerTracker.isHypixel = false;
             } else {
                 ServerTracker.isHypixel = true;
+                MeloMod.addDebug("§eServer instance detected as Hypixel");
             }
             if (!MeloMod.queue.isEmpty()) {
                 List<String> currentQueue = new ArrayList<>(MeloMod.queue);
@@ -53,7 +54,10 @@ public class PlayerConnection {
                     }
                 }
                 MeloMod.queue.removeAll(worked);
-
+                int left = currentQueue.size() - worked.size();
+                if (left > 0) {
+                    MeloMod.addWarn("§6Failed to sync §e" + left + "§6 queued chat(s). Retrying...");
+                }
             }
         }, 2L, TimeUnit.SECONDS);
 
@@ -63,7 +67,7 @@ public class PlayerConnection {
     public void onQuit(PlayerEvent.PlayerLoggedOutEvent event) {
         online = false;
         ServerTracker.isHypixel = false;
-        System.out.println("etaiotesio");
+        MeloMod.addDebug("§eSuccessfully disconnected from server");
         PacketPlayOutDisconnect disconnect = new PacketPlayOutDisconnect(MeloMod.playerUUID.toString(), MeloMod.playerName);
         CommunicationHandler.thread.sendPacket(disconnect);
     }

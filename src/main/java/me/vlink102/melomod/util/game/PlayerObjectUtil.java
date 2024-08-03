@@ -17,7 +17,7 @@ public class PlayerObjectUtil {
 
     public static String getHeldItemName() {
         ItemStack heldItem = getHeldItem();
-        if (heldItem == null || !heldItem.hasDisplayName()) return MeloMod.MinecraftColors.RED.getColor() + "None";
+        if (heldItem == null || !heldItem.hasDisplayName()) return MeloMod.AbstractColor.RED.getColor() + "None";
         return getHeldItem().getDisplayName();
     }
 }

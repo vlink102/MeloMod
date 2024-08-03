@@ -50,7 +50,6 @@ public class StringUtils {
     public static List<String> paginate(String prefix, List<String> strings) {
         List<String> helpMenu = new ArrayList<>();
         HashMap<Integer, Integer> pages = getPaginatedMap(prefix, strings);
-        System.out.println(pages);
 
         int currentElement = 0;
         for (int i = 0; i < pages.size(); i++) {

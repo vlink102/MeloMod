@@ -46,6 +46,16 @@ public enum StatusCodes {
         this.statusCode = statusCode;
     }
 
+
+    public static StatusCodes getStatusCode(int statusCode) {
+        for (StatusCodes status : StatusCodes.values()) {
+            if (status.statusCode == statusCode) {
+                return status;
+            }
+        }
+        return null;
+    }
+
     public static String getFromCode(int code) {
         for (StatusCodes value : StatusCodes.values()) {
             if (value.getStatusCode() == code) {

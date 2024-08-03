@@ -45,9 +45,7 @@ public class CommunicationHandler {
             thread.sendPacket(new ServerBoundVersionControlPacket(uuid.toString()));
 
         } catch (Exception e) {
-            System.out.println("Failed to connect: " + e.getCause());
-            System.err.println("Could not connect to game server: " + e.getMessage() + " (" + e.getCause() + ")");
-            MeloMod.addMessage("§4[§cMM§4]§r §cERROR: Could not connect to server (" + e.getMessage() + ": " + e.getCause() + ")");
+            MeloMod.addError("§cCould not connect to server §7(" + e.getMessage() + ": " + e.getCause() + ")", e);
         }
     }
 }

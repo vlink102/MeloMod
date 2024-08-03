@@ -4,6 +4,7 @@ import cc.polyfrost.oneconfig.utils.commands.annotations.SubCommand;
 import me.vlink102.melomod.MeloMod;
 import cc.polyfrost.oneconfig.utils.commands.annotations.Command;
 import cc.polyfrost.oneconfig.utils.commands.annotations.Main;
+import me.vlink102.melomod.config.MeloConfiguration;
 import me.vlink102.melomod.util.http.ApiUtil;
 import me.vlink102.melomod.util.http.CommunicationHandler;
 import me.vlink102.melomod.util.http.packets.ServerBoundRequestConnectionsPacket;
@@ -31,6 +32,18 @@ public class MeloCommand {
                 object -> mod.skyblockUtil.updateInformation(object),
                 ApiUtil.HypixelEndpoint.FilledEndpointArgument.uuid()
         );
+    }
+
+    @SubCommand(
+            description = "Toggle debug"
+    )
+    private void debug() {
+        MeloConfiguration.debugMessages = !MeloConfiguration.debugMessages;
+        if (MeloConfiguration.debugMessages) {
+            MeloMod.addDebug("&9Enabled Debug Mode");
+        } else {
+            MeloMod.addDebug("&9Disabled Debug Mode");
+        }
     }
 
     @SubCommand(

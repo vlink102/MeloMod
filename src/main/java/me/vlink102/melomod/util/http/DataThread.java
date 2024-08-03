@@ -7,6 +7,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import me.vlink102.melomod.MeloMod;
 import me.vlink102.melomod.config.ChatConfig;
+import me.vlink102.melomod.config.MeloConfiguration;
 import me.vlink102.melomod.events.ChatEvent;
 import me.vlink102.melomod.events.InternalLocraw;
 import me.vlink102.melomod.util.StringUtils;
@@ -34,16 +35,29 @@ public class DataThread extends Thread {
         CLOSED_BY_SERVER
     }
 
-    public void closeSocket(CloseReason... reason) {
+    public void closeSocket(CloseReason reason, Exception exception) {
         try {
             socket.close();
-            if (reason.length==0) {
-                closed = CloseReason.UNKNOWN;
-            } else {
-                closed = reason[0];
+            closed = reason;
+            switch (closed) {
+                case CLIENT_OUT_OF_DATE:
+                    MeloMod.addWarn("§eSocket closed: §cClient is out of date! §8(Hover over prefix for details) [" + closed + "]");
+                    break;
+                case INVALID_DATA:
+                    MeloMod.addError("§eSocket closed: §cClient received invalid data from the server! Please report this. [" + closed + "]", exception);
+                    break;
+                case ERROR:
+                    MeloMod.addError("§eSocket closed: §cClient found unexpected error (Check console) Please report this. [" + closed + "]", exception);
+                    break;
+                case UNKNOWN:
+                    MeloMod.addError("§eSocket closed: §cNo reason provided. Please report this. [" + closed + "]", exception);
+                    break;
+                case CLOSED_BY_SERVER:
+                    MeloMod.addWarn("§eSocket closed: §cThe connection was forcibly terminated by the server. This is NOT a bug. [" + closed + "]");
+                    break;
             }
-            System.out.println("Socket Closed: " + closed);
         } catch (IOException e) {
+            MeloMod.addError("§4Potentially severe error (Please report this): §c" + e.getMessage(), e);
             throw new RuntimeException(e);
         }
 
@@ -60,8 +74,7 @@ public class DataThread extends Thread {
             this.socket = socket;
             closed = null;
         } catch (IOException e) {
-            e.printStackTrace();
-            closeSocket(CloseReason.ERROR);
+            closeSocket(CloseReason.ERROR, e);
             throw new RuntimeException(e);
         }
     }
@@ -87,25 +100,28 @@ public class DataThread extends Thread {
 
                                 MeloMod.addMessage(("Connection lost: " + title + " (Reason: " + reason + ")"));
 
-                                closeSocket(CloseReason.CLOSED_BY_SERVER);
+                                closeSocket(CloseReason.CLOSED_BY_SERVER, null);
                                 break;
                             case VERSION_CONTROL_RESULT:
                                 ClientBoundVersionControlPacket clientBoundVersionControlPacket = (ClientBoundVersionControlPacket) Packet.parseFrom(object.toString());
                                 String correct = clientBoundVersionControlPacket.getCorrectVersion();
                                 String newLink = clientBoundVersionControlPacket.getUpdateLink();
-                                switch (clientBoundVersionControlPacket.getCorrect()) {
+                                Version.VersionStability stability = clientBoundVersionControlPacket.getCorrect();
+                                MeloMod.versionStability = stability;
+                                MeloMod.serverVersion = Version.parse(correct);
+                                switch (stability) {
                                     case INCOMPATIBLE:
-                                        MeloMod.addMessage(("\n§4[§cMM§4] §cIncompatible Version! §7Client: §4" + MeloMod.VERSION_NEW + "§7, Server: §2" + Version.parse(correct) + "§r"));
-                                        MeloMod.addMessage(("§eUpdate Link: §7" + newLink + "§r\n"));
+                                        MeloMod.addError(("\n§cIncompatible Version! §7Client: §4" + MeloMod.VERSION_NEW + "§7, Server: §2" + MeloMod.serverVersion + "§r"));
+                                        MeloMod.addError(("§eUpdate Link: §7" + newLink + "§r\n"));
 
-                                        closeSocket(CloseReason.CLIENT_OUT_OF_DATE);
+                                        closeSocket(CloseReason.CLIENT_OUT_OF_DATE, null);
                                         break;
                                     case UP_TO_DATE:
-                                        MeloMod.addMessage("\n§2[§aMM§2] §2You are up to date! §7Version: " + MeloMod.VERSION_NEW + "\n");
+                                        MeloMod.addSystemNotification("\n§2You are up to date! §7Version: " + MeloMod.VERSION_NEW + "\n");
                                         break;
                                     case OUTDATED:
-                                        MeloMod.addMessage(("\n§4[§cMM§4] §cOutdated Version! §7Client: §4" + MeloMod.VERSION_NEW + "§7, Server: §2" + Version.parse(correct) + "§r"));
-                                        MeloMod.addMessage(("§eUpdate Link: §7" + newLink + "§r\n"));
+                                        MeloMod.addWarn(("\n§cOutdated Version! §7Client: §4" + MeloMod.VERSION_NEW + "§7, Server: §2" + MeloMod.serverVersion + "§r"));
+                                        MeloMod.addWarn(("§eUpdate Link: §7" + newLink + "§r\n"));
                                         break;
                                 }
                                 if (clientBoundVersionControlPacket.isBanned()) {
@@ -121,7 +137,7 @@ public class DataThread extends Thread {
                             case NOTIFY_ONLINE:
                                 ClientBoundNotifyOnlinePacket clientBoundNotifyOnlinePacket = (ClientBoundNotifyOnlinePacket) Packet.parseFrom(object.toString());
                                 String onlineName = clientBoundNotifyOnlinePacket.getName();
-                                MeloMod.addMessage(("§6[§eMM§6] §e" + onlineName + " connected!"));
+                                MeloMod.addSystemNotification(("§e" + onlineName + " connected!"));
                                 break;
                             case CLOSED_CONNECTION:
                                 ClientBoundDisconnectPacket clientBoundDisconnectPacket = (ClientBoundDisconnectPacket) Packet.parseFrom(object.toString());
@@ -131,12 +147,11 @@ public class DataThread extends Thread {
                                 ClientBoundDisconnectPacket.ParsedException.ParsedCause parsedCause = exception.getCause();
                                 String parsedReason = parsedCause.getMessage();
 
-                                MeloMod.addMessage("§6[§eMM§6] §e" + disconnectName + " disconnected! (" + disconnectReason + ": " + parsedReason + ")");
+                                MeloMod.addSystemNotification("§e" + disconnectName + " disconnected! (" + disconnectReason + ": " + parsedReason + ")");
                                 break;
                             case CONNECTED_CLIENTS:
                                 ClientBoundConnectedClientsPacket clientBoundConnectedClientsPacket = (ClientBoundConnectedClientsPacket) Packet.parseFrom(object.toString());
                                 HashMap<String, InternalLocraw.LocrawInfo> onlinePlayers = clientBoundConnectedClientsPacket.getPlayerList();
-                                System.out.println(onlinePlayers);
                                 int page = clientBoundConnectedClientsPacket.getPage();
                                 List<String> paginated = StringUtils.paginateOnline(onlinePlayers, 8);
                                 MeloMod.addMessage((paginated.get(page -1)));
@@ -149,20 +164,25 @@ public class DataThread extends Thread {
                                 String targetName = packetPlayOutChat.getTargetName();
 
                                 if (targetName != null) {
-                                    if (uuid.equalsIgnoreCase(MeloMod.playerUUID.toString())) {
+                                    if (messenger.equals(targetName)) {
                                         // is relaying own message
-                                        MeloMod.addMessage("§5[§dMM§5] §8(Private Message) §dTo: §3" + targetName + "§r§7: " + message);
+                                        MeloMod.addRaw("§8Your message was lost in the wind...");
                                     } else {
-                                        MeloMod.addMessage("§5[§dMM§5] §8(Private Message) §dFrom: §3" + messenger + "§r§7: " + message);
+                                        if (targetName.equalsIgnoreCase(MeloMod.playerName)) {
+                                            MeloMod.addPrivateChat("§8(Private Message) §dFrom: §3" + messenger + "§r§7: " + message, messenger);
+                                        } else {
+                                            MeloMod.addPrivateChat("§8(Private Message) §dTo: §3" + targetName + "§r§7: " + message, targetName);
+                                        }
                                     }
                                 } else {
                                     if (uuid.equalsIgnoreCase(MeloMod.playerUUID.toString())) {
-                                        MeloMod.addMessage(("§d[§bMM§d] §b" + messenger + "§r§7: " + message));
+                                        MeloMod.addChat(("§b" + messenger + "§r§7: " + message));
                                     } else {
-                                        MeloMod.addMessage(("§d[§bMM§d] §d" + messenger + "§r§7: " + message));
+                                        MeloMod.addChat(("§d" + messenger + "§r§7: " + message));
                                     }
                                     if (message.startsWith(ChatConfig.chatPrefix)) {
                                         MeloMod.chatEvent.executeChatCommand(message, messenger, ApiUtil.ChatChannel.CUSTOM);
+                                        // todo update colors and stuff
                                     }
                                 }
                                 break;
@@ -171,9 +191,8 @@ public class DataThread extends Thread {
                                 String disconnectName2 = disconnect.getName();
                                 String disconnectUUID = disconnect.getUuid();
                                 if (!disconnectUUID.equalsIgnoreCase(MeloMod.playerUUID.toString())) {
-                                    MeloMod.addMessage("§6[§eMM§6] §e" + disconnectName2 + " disconnected from the game! §8(Socket is still connected)");
+                                    MeloMod.addSystemNotification("§e" + disconnectName2 + " disconnected from the game! §8(Socket is still connected)");
                                 }
-
                                 break;
 
                         }
@@ -181,19 +200,19 @@ public class DataThread extends Thread {
                     }
                 } else {
                     if (!data.startsWith("|")) {
-                        MeloMod.addMessage("§eMalformed/Unauthorized Data Packet: §7" + data);
+                        MeloMod.addWarn("§eMalformed/Unauthorized Data Packet: §7" + data);
                     }
                 }
 
-                System.out.println("Data: " + data);
+                MeloMod.addDebug("§7Data: §8" + data);
             }
 
             //closeSocket(CloseReason.INVALID_DATA);
         } catch (IOException e) {
-            MeloMod.addMessage("§4[§cMM§4]§r §cERROR: Lost connection from server (" + e.getMessage() + ": " + e.getCause() + ")");
-            e.printStackTrace();
+            MeloMod.addError("Lost connection from server (" + e.getMessage() + ": " + e.getCause() + ")", e);
+
             if (closed == null) {
-                closeSocket(CloseReason.ERROR);
+                closeSocket(CloseReason.ERROR, e);
             }
         }
     }
@@ -212,6 +231,7 @@ public class DataThread extends Thread {
     }
 
     public void sendPacket(Object packet) {
+        if (MeloConfiguration.debugMessages) MeloMod.addDebug("§eSuccessfully sent packet §7" + packet.getClass().getSimpleName() + "§e with packet ID §7" + Packet.from(packet.toString()).getPacketID() + "§e.");
         printWriter.println(packet.toString());
         printWriter.flush();
     }

@@ -184,7 +184,8 @@ public class ApiUtil {
                         if (conn instanceof HttpsURLConnection) {
                             int response = ((HttpsURLConnection) conn).getResponseCode();
                             if (response != 200) {
-                                System.out.println("FATAL: " + StatusCodes.getFromCode(response));
+                                StatusCodes code = StatusCodes.getStatusCode(response);
+                                MeloMod.addError("§cConnection failed: §6" + code.toString());
                             }
                         }
                         inputStream = conn.getInputStream();
@@ -241,7 +242,8 @@ public class ApiUtil {
                         if (conn instanceof HttpsURLConnection) {
                             int response = ((HttpsURLConnection) conn).getResponseCode();
                             if (response != 200) {
-                                System.out.println("FATAL: " + StatusCodes.getFromCode(response));
+                                StatusCodes code = StatusCodes.getStatusCode(response);
+                                MeloMod.addError("§cConnection failed: §6" + code.toString());
                             }
                         }
                         inputStream = conn.getInputStream();
@@ -492,7 +494,7 @@ public class ApiUtil {
         array.add(message);
         object.add("messages", array);
         String model = models.get(ChatConfig.aiModel);
-        System.out.println(model);
+        MeloMod.addDebug("§eUsing AI model: §7" + model + " §8(" + ChatConfig.aiModel + ")");
         object.addProperty("model", model);
         requestAI(
                 "https://api.groq.com/openai/v1/chat/completions",
