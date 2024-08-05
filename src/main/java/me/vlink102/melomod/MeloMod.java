@@ -150,19 +150,20 @@ public class MeloMod {
         public String generatePrefix(boolean system) {
             return this.bracketColor.generate(system) + "[" + this.prefixColor.generate(system) +
                     "MM" +
-                    this.bracketColor.generate(system) + "]" + Ansi.RESET;
+                    this.bracketColor.generate(system) + "]" + (system ? Ansi.RESET : "");
         }
 
         public String generateTag(boolean system) {
             if (tag != null && !tag.isEmpty()) {
                 return this.bracketColor.generate(system) + "[" + this.prefixColor.generate(system) +
-                        this.tag + this.bracketColor.generate(system) + "]" + Ansi.RESET;
+                        this.tag + this.bracketColor.generate(system) + "]" + (system ? Ansi.RESET : "");
             }
             return null;
         }
 
         public static String generatePrefixHover() {
-            StringJoiner joiner = new StringJoiner("\n").setEmptyValue("&3&lMeloMod");
+            StringJoiner joiner = new StringJoiner("\n");
+            joiner.add("&3&lMeloMod");
             joiner.add("");
             joiner.add("&8Authors:");
             joiner.add(" &8→ &eMelo &8(__MeloMio)");
@@ -189,7 +190,7 @@ public class MeloMod {
                 return prefixComponent.appendText("§r ").appendSibling(message);
             }
             IChatComponent tagComponent = new ChatComponentText(tag);
-            return prefixComponent.appendSibling(tagComponent).appendText("§r ").appendSibling(message);
+            return prefixComponent.appendText(" ").appendSibling(tagComponent).appendText("§r ").appendSibling(message);
         }
 
         public String getTag() {

@@ -5,6 +5,8 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import dev.vankka.mcdiscordreserializer.discord.DiscordSerializer;
+import dev.vankka.mcdiscordreserializer.minecraft.MinecraftSerializer;
 import me.vlink102.melomod.MeloMod;
 import me.vlink102.melomod.config.ChatConfig;
 import me.vlink102.melomod.config.MeloConfiguration;
@@ -78,7 +80,6 @@ public class DataThread extends Thread {
             throw new RuntimeException(e);
         }
     }
-
     public JsonArray onlinePlayers;
 
     @Override
@@ -163,6 +164,7 @@ public class DataThread extends Thread {
                                 String messenger = packetPlayOutChat.getName();
                                 String targetName = packetPlayOutChat.getTargetName();
 
+
                                 if (targetName != null) {
                                     if (messenger.equals(targetName)) {
                                         // is relaying own message
@@ -175,6 +177,9 @@ public class DataThread extends Thread {
                                         }
                                     }
                                 } else {
+                                    if (uuid.startsWith("discord:")) {
+                                        MeloMod.addChat(("§9[DISCORD] " + messenger + "§r§7: " + MinecraftSerializer.INSTANCE.serialize(message)));
+                                    }
                                     if (uuid.equalsIgnoreCase(MeloMod.playerUUID.toString())) {
                                         MeloMod.addChat(("§b" + messenger + "§r§7: " + message));
                                     } else {
