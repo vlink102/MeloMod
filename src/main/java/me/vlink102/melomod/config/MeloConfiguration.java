@@ -29,7 +29,7 @@ public class MeloConfiguration extends Config {
             name = "Debug messages",
             description = "Debug messages will print in chat (developer)"
     )
-    public static boolean debugMessages = true;
+    public static boolean debugMessages = false;
 
     @Text(
             name = "Mod chat prefix"
