@@ -154,7 +154,7 @@ public class DataThread extends Thread {
                                 HashMap<String, InternalLocraw.LocrawInfo> onlinePlayers = clientBoundConnectedClientsPacket.getPlayerList();
                                 int page = clientBoundConnectedClientsPacket.getPage();
                                 List<String> paginated = StringUtils.paginateOnline(onlinePlayers, 8);
-                                MeloMod.addMessage((paginated.get(page -1)));
+                                MeloMod.addRaw((paginated.get(page -1)));
                                 break;
                             case CHAT_MESSAGE:
                                 PacketPlayOutChat packetPlayOutChat = (PacketPlayOutChat) Packet.parseFrom(object.toString());
