@@ -389,7 +389,6 @@ public class MeloMod {
                 return true;
             } else {
                 queue.add(message);
-                addDebug("§eQueued: §8" + message);
             }
         } catch (NullPointerException e) {
             System.err.println("Failed to add message: " + e.getMessage());
