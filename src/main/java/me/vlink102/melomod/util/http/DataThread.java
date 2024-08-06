@@ -175,6 +175,7 @@ public class DataThread extends Thread {
                                 } else {
                                     if (uuid.startsWith("discord:")) {
                                         MeloMod.addChat(("§9[DISCORD] " + messenger + "§r§7: " + message));
+                                        return;
                                     }
                                     if (uuid.equalsIgnoreCase(MeloMod.playerUUID.toString())) {
                                         MeloMod.addChat(("§b" + messenger + "§r§7: " + message));
