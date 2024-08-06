@@ -107,7 +107,6 @@ dependencies {
     // Adds the OneConfig library, so we can develop with it.
     modCompileOnly("cc.polyfrost:oneconfig-$platform:0.2.2-alpha+")
     forge("net.minecraftforge:forge:1.8.9-11.15.1.2318-1.8.9")
-    implementation("dev.vankka:mcdiscordreserializer:4.3.0")
     // Adds DevAuth, which we can use to log in to Minecraft in development.
     implementation("net.hypixel:mod-api:0.3.1")
     modRuntimeOnly("me.djtheredstoner:DevAuth-${if (platform.isFabric) "fabric" else if (platform.isLegacyForge) "forge-legacy" else "forge-latest"}:1.2.0")

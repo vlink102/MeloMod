@@ -1,16 +1,12 @@
 package me.vlink102.melomod.util.http;
 
-import cc.polyfrost.oneconfig.libs.checker.units.qual.C;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import dev.vankka.mcdiscordreserializer.discord.DiscordSerializer;
-import dev.vankka.mcdiscordreserializer.minecraft.MinecraftSerializer;
 import me.vlink102.melomod.MeloMod;
 import me.vlink102.melomod.config.ChatConfig;
 import me.vlink102.melomod.config.MeloConfiguration;
-import me.vlink102.melomod.events.ChatEvent;
 import me.vlink102.melomod.events.InternalLocraw;
 import me.vlink102.melomod.util.StringUtils;
 import me.vlink102.melomod.util.game.Utils;
@@ -178,7 +174,7 @@ public class DataThread extends Thread {
                                     }
                                 } else {
                                     if (uuid.startsWith("discord:")) {
-                                        MeloMod.addChat(("§9[DISCORD] " + messenger + "§r§7: " + MinecraftSerializer.INSTANCE.serialize(message)));
+                                        MeloMod.addChat(("§9[DISCORD] " + messenger + "§r§7: " + message));
                                     }
                                     if (uuid.equalsIgnoreCase(MeloMod.playerUUID.toString())) {
                                         MeloMod.addChat(("§b" + messenger + "§r§7: " + message));
