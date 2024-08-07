@@ -1,19 +1,26 @@
 package me.vlink102.melomod.util;
 
+import cc.polyfrost.oneconfig.libs.universal.UMouse;
 import com.google.common.collect.Sets;
+import me.vlink102.melomod.MeloMod;
 import me.vlink102.melomod.events.ChatEvent;
 import me.vlink102.melomod.events.InternalLocraw;
-import me.vlink102.melomod.util.game.PlayerUtil;
 import me.vlink102.melomod.util.game.Utils;
-import me.vlink102.melomod.util.http.packets.ServerBoundLocrawPacket;
+import net.minecraft.event.ClickEvent;
+import net.minecraft.event.HoverEvent;
+import net.minecraft.item.ItemStack;
+import net.minecraft.util.*;
 import org.apache.commons.lang3.text.WordUtils;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.UnsupportedEncodingException;
+import java.net.URL;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 
 public class StringUtils {
+
     public static final Set<String> PROTOCOLS = Sets.newHashSet("http", "https");
 
     public static String cleanColour(String in) {
@@ -21,8 +28,119 @@ public class StringUtils {
     }
 
     public static String cleanColourNotModifiers(String in) {
-        return in.replaceAll("(?i)\\u00A7[0-9a-f]", "\u00A7r");
+        return in.replaceAll("(?i)\\u00A7[0-9a-f]", "§r");
     }
+
+    @Deprecated
+    public class IChatComponentChain {
+        private final List<IChatComponent> components;
+        private ColorSettings colorSettings = ColorSettings.CLEAN_COLOR;
+        private InteractionSettings interactionSettings = InteractionSettings.CLEAN_BOTH;
+        private FormatSettings formatSettings = FormatSettings.CLEAN_FORMAT;
+
+        public IChatComponentChain() {
+            this.components = new ArrayList<>();
+        }
+
+        public IChatComponentChain add(IChatComponent component) {
+            ChatStyle style = component.getChatStyle();
+            return this;
+        }
+
+        public IChatComponentChain add(IChatComponent component, ColorSettings colorSettings, InteractionSettings interactionSettings, FormatSettings formatSettings) {
+            ChatStyle generatedStyle = generateChatStyle(colorSettings, interactionSettings, formatSettings);
+            components.add(component);
+            return this;
+        }
+    }
+
+    @Deprecated
+    public static ChatStyle generateChatStyle(ColorSettings colorSettings, InteractionSettings interactionSettings, FormatSettings formatSettings) {
+        ChatStyle style = new ChatStyle();
+        if (Objects.requireNonNull(colorSettings) == ColorSettings.CLEAN_COLOR) {
+            style.setColor(EnumChatFormatting.RESET);
+        }
+        switch (interactionSettings) {
+            case CLEAN_BOTH:
+                style.setChatHoverEvent(null);
+                style.setChatClickEvent(null);
+                break;
+            case CLEAN_CLICK:
+                style.setChatClickEvent(null);
+                break;
+            case CLEAN_HOVER:
+                style.setChatHoverEvent(null);
+                break;
+        }
+        if (Objects.requireNonNull(formatSettings) == FormatSettings.CLEAN_FORMAT) {
+            style.setItalic(false);
+            style.setBold(false);
+            style.setUnderlined(false);
+            style.setStrikethrough(false);
+            style.setObfuscated(false);
+        }
+        return style;
+    }
+
+    @Deprecated
+    public enum ColorSettings {
+        IGNORE_COLOR,
+        CLEAN_COLOR
+    }
+
+    @Deprecated
+    public enum InteractionSettings {
+        CLEAN_HOVER,
+        CLEAN_CLICK,
+        CLEAN_BOTH,
+        IGNORE_BOTH;
+    }
+
+    @Deprecated
+    public enum FormatSettings {
+        CLEAN_FORMAT,
+        IGNORE_FORMAT
+    }
+
+    @Deprecated
+    public static final ChatStyle RESET = new ChatStyle()
+            .setBold(false)
+            .setColor(null)
+            .setObfuscated(false)
+            .setItalic(false)
+            .setUnderlined(false)
+            .setStrikethrough(false)
+            .setChatHoverEvent(null)
+            .setChatClickEvent(null)
+            .setInsertion(null);
+
+    @Deprecated
+    public static final ChatStyle RESET_INTERACTIONS = new ChatStyle()
+            .setChatHoverEvent(null)
+            .setChatClickEvent(null);
+
+
+
+    public enum VComponentSettings {
+        INHERIT_NONE(RESET),
+        INHERIT_ALL(new ChatStyle()),
+        INHERIT_FORMAT(RESET_INTERACTIONS); // Color/Bold/Italic/etc
+
+        private final ChatStyle style;
+
+        VComponentSettings(ChatStyle style) {
+            this.style = style;
+        }
+
+        public ChatStyle getStyle() {
+            return style;
+        }
+    }
+
+    public static String cc(String in) {
+        return in.replaceAll("(?i)&([\\da-fklmnorx])", "§$1");
+    }
+
 
     public static List<String> paginateHelp() {
         List<String> helpMenu = new ArrayList<>();

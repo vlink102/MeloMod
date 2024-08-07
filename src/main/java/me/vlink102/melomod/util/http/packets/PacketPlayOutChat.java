@@ -6,6 +6,8 @@ import com.google.gson.JsonParser;
 import me.vlink102.melomod.util.http.Packet;
 import me.vlink102.melomod.util.game.SkyblockUtil;
 
+import static me.vlink102.melomod.util.StringUtils.cc;
+
 public class PacketPlayOutChat extends Packet {
     private final String contents;
     private final String uuid;
@@ -18,7 +20,7 @@ public class PacketPlayOutChat extends Packet {
         this.uuid = uuid;
         this.name = name;
         this.targetName = targetUUID;
-        this.data = data == null ? null : data.replaceAll("§", "&");
+        this.data = data == null ? null : cc(data);
     }
 
     public String getData() {

@@ -27,7 +27,7 @@ public class TickHandler
     private long lastExecutionTime = System.currentTimeMillis();
 
     public static void addToQueue(String message) {
-        MeloMod.addDebug("§eAdded message to queue: §7" + message);
+        MeloMod.addDebug("&eAdded message to queue: &7" + message);
         scheduledCommands.add(message);
     }
 
@@ -67,7 +67,7 @@ public class TickHandler
         int executeResult = ClientCommandHandler.instance.executeCommand(Minecraft.getMinecraft().thePlayer, command);
 
         if (executeResult != 0) {
-            MeloMod.addWarn("§eFailed to execute command: §8Status: " + executeResult);
+            MeloMod.addWarn("&eFailed to execute command: &8Status: " + executeResult);
             return;
         }
 

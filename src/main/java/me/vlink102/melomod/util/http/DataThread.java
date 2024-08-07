@@ -10,6 +10,7 @@ import me.vlink102.melomod.config.MeloConfiguration;
 import me.vlink102.melomod.events.InternalLocraw;
 import me.vlink102.melomod.util.ItemSerializer;
 import me.vlink102.melomod.util.StringUtils;
+import me.vlink102.melomod.util.VChatComponent;
 import me.vlink102.melomod.util.game.Utils;
 import me.vlink102.melomod.util.http.packets.*;
 import net.minecraft.event.HoverEvent;
@@ -47,23 +48,23 @@ public class DataThread extends Thread {
             closed = reason;
             switch (closed) {
                 case CLIENT_OUT_OF_DATE:
-                    MeloMod.addWarn("§eSocket closed: §cClient is out of date! §8(Hover over prefix for details) [" + closed + "]");
+                    MeloMod.addWarn("&eSocket closed: &cClient is out of date! &8(Hover over prefix for details) [" + closed + "]");
                     break;
                 case INVALID_DATA:
-                    MeloMod.addError("§eSocket closed: §cClient received invalid data from the server! Please report this. [" + closed + "]", exception);
+                    MeloMod.addError("&eSocket closed: &cClient received invalid data from the server! Please report this. [" + closed + "]", exception);
                     break;
                 case ERROR:
-                    MeloMod.addError("§eSocket closed: §cClient found unexpected error (Check console) Please report this. [" + closed + "]", exception);
+                    MeloMod.addError("&eSocket closed: &cClient found unexpected error (Check console) Please report this. [" + closed + "]", exception);
                     break;
                 case UNKNOWN:
-                    MeloMod.addError("§eSocket closed: §cNo reason provided. Please report this. [" + closed + "]", exception);
+                    MeloMod.addError("&eSocket closed: &cNo reason provided. Please report this. [" + closed + "]", exception);
                     break;
                 case CLOSED_BY_SERVER:
-                    MeloMod.addWarn("§eSocket closed: §cThe connection was forcibly terminated by the server. This is NOT a bug. [" + closed + "]");
+                    MeloMod.addWarn("&eSocket closed: &cThe connection was forcibly terminated by the server. This is NOT a bug. [" + closed + "]");
                     break;
             }
         } catch (IOException e) {
-            MeloMod.addError("§4Potentially severe error (Please report this): §c" + e.getMessage(), e);
+            MeloMod.addError("&4Potentially severe error (Please report this): &c" + e.getMessage(), e);
             throw new RuntimeException(e);
         }
 
@@ -116,17 +117,17 @@ public class DataThread extends Thread {
                                 MeloMod.serverVersion = Version.parse(correct);
                                 switch (stability) {
                                     case INCOMPATIBLE:
-                                        MeloMod.addError(("\n§cIncompatible Version! §7Client: §4" + MeloMod.VERSION_NEW + "§7, Server: §2" + MeloMod.serverVersion + "§r"));
-                                        MeloMod.addError(("§eUpdate Link: §7" + newLink + "§r\n"));
+                                        MeloMod.addError(("\n&cIncompatible Version! &7Client: &4" + MeloMod.VERSION_NEW + "&7, Server: &2" + MeloMod.serverVersion + "&r"));
+                                        MeloMod.addError(("&eUpdate Link: &7" + newLink + "&r\n"));
 
                                         closeSocket(CloseReason.CLIENT_OUT_OF_DATE, null);
                                         break;
                                     case UP_TO_DATE:
-                                        MeloMod.addSystemNotification("\n§2You are up to date! §7Version: " + MeloMod.VERSION_NEW + "\n");
+                                        MeloMod.addSystemNotification("\n&2You are up to date! &7Version: " + MeloMod.VERSION_NEW + "\n");
                                         break;
                                     case OUTDATED:
-                                        MeloMod.addWarn(("\n§cOutdated Version! §7Client: §4" + MeloMod.VERSION_NEW + "§7, Server: §2" + MeloMod.serverVersion + "§r"));
-                                        MeloMod.addWarn(("§eUpdate Link: §7" + newLink + "§r\n"));
+                                        MeloMod.addWarn(("\n&cOutdated Version! &7Client: &4" + MeloMod.VERSION_NEW + "&7, Server: &2" + MeloMod.serverVersion + "&r"));
+                                        MeloMod.addWarn(("&eUpdate Link: &7" + newLink + "&r\n"));
                                         break;
                                 }
                                 if (clientBoundVersionControlPacket.isBanned()) {
@@ -142,7 +143,7 @@ public class DataThread extends Thread {
                             case NOTIFY_ONLINE:
                                 ClientBoundNotifyOnlinePacket clientBoundNotifyOnlinePacket = (ClientBoundNotifyOnlinePacket) Packet.parseFrom(object.toString());
                                 String onlineName = clientBoundNotifyOnlinePacket.getName();
-                                MeloMod.addSystemNotification(("§e" + onlineName + " connected!"));
+                                MeloMod.addSystemNotification(("&e" + onlineName + " connected!"));
                                 break;
                             case CLOSED_CONNECTION:
                                 ClientBoundDisconnectPacket clientBoundDisconnectPacket = (ClientBoundDisconnectPacket) Packet.parseFrom(object.toString());
@@ -152,7 +153,7 @@ public class DataThread extends Thread {
                                 ClientBoundDisconnectPacket.ParsedException.ParsedCause parsedCause = exception.getCause();
                                 String parsedReason = parsedCause.getMessage();
 
-                                MeloMod.addSystemNotification("§e" + disconnectName + " disconnected! (" + disconnectReason + ": " + parsedReason + ")");
+                                MeloMod.addSystemNotification("&e" + disconnectName + " disconnected! (" + disconnectReason + ": " + parsedReason + ")");
                                 break;
                             case CONNECTED_CLIENTS:
                                 ClientBoundConnectedClientsPacket clientBoundConnectedClientsPacket = (ClientBoundConnectedClientsPacket) Packet.parseFrom(object.toString());
@@ -168,7 +169,7 @@ public class DataThread extends Thread {
                                 String uuid = packetPlayOutChat.getUuid();
                                 String messenger = packetPlayOutChat.getName();
                                 String targetName = packetPlayOutChat.getTargetName();
-                                String dataAddon = packetPlayOutChat.getData() == null ? null : new String(packetPlayOutChat.getData().replaceAll("&", "§").getBytes(StandardCharsets.UTF_8), StandardCharsets.UTF_8);
+                                String dataAddon = packetPlayOutChat.getData() == null ? null : packetPlayOutChat.getData();
 
                                 MeloMod.addDebug("Message: " + message);
                                 MeloMod.addDebug("UUID: " + uuid);
@@ -179,54 +180,38 @@ public class DataThread extends Thread {
                                     break;
                                 }
 
-                                IChatComponent finalComponent = new ChatComponentText(message);
+                                VChatComponent chatComponent = new VChatComponent(MeloMod.MessageScheme.RAW);
 
-                                if (dataAddon != null) {
-                                    String[] splitSides = message.split("item");
-                                    IChatComponent chatComponent = new ChatComponentText(splitSides[0]);
+                                IChatComponent inserted = VChatComponent.insert(new VChatComponent(MeloMod.MessageScheme.RAW).add(message).build(), "<item>", dataAddon);
 
-                                    ItemStack fromData = ItemSerializer.INSTANCE.deserialize(dataAddon);
-
-                                    IChatComponent itemComponent = new ChatComponentText(fromData.getDisplayName());
-                                    ChatStyle style = itemComponent.getChatStyle();
-                                    style.setChatHoverEvent(
-                                            new HoverEvent(
-                                                    HoverEvent.Action.SHOW_ITEM,
-                                                    new ChatComponentText(dataAddon)
-                                            )
-                                    );
-                                    itemComponent.setChatStyle(style);
-
-                                    finalComponent = chatComponent.appendSibling(itemComponent).appendSibling(new ChatComponentText(splitSides[1]));
-
-                                }
+                                chatComponent.add(inserted);
 
                                 if (targetName != null) {
                                     if (messenger.equals(targetName)) {
                                         // is relaying own message
-                                        MeloMod.addRaw("§8Your message was lost in the wind...");
+                                        MeloMod.addRaw("&8Your message was lost in the wind...");
                                     } else {
                                         if (targetName.equalsIgnoreCase(MeloMod.playerName)) {
-                                            IChatComponent prefix = new ChatComponentText("§8(Private Message) §dFrom: §3" + messenger + "§r§7: ");
-                                            MeloMod.addPrivateChat(prefix.appendSibling(finalComponent), messenger);
+                                            VChatComponent prefix = new VChatComponent(MeloMod.MessageScheme.RAW).add("&8(Private Message) &dFrom: &3" + targetName + "&r&7: ");
+                                            MeloMod.addPrivateChat(chatComponent.prefix(prefix.build()), messenger);
                                         } else {
-                                            IChatComponent prefix = new ChatComponentText("§8(Private Message) §dTo: §3" + targetName + "§r§7: ");
-                                            MeloMod.addPrivateChat(prefix.appendSibling(finalComponent), targetName);
+                                            VChatComponent prefix = new VChatComponent(MeloMod.MessageScheme.RAW).add("&8(Private Message) &dTo: &3" + targetName + "&r&7: ");
+                                            MeloMod.addPrivateChat(chatComponent.prefix(prefix.build()), targetName);
                                         }
                                     }
                                 } else {
                                     if (uuid.startsWith("discord:")) {
-                                        IChatComponent prefix = new ChatComponentText("§9[DISCORD] " + messenger + "§r§7: ");
-                                        MeloMod.addChat(prefix.appendSibling(finalComponent));
+                                        VChatComponent prefix = new VChatComponent(MeloMod.MessageScheme.RAW).add("&9[DISCORD] " + messenger + "&r&7: ");
+                                        MeloMod.addChat(chatComponent.prefix(prefix.build()));
                                         break;
                                     }
-                                    IChatComponent prefix;
+                                    VChatComponent prefix;
                                     if (uuid.equalsIgnoreCase(MeloMod.playerUUID.toString())) {
-                                        prefix = new ChatComponentText("§b" + messenger + "§r§7: ");
+                                        prefix = new VChatComponent(MeloMod.MessageScheme.RAW).add("&b" + messenger + "&r&7: ");
                                     } else {
-                                        prefix = new ChatComponentText("§d" + messenger + "§r§7: ");
+                                        prefix = new VChatComponent(MeloMod.MessageScheme.RAW).add("&d" + messenger + "&r&7: ");
                                     }
-                                    MeloMod.addChat(prefix.appendSibling(finalComponent));
+                                    MeloMod.addChat(chatComponent.prefix(prefix.build()));
                                     if (message.startsWith(ChatConfig.chatPrefix)) {
                                         MeloMod.chatEvent.executeChatCommand(message, messenger, ApiUtil.ChatChannel.CUSTOM);
                                         // todo update colors and stuff
@@ -238,7 +223,7 @@ public class DataThread extends Thread {
                                 String disconnectName2 = disconnect.getName();
                                 String disconnectUUID = disconnect.getUuid();
                                 if (!disconnectUUID.equalsIgnoreCase(MeloMod.playerUUID.toString())) {
-                                    MeloMod.addSystemNotification("§e" + disconnectName2 + " disconnected from the game! §8(Socket is still connected)");
+                                    MeloMod.addSystemNotification("&e" + disconnectName2 + " disconnected from the game! &8(Socket is still connected)");
                                 }
                                 break;
 
@@ -247,11 +232,11 @@ public class DataThread extends Thread {
                     }
                 } else {
                     if (!data.startsWith("|")) {
-                        MeloMod.addWarn("§eMalformed/Unauthorized Data Packet: §7" + data);
+                        MeloMod.addWarn("&eMalformed/Unauthorized Data Packet: &7" + data);
                     }
                 }
 
-                MeloMod.addDebug("§7Data: §8" + data);
+                MeloMod.addDebug("&7Data: &8" + data);
             }
 
             //closeSocket(CloseReason.INVALID_DATA);
@@ -265,20 +250,20 @@ public class DataThread extends Thread {
     }
 
     public void printBan(Ban ban) {
-        MeloMod.addMessage("\n§4[§cMM§4] §cUh-oh! You are currently banned from " + MeloMod.NAME + "!");
-        MeloMod.addMessage("§4[§cMM§4] §cThis only applies to chat.");
-        MeloMod.addMessage("\n§e  Summary: §7" + ban.getSummary());
-        MeloMod.addMessage("§e  Reason: §7" + ban.getReason());
-        MeloMod.addMessage("§e  Banned by: §7" + ban.getAdmin());
-        MeloMod.addMessage("§e  Ban Length: §7" + Utils.prettyTime(ban.getDuration()));
-        MeloMod.addMessage("§e  Issued: §7" + Utils.another(ban.getTimestamp()));
+        MeloMod.addMessage("\n&4[&cMM&4] &cUh-oh! You are currently banned from " + MeloMod.NAME + "!");
+        MeloMod.addMessage("&4[&cMM&4] &cThis only applies to chat.");
+        MeloMod.addMessage("\n&e  Summary: &7" + ban.getSummary());
+        MeloMod.addMessage("&e  Reason: &7" + ban.getReason());
+        MeloMod.addMessage("&e  Banned by: &7" + ban.getAdmin());
+        MeloMod.addMessage("&e  Ban Length: &7" + Utils.prettyTime(ban.getDuration()));
+        MeloMod.addMessage("&e  Issued: &7" + Utils.another(ban.getTimestamp()));
         long expiry = ban.getExpiry();
-        MeloMod.addMessage("§e  Expires: §7" + Utils.another(expiry));
-        MeloMod.addMessage("§e  Time Left: §7" + Utils.prettyTime(expiry - System.currentTimeMillis()) + "\n");
+        MeloMod.addMessage("&e  Expires: &7" + Utils.another(expiry));
+        MeloMod.addMessage("&e  Time Left: &7" + Utils.prettyTime(expiry - System.currentTimeMillis()) + "\n");
     }
 
     public void sendPacket(Object packet) {
-        if (MeloConfiguration.debugMessages) MeloMod.addDebug("§eSuccessfully sent packet §7" + packet.getClass().getSimpleName() + "§e with packet ID §7" + Packet.from(packet.toString()).getPacketID() + "§e.");
+        if (MeloConfiguration.debugMessages) MeloMod.addDebug("&eSuccessfully sent packet &7" + packet.getClass().getSimpleName() + "&e with packet ID &7" + Packet.from(packet.toString()).getPacketID() + "&e.");
         printWriter.println(packet.toString());
         printWriter.flush();
     }

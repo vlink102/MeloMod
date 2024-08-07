@@ -45,7 +45,7 @@ public class CommunicationHandler {
             thread.sendPacket(new ServerBoundVersionControlPacket(uuid.toString()));
 
         } catch (Exception e) {
-            MeloMod.addError("§cCould not connect to server §7(" + e.getMessage() + ": " + e.getCause() + ")", e);
+            MeloMod.addError("&cCould not connect to server &7(" + e.getMessage() + ": " + e.getCause() + ")", e);
         }
     }
 }

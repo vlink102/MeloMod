@@ -15,6 +15,7 @@ import me.vlink102.melomod.chatcooldownmanager.ServerTracker;
 import me.vlink102.melomod.chatcooldownmanager.TickHandler;
 import me.vlink102.melomod.events.PlayerConnection;
 import me.vlink102.melomod.util.StringUtils;
+import me.vlink102.melomod.util.VChatComponent;
 import me.vlink102.melomod.util.game.PlayerObjectUtil;
 import me.vlink102.melomod.util.game.SkyblockUtil;
 import me.vlink102.melomod.util.http.ApiUtil;
@@ -23,7 +24,6 @@ import me.vlink102.melomod.util.http.Version;
 import me.vlink102.melomod.util.jcolor.Ansi;
 import me.vlink102.melomod.util.jcolor.AnsiFormat;
 import me.vlink102.melomod.util.jcolor.Attribute;
-import me.vlink102.melomod.util.jcolor.Command;
 import me.vlink102.melomod.world.Render;
 import net.minecraft.client.Minecraft;
 import net.minecraft.event.ClickEvent;
@@ -36,8 +36,11 @@ import net.minecraftforge.fml.common.Mod;
 import cc.polyfrost.oneconfig.utils.commands.CommandManager;
 import net.minecraftforge.fml.common.event.FMLInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
+import org.omg.PortableInterceptor.NON_EXISTENT;
 
 import java.util.*;
+
+import static me.vlink102.melomod.util.StringUtils.cc;
 
 /**
  * The entrypoint of the Mod that initializes it.
@@ -96,7 +99,7 @@ public class MeloMod {
         }
 
         public static String parse(String string, boolean system) {
-            String toReturn = string.replaceAll("&", "§");
+            String toReturn = cc(string);
             if (system) {
                 for (AbstractColor value : AbstractColor.values()) {
                     if (value.ansi == null) continue;
@@ -120,7 +123,7 @@ public class MeloMod {
         DEBUG(AbstractColor.BLUE, AbstractColor.DARK_AQUA, "DEBUG"),
         ERROR(AbstractColor.DARK_RED, AbstractColor.RED, "ERROR"),
         WARN(AbstractColor.RED, AbstractColor.GOLD, "WARNING"),
-        RAW(AbstractColor.RESET, AbstractColor.RESET, null),
+        RAW(null, null, null),
         RAW_SIGNED(AbstractColor.DARK_AQUA, AbstractColor.AQUA, null);
 
         private final AbstractColor bracketColor;
@@ -172,23 +175,10 @@ public class MeloMod {
             joiner.add("");
             joiner.add("&8discord.gg/NVPUTYSk3u");
             joiner.add("&eLeft-click to join!");
-            return joiner.toString().replaceAll("&", "§");
+            return cc(joiner.toString());
         }
 
-        public IChatComponent generateComponent(IChatComponent message) {
-            String prefix = generatePrefix(false);
-            String tag = generateTag(false);
-            IChatComponent prefixComponent = new ChatComponentText(prefix);
-            ChatStyle prefixStyle = prefixComponent.getChatStyle();
-            prefixStyle.setChatClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, "https://discord.gg/NVPUTYSk3u"));
-            prefixStyle.setChatHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new ChatComponentText(generatePrefixHover())));
-            prefixComponent.setChatStyle(prefixStyle);
-            if (tag == null) {
-                return prefixComponent.appendText("§r ").appendSibling(message);
-            }
-            IChatComponent tagComponent = new ChatComponentText(tag);
-            return prefixComponent.appendText(" ").appendSibling(tagComponent).appendText("§r ").appendSibling(message);
-        }
+        // move to vchatcomponent
 
         public String getTag() {
             return tag;
@@ -285,17 +275,20 @@ public class MeloMod {
         return Minecraft.getMinecraft().thePlayer != null;
     }
 
-    public static List<String> queue = new ArrayList<>();
+    public static List<VChatComponent> queue = new ArrayList<>();
 
     public static boolean addCenteredMessage(String message) {
         return addMessage(StringUtils.getCentredMessage(message));
     }
 
     public static boolean addError(String message, Exception... exception) {
-        boolean result = addMessage(new ChatComponentText(message).setChatStyle(new ChatStyle()),
-                new HoverEvent(HoverEvent.Action.SHOW_TEXT, new ChatComponentText("§cPlease report this error to the discord. §e(Click)")),
-                new ClickEvent(ClickEvent.Action.OPEN_URL, "https://discord.gg/NVPUTYSk3u"),
-                MessageScheme.ERROR
+        boolean result = addMessage(new VChatComponent(MessageScheme.ERROR)
+                .add(
+                        message,
+                        "&cPlease report this error to the discord. &e(Click)",
+                        "https://discord.gg/NVPUTYSk3u",
+                        StringUtils.VComponentSettings.INHERIT_NONE
+                )
         );
 
         if (!result) {
@@ -308,10 +301,13 @@ public class MeloMod {
     }
 
     public static boolean addWarn(String message) {
-        boolean result = addMessage(new ChatComponentText(message).setChatStyle(new ChatStyle()),
-                new HoverEvent(HoverEvent.Action.SHOW_TEXT, new ChatComponentText("§cPlease report serious warnings to the discord. §6(Click)")),
-                new ClickEvent(ClickEvent.Action.OPEN_URL, "https://discord.gg/NVPUTYSk3u"),
-                MessageScheme.WARN
+        boolean result = addMessage(new VChatComponent(MessageScheme.WARN)
+                .add(
+                        message,
+                        "&cPlease report serious warnings to the discord. &6(Click)",
+                        "https://discord.gg/NVPUTYSk3u",
+                        StringUtils.VComponentSettings.INHERIT_NONE
+                )
         );
 
         if (!result) {
@@ -323,126 +319,84 @@ public class MeloMod {
     public static boolean addDebug(String message) {
         if (MeloConfiguration.debugMessages) {
             System.out.println("Debug: " + message);
-            return addMessage(
-                    new ChatComponentText(message).setChatStyle(new ChatStyle()),
-                    new HoverEvent(HoverEvent.Action.SHOW_TEXT, new ChatComponentText("§eClick to disable debug mode")),
-                    new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/melomod debug"),
-                    MessageScheme.DEBUG
+            return addMessage(new VChatComponent(MessageScheme.DEBUG)
+                    .add(
+                            message,
+                           "&eClick to disable debug mode",
+                            "/melomod debug",
+                            StringUtils.VComponentSettings.INHERIT_NONE
+                    )
             );
         }
         return false;
     }
 
-    private static String justify(String s, int limit) {
-        StringBuilder justifiedText = new StringBuilder();
-        StringBuilder justifiedLine = new StringBuilder();
-        String[] words = s.split(" ");
-        for (int i = 0; i < words.length; i++) {
-            justifiedLine.append(words[i]).append(" ");
-            if (i+1 == words.length || justifiedLine.length() + words[i+1].length() > limit) {
-                justifiedLine.deleteCharAt(justifiedLine.length() - 1);
-                justifiedText.append(justifiedLine).append(System.lineSeparator());
-                justifiedLine = new StringBuilder();
-            }
-        }
-        return justifiedText.toString();
-    }
+
 
     public static IChatComponent box(IChatComponent tooLong) {
-        if (tooLong.getFormattedText().length() >= 256) {
-            boolean shouldReformat = tooLong.getChatStyle().getChatHoverEvent() == null;
-            if (shouldReformat) {
-                MeloMod.addWarn("§eDetected IChatComponent too large: Converting without formatting...");
 
-            } else {
-                MeloMod.addWarn("§eDetected IChatComponent too large: Converting...");
-
-            }
-            String trimmed = StringUtils.cleanColour(tooLong.getUnformattedText()).substring(0, 255);
-            IChatComponent newComponent = new ChatComponentText(trimmed);
-            ChatStyle newComponentStyle = newComponent.getChatStyle();
-            newComponentStyle.setChatHoverEvent(new HoverEvent(
-                    HoverEvent.Action.SHOW_TEXT,
-                    new ChatComponentText(justify(tooLong.getUnformattedText(), 64))
-            ));
-            newComponent.setChatStyle(newComponentStyle);
-            return newComponent;
-        }
         return tooLong;
     }
 
 
-    public static boolean addMessage(String message, HoverEvent hoverMessage, ClickEvent execute, MessageScheme scheme) {
-
-        return addMessage(message == null ? new ChatComponentText("?").setChatStyle(new ChatStyle()) : new ChatComponentText(message.replaceAll("&", "§")).setChatStyle(new ChatStyle()), hoverMessage, execute, scheme);
+    public static boolean addMessage(String message) {
+        return addMessage(message == null ? VChatComponent.empty() : VChatComponent.of(message));
     }
 
-    public static boolean addMessage(IChatComponent chatComponent, HoverEvent hoverMessage, ClickEvent execute, MessageScheme scheme) {
-
+    public static boolean addMessage(VChatComponent chatComponent) {
         if (isOnline() && Minecraft.getMinecraft().ingameGUI != null) {
-            ChatStyle style;
-            if (Objects.isNull(chatComponent.getChatStyle())) {
-                style = new ChatStyle();
-            } else {
-                style = chatComponent.getChatStyle();
-            }
-            if (hoverMessage != null) style.setChatHoverEvent(hoverMessage);
-            if (execute != null) style.setChatClickEvent(execute);
-            chatComponent.setChatStyle(style);
-            if (scheme == MessageScheme.RAW) {
-                Minecraft.getMinecraft().thePlayer.addChatMessage(box(chatComponent));
-            } else {
-                Minecraft.getMinecraft().thePlayer.addChatMessage(scheme.generateComponent(box(chatComponent)));
-            }
+            Minecraft.getMinecraft().thePlayer.addChatMessage(chatComponent.build());
             return true;
         } else {
-            queue.add(chatComponent.getUnformattedText());
+            queue.add(chatComponent);
         }
         return false;
     }
 
-    public static boolean addMessage(String message) {
-        return addMessage(message, null, null, MessageScheme.RAW_SIGNED);
-    }
-
     public static boolean addRaw(String message) {
-        return addMessage(message, null, null, MessageScheme.RAW);
+        return addMessage(VChatComponent.of(MessageScheme.RAW, message));
     }
 
     public static boolean addSystemNotification(String message) {
-        return addMessage(message, null, null, MessageScheme.NOTIFICATION);
+        return addMessage(VChatComponent.of(MessageScheme.NOTIFICATION, message));
+    }
+
+    public static boolean addChat(VChatComponent component) {
+        // ??
+        return addMessage(new VChatComponent(MessageScheme.CHAT).add(component.build()));
     }
 
     public static boolean addChat(String message) {
-        return addMessage(message, null, null, MessageScheme.CHAT);
+        return addMessage(VChatComponent.of(MessageScheme.CHAT, message));
     }
 
-    public static boolean addChat(IChatComponent message) {
-        return addMessage(message, null, null, MessageScheme.CHAT);
-    }
-
-    public static boolean addPrivateChat(IChatComponent message, String recipient) {
-        return addMessage(message,
-                null,
-                new ClickEvent(
-                        ClickEvent.Action.SUGGEST_COMMAND,
-                        "/melopriv " + recipient + " "
-                ),
-                MessageScheme.PRIVATE_CHAT
+    public static boolean addPrivateChat(VChatComponent message, String recipient) {
+        return addMessage(new VChatComponent(MessageScheme.PRIVATE_CHAT)
+                .add(
+                        message.build(),
+                        new HoverEvent(
+                                HoverEvent.Action.SHOW_TEXT,
+                                new ChatComponentText(cc("&eClick to reply!"))
+                        ),
+                        new ClickEvent(
+                                ClickEvent.Action.SUGGEST_COMMAND,
+                                "/melopriv " + recipient + " "
+                        )
+                )
         );
     }
 
     public static boolean addPrivateChat(String message, String recipient) {
-        return addMessage(message,
-                new HoverEvent(
-                        HoverEvent.Action.SHOW_TEXT,
-                        new ChatComponentText("§eClick to reply!")
-                ),
-                new ClickEvent(
-                        ClickEvent.Action.SUGGEST_COMMAND,
-                        "/melopriv " + recipient + " "
-                ),
-                MessageScheme.PRIVATE_CHAT
+        return addMessage(new VChatComponent(MessageScheme.PRIVATE_CHAT)
+                .add(
+                        message,
+                        "&eClick to reply!",
+                        new ClickEvent(
+                                ClickEvent.Action.SUGGEST_COMMAND,
+                                "/melopriv " + recipient + " "
+                        ),
+                        StringUtils.VComponentSettings.INHERIT_NONE
+                )
         );
     }
 

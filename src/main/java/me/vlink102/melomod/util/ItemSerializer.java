@@ -20,6 +20,8 @@ import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 import java.util.Optional;
 
+import static me.vlink102.melomod.util.StringUtils.cc;
+
 public class ItemSerializer {
     public static final ItemSerializer INSTANCE = new ItemSerializer();
 
@@ -28,14 +30,22 @@ public class ItemSerializer {
         return encoder.encodeToString(stack.serializeNBT().toString().getBytes(StandardCharsets.UTF_8));
     }
 
-    public ItemStack deserialize(String stack) {
+    public String deserializeFromBase64(String stack) {
+        Base64.Decoder decoder = Base64.getDecoder();
+        return cc(new String(decoder.decode(stack), StandardCharsets.UTF_8));
+    }
+
+    public ItemStack deserializeFromNBT(String nbt) {
         try {
-            Base64.Decoder decoder = Base64.getDecoder();
-            String newStack = new String(decoder.decode(stack), StandardCharsets.UTF_8);
-            NBTTagCompound tagCompound = JsonToNBT.getTagFromJson(newStack);
+            NBTTagCompound tagCompound = JsonToNBT.getTagFromJson(nbt);
             return ItemStack.loadItemStackFromNBT(tagCompound);
         } catch (NBTException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    public ItemStack deserialize(String stack) {
+        String newStack = deserializeFromBase64(stack);
+        return deserializeFromNBT(newStack);
     }
 }
