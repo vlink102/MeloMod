@@ -8,12 +8,20 @@ import me.vlink102.melomod.MeloMod;
 import me.vlink102.melomod.config.ChatConfig;
 import me.vlink102.melomod.config.MeloConfiguration;
 import me.vlink102.melomod.events.InternalLocraw;
+import me.vlink102.melomod.util.ItemSerializer;
 import me.vlink102.melomod.util.StringUtils;
 import me.vlink102.melomod.util.game.Utils;
 import me.vlink102.melomod.util.http.packets.*;
+import net.minecraft.event.HoverEvent;
+import net.minecraft.item.ItemStack;
+import net.minecraft.util.ChatComponentProcessor;
+import net.minecraft.util.ChatComponentText;
+import net.minecraft.util.ChatStyle;
+import net.minecraft.util.IChatComponent;
 
 import java.io.*;
 import java.net.Socket;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.List;
 
@@ -154,12 +162,44 @@ public class DataThread extends Thread {
                                 MeloMod.addRaw((paginated.get(page -1)));
                                 break;
                             case CHAT_MESSAGE:
+                                System.out.println("on god");
                                 PacketPlayOutChat packetPlayOutChat = (PacketPlayOutChat) Packet.parseFrom(object.toString());
                                 String message = packetPlayOutChat.getContents();
                                 String uuid = packetPlayOutChat.getUuid();
                                 String messenger = packetPlayOutChat.getName();
                                 String targetName = packetPlayOutChat.getTargetName();
+                                String dataAddon = packetPlayOutChat.getData() == null ? null : new String(packetPlayOutChat.getData().replaceAll("&", "§").getBytes(StandardCharsets.UTF_8), StandardCharsets.UTF_8);
 
+                                MeloMod.addDebug("Message: " + message);
+                                MeloMod.addDebug("UUID: " + uuid);
+                                MeloMod.addDebug("Messenger: " + messenger);
+                                MeloMod.addDebug("Target: " + targetName);
+                                MeloMod.addDebug("Data Addon: " + dataAddon);
+                                if (message == null) {
+                                    break;
+                                }
+
+                                IChatComponent finalComponent = new ChatComponentText(message);
+
+                                if (dataAddon != null) {
+                                    String[] splitSides = message.split("item");
+                                    IChatComponent chatComponent = new ChatComponentText(splitSides[0]);
+
+                                    ItemStack fromData = ItemSerializer.INSTANCE.deserialize(dataAddon);
+
+                                    IChatComponent itemComponent = new ChatComponentText(fromData.getDisplayName());
+                                    ChatStyle style = itemComponent.getChatStyle();
+                                    style.setChatHoverEvent(
+                                            new HoverEvent(
+                                                    HoverEvent.Action.SHOW_ITEM,
+                                                    new ChatComponentText(dataAddon)
+                                            )
+                                    );
+                                    itemComponent.setChatStyle(style);
+
+                                    finalComponent = chatComponent.appendSibling(itemComponent).appendSibling(new ChatComponentText(splitSides[1]));
+
+                                }
 
                                 if (targetName != null) {
                                     if (messenger.equals(targetName)) {
@@ -167,21 +207,26 @@ public class DataThread extends Thread {
                                         MeloMod.addRaw("§8Your message was lost in the wind...");
                                     } else {
                                         if (targetName.equalsIgnoreCase(MeloMod.playerName)) {
-                                            MeloMod.addPrivateChat("§8(Private Message) §dFrom: §3" + messenger + "§r§7: " + message, messenger);
+                                            IChatComponent prefix = new ChatComponentText("§8(Private Message) §dFrom: §3" + messenger + "§r§7: ");
+                                            MeloMod.addPrivateChat(prefix.appendSibling(finalComponent), messenger);
                                         } else {
-                                            MeloMod.addPrivateChat("§8(Private Message) §dTo: §3" + targetName + "§r§7: " + message, targetName);
+                                            IChatComponent prefix = new ChatComponentText("§8(Private Message) §dTo: §3" + targetName + "§r§7: ");
+                                            MeloMod.addPrivateChat(prefix.appendSibling(finalComponent), targetName);
                                         }
                                     }
                                 } else {
                                     if (uuid.startsWith("discord:")) {
-                                        MeloMod.addChat(("§9[DISCORD] " + messenger + "§r§7: " + message));
-                                        return;
+                                        IChatComponent prefix = new ChatComponentText("§9[DISCORD] " + messenger + "§r§7: ");
+                                        MeloMod.addChat(prefix.appendSibling(finalComponent));
+                                        break;
                                     }
+                                    IChatComponent prefix;
                                     if (uuid.equalsIgnoreCase(MeloMod.playerUUID.toString())) {
-                                        MeloMod.addChat(("§b" + messenger + "§r§7: " + message));
+                                        prefix = new ChatComponentText("§b" + messenger + "§r§7: ");
                                     } else {
-                                        MeloMod.addChat(("§d" + messenger + "§r§7: " + message));
+                                        prefix = new ChatComponentText("§d" + messenger + "§r§7: ");
                                     }
+                                    MeloMod.addChat(prefix.appendSibling(finalComponent));
                                     if (message.startsWith(ChatConfig.chatPrefix)) {
                                         MeloMod.chatEvent.executeChatCommand(message, messenger, ApiUtil.ChatChannel.CUSTOM);
                                         // todo update colors and stuff

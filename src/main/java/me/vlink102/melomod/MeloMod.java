@@ -37,10 +37,7 @@ import cc.polyfrost.oneconfig.utils.commands.CommandManager;
 import net.minecraftforge.fml.common.event.FMLInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.StringJoiner;
-import java.util.UUID;
+import java.util.*;
 
 /**
  * The entrypoint of the Mod that initializes it.
@@ -277,8 +274,9 @@ public class MeloMod {
         EventManager.INSTANCE.register(new TickHandler());
         Render render = new Render();
         MinecraftForge.EVENT_BUS.register(render);
-        new PlayerConnection();
         //MinecraftForge.EVENT_BUS.register(internalLocraw);
+        new PlayerConnection();
+
         handler = new CommunicationHandler();
         handler.beginKeepAlive(playerUUID, playerName);
     }
@@ -294,7 +292,7 @@ public class MeloMod {
     }
 
     public static boolean addError(String message, Exception... exception) {
-        boolean result = addMessage(message,
+        boolean result = addMessage(new ChatComponentText(message).setChatStyle(new ChatStyle()),
                 new HoverEvent(HoverEvent.Action.SHOW_TEXT, new ChatComponentText("§cPlease report this error to the discord. §e(Click)")),
                 new ClickEvent(ClickEvent.Action.OPEN_URL, "https://discord.gg/NVPUTYSk3u"),
                 MessageScheme.ERROR
@@ -310,7 +308,7 @@ public class MeloMod {
     }
 
     public static boolean addWarn(String message) {
-        boolean result = addMessage(message,
+        boolean result = addMessage(new ChatComponentText(message).setChatStyle(new ChatStyle()),
                 new HoverEvent(HoverEvent.Action.SHOW_TEXT, new ChatComponentText("§cPlease report serious warnings to the discord. §6(Click)")),
                 new ClickEvent(ClickEvent.Action.OPEN_URL, "https://discord.gg/NVPUTYSk3u"),
                 MessageScheme.WARN
@@ -326,7 +324,7 @@ public class MeloMod {
         if (MeloConfiguration.debugMessages) {
             System.out.println("Debug: " + message);
             return addMessage(
-                    message,
+                    new ChatComponentText(message).setChatStyle(new ChatStyle()),
                     new HoverEvent(HoverEvent.Action.SHOW_TEXT, new ChatComponentText("§eClick to disable debug mode")),
                     new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/melomod debug"),
                     MessageScheme.DEBUG
@@ -373,27 +371,32 @@ public class MeloMod {
         return tooLong;
     }
 
+
     public static boolean addMessage(String message, HoverEvent hoverMessage, ClickEvent execute, MessageScheme scheme) {
-        message = message.replaceAll("&", "§");
-        try {
-            if (isOnline() && Minecraft.getMinecraft().ingameGUI != null) {
-                IChatComponent chatComponent = new ChatComponentText(message);
-                ChatStyle style = chatComponent.getChatStyle();
-                if (hoverMessage != null) style.setChatHoverEvent(hoverMessage);
-                if (execute != null) style.setChatClickEvent(execute);
-                chatComponent.setChatStyle(style);
-                if (scheme == MessageScheme.RAW) {
-                    Minecraft.getMinecraft().thePlayer.addChatMessage(box(chatComponent));
-                } else {
-                    Minecraft.getMinecraft().thePlayer.addChatMessage(scheme.generateComponent(box(chatComponent)));
-                }
-                return true;
+
+        return addMessage(message == null ? new ChatComponentText("?").setChatStyle(new ChatStyle()) : new ChatComponentText(message.replaceAll("&", "§")).setChatStyle(new ChatStyle()), hoverMessage, execute, scheme);
+    }
+
+    public static boolean addMessage(IChatComponent chatComponent, HoverEvent hoverMessage, ClickEvent execute, MessageScheme scheme) {
+
+        if (isOnline() && Minecraft.getMinecraft().ingameGUI != null) {
+            ChatStyle style;
+            if (Objects.isNull(chatComponent.getChatStyle())) {
+                style = new ChatStyle();
             } else {
-                queue.add(message);
+                style = chatComponent.getChatStyle();
             }
-        } catch (NullPointerException e) {
-            System.err.println("Failed to add message: " + e.getMessage());
-            queue.add(message);
+            if (hoverMessage != null) style.setChatHoverEvent(hoverMessage);
+            if (execute != null) style.setChatClickEvent(execute);
+            chatComponent.setChatStyle(style);
+            if (scheme == MessageScheme.RAW) {
+                Minecraft.getMinecraft().thePlayer.addChatMessage(box(chatComponent));
+            } else {
+                Minecraft.getMinecraft().thePlayer.addChatMessage(scheme.generateComponent(box(chatComponent)));
+            }
+            return true;
+        } else {
+            queue.add(chatComponent.getUnformattedText());
         }
         return false;
     }
@@ -412,6 +415,21 @@ public class MeloMod {
 
     public static boolean addChat(String message) {
         return addMessage(message, null, null, MessageScheme.CHAT);
+    }
+
+    public static boolean addChat(IChatComponent message) {
+        return addMessage(message, null, null, MessageScheme.CHAT);
+    }
+
+    public static boolean addPrivateChat(IChatComponent message, String recipient) {
+        return addMessage(message,
+                null,
+                new ClickEvent(
+                        ClickEvent.Action.SUGGEST_COMMAND,
+                        "/melopriv " + recipient + " "
+                ),
+                MessageScheme.PRIVATE_CHAT
+        );
     }
 
     public static boolean addPrivateChat(String message, String recipient) {

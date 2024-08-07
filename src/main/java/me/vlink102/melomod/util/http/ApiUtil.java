@@ -7,6 +7,7 @@ import me.vlink102.melomod.config.ChatConfig;
 import me.vlink102.melomod.config.MeloConfiguration;
 import me.vlink102.melomod.events.InternalLocraw;
 import me.vlink102.melomod.chatcooldownmanager.TickHandler;
+import me.vlink102.melomod.util.ItemSerializer;
 import me.vlink102.melomod.util.game.PlayerUtil;
 import me.vlink102.melomod.util.game.SkyblockUtil;
 import me.vlink102.melomod.util.http.packets.PacketPlayOutChat;
@@ -538,7 +539,13 @@ public class ApiUtil {
                 prefixCommand = "/oc";
                 break;
             case CUSTOM:
-                CommunicationHandler.thread.sendPacket(new PacketPlayOutChat(message, MeloMod.playerUUID.toString(), MeloMod.playerName, null));
+                if (message.contains("<item>")) {
+                    String data = ItemSerializer.INSTANCE.serialize(Minecraft.getMinecraft().thePlayer.getHeldItem());
+                    CommunicationHandler.thread.sendPacket(new PacketPlayOutChat(message, MeloMod.playerUUID.toString(), MeloMod.playerName, null, data));
+                } else {
+
+                    CommunicationHandler.thread.sendPacket(new PacketPlayOutChat(message, MeloMod.playerUUID.toString(), MeloMod.playerName, null, null));
+                }
                 return;
         }
         String finalCommand = prefixCommand + " " + message;
