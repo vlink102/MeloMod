@@ -17,18 +17,22 @@ import java.io.BufferedWriter;
 import java.io.ByteArrayOutputStream;
 import java.io.StringWriter;
 import java.nio.charset.StandardCharsets;
+import java.util.Base64;
 import java.util.Optional;
 
 public class ItemSerializer {
     public static final ItemSerializer INSTANCE = new ItemSerializer();
 
     public String serialize(ItemStack stack) {
-        return new String(stack.serializeNBT().toString().getBytes(StandardCharsets.UTF_8), StandardCharsets.UTF_8);
+        Base64.Encoder encoder = Base64.getEncoder();
+        return encoder.encodeToString(stack.serializeNBT().toString().getBytes(StandardCharsets.UTF_8));
     }
 
     public ItemStack deserialize(String stack) {
         try {
-            NBTTagCompound tagCompound = JsonToNBT.getTagFromJson(stack);
+            Base64.Decoder decoder = Base64.getDecoder();
+            String newStack = new String(decoder.decode(stack), StandardCharsets.UTF_8);
+            NBTTagCompound tagCompound = JsonToNBT.getTagFromJson(newStack);
             return ItemStack.loadItemStackFromNBT(tagCompound);
         } catch (NBTException e) {
             throw new RuntimeException(e);
