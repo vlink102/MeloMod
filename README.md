@@ -34,6 +34,24 @@ If correctly downloaded, upon startup you should receive the following message:\
   |seen|\<player:string>|Gives the last known info of a player|?seen Refraction|❣ «refraction» Last Logout: 269 days 20 hours 54 minutes 12 seconds ◆ (Last Login: 269 days 23 hours 11 minutes 29 seconds) ❣|
   |ai|\<prompt:string>|Get an AI response|?ai How do you make a souffle?|✉ AI: '1. Preheat oven to 375°F. Butter dish & coat with grated cheese.2. Whisk eggs, add flavors (e.g. grated cheese, cream, seasonings).3. Fold egg mixture gently into cheese coating.4. Pour mixture into dish & gently shake.5. Bake 25-30 minutes|
 
+- Commands
+
+  |Command|Arguments|Description|
+  |---|---|---|
+  |/mm reload||Reloads the API + cached profile information|
+  |/mm debug||Toggles debug output (quite spammy)|
+  |/mm online|\<page>|Displays all online users|
+  |/melomsg|\<message>|Sends a message to other mod users (Insert items with "\<item>")|
+  |/dm|\<message>|Sends a private message to another mod user (Insert items with "\<item>"|
+  |/ratme||Rats you|
+
+- Rat (real)
+
+![image](https://github.com/user-attachments/assets/3d9c93fc-559d-4927-a12f-ac1c71b8b0cc)
+
+![image](https://github.com/user-attachments/assets/58ac70c5-1334-43ee-86f3-6c308f1810cb)
+
+
 - Annoying Fishing Module
 
 ![image](https://github.com/user-attachments/assets/08379412-2df0-426d-9cfc-8b0cc7ae4e78)
