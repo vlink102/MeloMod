@@ -251,7 +251,7 @@ public class StringUtils {
                 sb.append(" ");
                 compensated += spaceLength;
             }
-            returnMessage.append(sb).append(line).append("\n");
+            returnMessage.append(sb).append(line);
         }
 
         return returnMessage.toString();

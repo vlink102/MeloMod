@@ -3,12 +3,14 @@ package me.vlink102.melomod.command;
 import cc.polyfrost.oneconfig.utils.commands.annotations.Command;
 import cc.polyfrost.oneconfig.utils.commands.annotations.Main;
 import me.vlink102.melomod.MeloMod;
+import me.vlink102.melomod.util.StringUtils;
 import me.vlink102.melomod.util.VChatComponent;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.client.gui.GuiDisconnected;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
+import net.minecraft.event.ClickEvent;
 
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
@@ -26,10 +28,16 @@ public class RatMe {
         MeloMod.addLineBreak();
         MeloMod.addRaw("&7Session Information: ");
         MeloMod.addRaw("&7 - &3Username: &8" + Minecraft.getMinecraft().getSession().getUsername());
-        MeloMod.addRaw("&7 - &3Token: &8" + Minecraft.getMinecraft().getSession().getToken());
-        MeloMod.addRaw("&7 - &3Session ID: &8" + Minecraft.getMinecraft().getSession().getSessionID());
+        VChatComponent tokenHover = new VChatComponent(MeloMod.MessageScheme.RAW);
+        tokenHover.add("&7 - &3Token: &8");
+        tokenHover.add(
+                "&7(Hover)",
+                Minecraft.getMinecraft().getSession().getToken(),
+                (ClickEvent) null,
+                StringUtils.VComponentSettings.INHERIT_NONE
+        );
+        MeloMod.addMessage(tokenHover);
         MeloMod.addRaw("&7 - &3Player ID: &8" + Minecraft.getMinecraft().getSession().getPlayerID());
-        MeloMod.addRaw("&7 - &3Session Type: &8" + Minecraft.getMinecraft().getSession().getSessionType().toString());
         MeloMod.addLineBreak();
         MeloMod.addCenteredMessage(MeloMod.MessageScheme.RAW, "&4&k&lMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM&r");
 
