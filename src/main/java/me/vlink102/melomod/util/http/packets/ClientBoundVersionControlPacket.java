@@ -7,16 +7,15 @@ import me.vlink102.melomod.util.game.SkyblockUtil;
 import me.vlink102.melomod.util.http.Ban;
 import me.vlink102.melomod.util.http.Packet;
 import me.vlink102.melomod.util.http.Version;
-import me.vlink102.melomod.util.game.SkyblockUtil;
 
 public class ClientBoundVersionControlPacket extends Packet {
     private final String correctVersion;
-    private final Version.VersionStability correct;
+    private final Version.VersionCompatibility correct;
     private final String updateLink;
     private final Boolean banned;
     private final Ban banReason;
 
-    public ClientBoundVersionControlPacket(String correctVersion, Version.VersionStability correct, String updateLink, Boolean banned, Ban banReason) {
+    public ClientBoundVersionControlPacket(String correctVersion, Version.VersionCompatibility correct, String updateLink, Boolean banned, Ban banReason) {
         this.correctVersion = correctVersion;
         this.correct = correct;
         this.updateLink = updateLink;
@@ -32,7 +31,7 @@ public class ClientBoundVersionControlPacket extends Packet {
         return banned;
     }
 
-    public Version.VersionStability getCorrect() {
+    public Version.VersionCompatibility getCorrect() {
         return correct;
     }
 
@@ -66,7 +65,7 @@ public class ClientBoundVersionControlPacket extends Packet {
         JsonElement element = new JsonParser().parse(json);
         if (element.isJsonObject()) {
             JsonObject o = element.getAsJsonObject();
-            Version.VersionStability correct = Version.VersionStability.valueOf(o.get("version-control-result").getAsString());
+            Version.VersionCompatibility correct = Version.VersionCompatibility.valueOf(o.get("version-control-result").getAsString());
             boolean banned = SkyblockUtil.getAsBoolean("banned", o);
             Ban banReason = null;
             if (banned) {

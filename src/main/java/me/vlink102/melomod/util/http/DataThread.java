@@ -8,21 +8,14 @@ import me.vlink102.melomod.MeloMod;
 import me.vlink102.melomod.config.ChatConfig;
 import me.vlink102.melomod.config.MeloConfiguration;
 import me.vlink102.melomod.events.InternalLocraw;
-import me.vlink102.melomod.util.ItemSerializer;
 import me.vlink102.melomod.util.StringUtils;
 import me.vlink102.melomod.util.VChatComponent;
 import me.vlink102.melomod.util.game.Utils;
 import me.vlink102.melomod.util.http.packets.*;
-import net.minecraft.event.HoverEvent;
-import net.minecraft.item.ItemStack;
-import net.minecraft.util.ChatComponentProcessor;
-import net.minecraft.util.ChatComponentText;
-import net.minecraft.util.ChatStyle;
 import net.minecraft.util.IChatComponent;
 
 import java.io.*;
 import java.net.Socket;
-import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.List;
 
@@ -112,8 +105,8 @@ public class DataThread extends Thread {
                                 ClientBoundVersionControlPacket clientBoundVersionControlPacket = (ClientBoundVersionControlPacket) Packet.parseFrom(object.toString());
                                 String correct = clientBoundVersionControlPacket.getCorrectVersion();
                                 String newLink = clientBoundVersionControlPacket.getUpdateLink();
-                                Version.VersionStability stability = clientBoundVersionControlPacket.getCorrect();
-                                MeloMod.versionStability = stability;
+                                Version.VersionCompatibility stability = clientBoundVersionControlPacket.getCorrect();
+                                MeloMod.versionCompatibility = stability;
                                 MeloMod.serverVersion = Version.parse(correct);
                                 switch (stability) {
                                     case INCOMPATIBLE:
@@ -181,10 +174,13 @@ public class DataThread extends Thread {
                                 }
 
                                 VChatComponent chatComponent = new VChatComponent(MeloMod.MessageScheme.RAW);
+                                MeloMod.addDebug("Chat Component: " + chatComponent);
 
                                 IChatComponent inserted = VChatComponent.insert(new VChatComponent(MeloMod.MessageScheme.RAW).add(message).build(), "<item>", dataAddon);
+                                MeloMod.addDebug("Inserted: " + inserted);
 
                                 chatComponent.add(inserted);
+                                MeloMod.addDebug("Inserted Chat Component: " + chatComponent);
 
                                 if (targetName != null) {
                                     if (messenger.equals(targetName)) {

@@ -103,18 +103,6 @@ public class StringUtils {
     }
 
     @Deprecated
-    public static final ChatStyle RESET = new ChatStyle()
-            .setBold(false)
-            .setColor(null)
-            .setObfuscated(false)
-            .setItalic(false)
-            .setUnderlined(false)
-            .setStrikethrough(false)
-            .setChatHoverEvent(null)
-            .setChatClickEvent(null)
-            .setInsertion(null);
-
-    @Deprecated
     public static final ChatStyle RESET_INTERACTIONS = new ChatStyle()
             .setChatHoverEvent(null)
             .setChatClickEvent(null);
@@ -122,19 +110,10 @@ public class StringUtils {
 
 
     public enum VComponentSettings {
-        INHERIT_NONE(RESET),
-        INHERIT_ALL(new ChatStyle()),
-        INHERIT_FORMAT(RESET_INTERACTIONS); // Color/Bold/Italic/etc
+        INHERIT_NONE(),
+        INHERIT_ALL(),
+        INHERIT_FORMAT(); // Color/Bold/Italic/etc
 
-        private final ChatStyle style;
-
-        VComponentSettings(ChatStyle style) {
-            this.style = style;
-        }
-
-        public ChatStyle getStyle() {
-            return style;
-        }
     }
 
     public static String cc(String in) {

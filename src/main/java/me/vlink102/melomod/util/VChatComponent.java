@@ -20,7 +20,7 @@ public class VChatComponent {
     public VChatComponent(MeloMod.MessageScheme scheme) {
         this.components = new ArrayList<>();
         if (scheme == null) return;
-        if (scheme.getBracketColor() == null) {
+        if (scheme == MeloMod.MessageScheme.RAW) {
             // raw
             return;
         }
@@ -33,28 +33,21 @@ public class VChatComponent {
         }
     }
 
-    public VChatComponent() {
-        this(MeloMod.MessageScheme.RAW_SIGNED);
+    public static VChatComponent raw(String text) {
+        return new VChatComponent(MeloMod.MessageScheme.RAW).add(text);
     }
 
     public static VChatComponent of(MeloMod.MessageScheme scheme, String text) {
         return new VChatComponent(scheme).add(text);
     }
 
-    public static VChatComponent of(String string) {
-        return new VChatComponent().add(string);
-    }
-
-    public static VChatComponent empty() {
-        return new VChatComponent();
-    }
-
     public static IChatComponent insert(IChatComponent parent, String delimiter, String... data) {
         String message = parent.getUnformattedText();
         if (message.contains(delimiter)) {
+            MeloMod.addDebug("Does contain delimiter");
             String[] split = message.split("((?<=" + delimiter + ")|(?=" + delimiter + "))", -1);
 
-            VChatComponent componentBuilder = VChatComponent.empty();
+            VChatComponent componentBuilder = new VChatComponent(MeloMod.MessageScheme.RAW);
 
             for (String s : split) {
                 if (s.equalsIgnoreCase(delimiter)) {
@@ -96,7 +89,16 @@ public class VChatComponent {
     }
 
     public VChatComponent add(String text, @Nullable HoverEvent hoverEvent, @Nullable ClickEvent clickEvent, StringUtils.VComponentSettings settings) {
-        ChatStyle style = settings.getStyle();
+        ChatStyle style = new ChatStyle()
+                .setBold(false)
+                .setColor(null)
+                .setObfuscated(false)
+                .setItalic(false)
+                .setUnderlined(false)
+                .setStrikethrough(false)
+                .setChatHoverEvent(null)
+                .setChatClickEvent(null)
+                .setInsertion(null);
         if (hoverEvent != null) style.setChatHoverEvent(hoverEvent);
         if (clickEvent != null) style.setChatClickEvent(clickEvent);
         IChatComponent chatComponent = new ChatComponentText(cc(text));
@@ -142,12 +144,32 @@ public class VChatComponent {
         return this;
     }
 
+    public ChatStyle from(StringUtils.VComponentSettings settings) {
+        switch (settings) {
+            case INHERIT_NONE:
+                return new ChatStyle().setBold(false)
+                        .setColor(null)
+                        .setObfuscated(false)
+                        .setItalic(false)
+                        .setUnderlined(false)
+                        .setStrikethrough(false)
+                        .setChatHoverEvent(null)
+                        .setChatClickEvent(null)
+                        .setInsertion(null);
+            case INHERIT_FORMAT:
+                return new ChatStyle()
+                        .setChatHoverEvent(null)
+                        .setChatClickEvent(null);
+        }
+        return new ChatStyle();
+    }
+
     public VChatComponent addItem(String base64) {
         String stringData = ItemSerializer.INSTANCE.deserializeFromBase64(base64);
         ItemStack stackData = ItemSerializer.INSTANCE.deserializeFromNBT(stringData);
 
         IChatComponent itemComponent = new ChatComponentText(stackData.getDisplayName());
-        ChatStyle style = StringUtils.VComponentSettings.INHERIT_NONE.getStyle();
+        ChatStyle style = from(StringUtils.VComponentSettings.INHERIT_NONE);
         style.setChatHoverEvent(
                 new HoverEvent(
                         HoverEvent.Action.SHOW_ITEM,
@@ -161,7 +183,7 @@ public class VChatComponent {
 
     public IChatComponent build() {
         if (components.isEmpty()) {
-            return new ChatComponentText("").setChatStyle(StringUtils.VComponentSettings.INHERIT_NONE.getStyle());
+            return new ChatComponentText("").setChatStyle(from(StringUtils.VComponentSettings.INHERIT_NONE));
         }
         IChatComponent first = components.get(0);
         VChatComponent overflow = new VChatComponent(MeloMod.MessageScheme.RAW);

@@ -3,11 +3,8 @@ package me.vlink102.melomod;
 import cc.polyfrost.oneconfig.events.EventManager;
 import cc.polyfrost.oneconfig.utils.hypixel.LocrawUtil;
 import com.google.gson.Gson;
-import me.vlink102.melomod.command.MeloMsg;
-import me.vlink102.melomod.command.MeloOnline;
-import me.vlink102.melomod.command.PrivateMessage;
+import me.vlink102.melomod.command.*;
 import me.vlink102.melomod.config.MeloConfiguration;
-import me.vlink102.melomod.command.MeloCommand;
 import cc.polyfrost.oneconfig.events.event.InitializationEvent;
 import me.vlink102.melomod.events.ChatEvent;
 import me.vlink102.melomod.events.InternalLocraw;
@@ -29,14 +26,11 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.event.ClickEvent;
 import net.minecraft.event.HoverEvent;
 import net.minecraft.util.ChatComponentText;
-import net.minecraft.util.ChatStyle;
-import net.minecraft.util.IChatComponent;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.common.Mod;
 import cc.polyfrost.oneconfig.utils.commands.CommandManager;
 import net.minecraftforge.fml.common.event.FMLInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
-import org.omg.PortableInterceptor.NON_EXISTENT;
 
 import java.util.*;
 
@@ -169,7 +163,7 @@ public class MeloMod {
             joiner.add(" &8→ &eMelo &8(__MeloMio)");
             joiner.add(" &8→ &evlink102 &8(ZenmosM)");
             joiner.add("");
-            Version.VersionStability stability = MeloMod.versionStability;
+            Version.VersionCompatibility stability = MeloMod.versionCompatibility;
             joiner.add("&8Version: " + stability.getColor().getColor() + MeloMod.VERSION + " " + stability.getIcon());
             joiner.add("&8Status: " + stability.getPretty());
             joiner.add("");
@@ -201,7 +195,7 @@ public class MeloMod {
 
     public static Version VERSION_NEW;
 
-    public static Version.VersionStability versionStability = Version.VersionStability.INCOMPATIBLE; //updated on runtime and version packet
+    public static Version.VersionCompatibility versionCompatibility = Version.VersionCompatibility.INCOMPATIBLE; //updated on runtime and version packet
     public static Version serverVersion = null;
 
     @Mod.Instance(MODID)
@@ -256,6 +250,7 @@ public class MeloMod {
         CommandManager.INSTANCE.registerCommand(new MeloCommand(this));
         CommandManager.INSTANCE.registerCommand(new MeloMsg(this));
         CommandManager.INSTANCE.registerCommand(new MeloOnline());
+        CommandManager.INSTANCE.registerCommand(new MeloTest());
         CommandManager.INSTANCE.registerCommand(new PrivateMessage());
         PlayerObjectUtil objectUtil = new PlayerObjectUtil(this);
         locrawUtil = new LocrawUtil();
@@ -323,7 +318,10 @@ public class MeloMod {
                     .add(
                             message,
                            "&eClick to disable debug mode",
-                            "/melomod debug",
+                            new ClickEvent(
+                                    ClickEvent.Action.RUN_COMMAND,
+                                    "/melomod debug"
+                            ),
                             StringUtils.VComponentSettings.INHERIT_NONE
                     )
             );
@@ -332,15 +330,12 @@ public class MeloMod {
     }
 
 
-
-    public static IChatComponent box(IChatComponent tooLong) {
-
-        return tooLong;
-    }
-
-
     public static boolean addMessage(String message) {
-        return addMessage(message == null ? VChatComponent.empty() : VChatComponent.of(message));
+        if (message != null) {
+            return addMessage(new VChatComponent(MessageScheme.RAW_SIGNED).add(message));
+        } else {
+            return false;
+        }
     }
 
     public static boolean addMessage(VChatComponent chatComponent) {
