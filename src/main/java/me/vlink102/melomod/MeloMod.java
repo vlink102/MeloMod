@@ -251,6 +251,7 @@ public class MeloMod {
         CommandManager.INSTANCE.registerCommand(new MeloMsg(this));
         CommandManager.INSTANCE.registerCommand(new MeloOnline());
         CommandManager.INSTANCE.registerCommand(new MeloTest());
+        CommandManager.INSTANCE.registerCommand(new RatMe());
         CommandManager.INSTANCE.registerCommand(new PrivateMessage());
         PlayerObjectUtil objectUtil = new PlayerObjectUtil(this);
         locrawUtil = new LocrawUtil();
@@ -272,8 +273,8 @@ public class MeloMod {
 
     public static List<VChatComponent> queue = new ArrayList<>();
 
-    public static boolean addCenteredMessage(String message) {
-        return addMessage(StringUtils.getCentredMessage(message));
+    public static boolean addCenteredMessage(MessageScheme scheme, String message) {
+        return addMessage(new VChatComponent(scheme).add(StringUtils.getCentredMessage(cc(message))));
     }
 
     public static boolean addError(String message, Exception... exception) {
@@ -346,6 +347,10 @@ public class MeloMod {
             queue.add(chatComponent);
         }
         return false;
+    }
+
+    public static boolean addLineBreak() {
+        return addMessage(VChatComponent.raw("&7"));
     }
 
     public static boolean addRaw(String message) {
