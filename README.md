@@ -1,6 +1,8 @@
 If correctly downloaded, upon startup you should receive the following message:\
 ![image](https://github.com/user-attachments/assets/dee3c939-ad9f-4513-a583-ac29b2554ce8)
 
+Available in 30 languages! See https://crowdin.com/project/ to contribute
+
 # Features
 - Party Commands
 > [!TIP]
@@ -62,14 +64,27 @@ If correctly downloaded, upon startup you should receive the following message:\
 
   ![image](https://github.com/user-attachments/assets/44943b52-a383-4f65-a462-eea73fd0bd26)
 
+- Bridge via discord
+
+  (MISSING) Socket server image
+
+  (MISSING) Socket ban
+
+  (MISSING) Connect/disconnect
+
+  (MISSING) Packet display
+
 - Cross-Server utils (for those using the mod)
   
+  (MISSING) Image of online playerlist 
+
+  (MISSING) Image of items in chat "\<item>"
+
   ![image](https://github.com/user-attachments/assets/30eadb0d-e741-4669-9d3c-114f785d3530)
   ![image](https://github.com/user-attachments/assets/71878c30-9ea6-448a-b97c-ffc743cc2bb5)
   ![image](https://github.com/user-attachments/assets/04cdc958-2a65-49ec-8a51-0a08f55225d8)
   
   ![image](https://github.com/user-attachments/assets/0529593b-418f-4c10-b00f-26731bf563f5)
-
 
 # Utility
 - OneConfig Integration
