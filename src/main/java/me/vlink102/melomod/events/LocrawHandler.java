@@ -101,7 +101,11 @@ public class LocrawHandler {
         gameMode = Location.parseFromLocraw(info.getGameMode());
         serverID = info.getServerId();
 
+        System.out.println(event.info);
+
         ServerBoundLocrawPacket packet = new ServerBoundLocrawPacket(info.getMapName(), info.getGameMode(), info.getRawGameType(), info.getServerId(), getType(), serverIP());
+
+        System.out.println(packet);
         CommunicationHandler.thread.sendPacket(packet);
 
         if (mod.getPlayerProfile() == null) {

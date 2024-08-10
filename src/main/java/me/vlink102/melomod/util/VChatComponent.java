@@ -17,14 +17,17 @@ import static me.vlink102.melomod.util.StringUtils.cc;
 
 public class VChatComponent {
     private final List<IChatComponent> components;
+    private boolean isDebug = false;
+
+    public boolean isDebug() {
+        return isDebug;
+    }
 
     public VChatComponent(MeloMod.MessageScheme scheme) {
         this.components = new ArrayList<>();
         if (scheme == null) return;
-        if (scheme == MeloMod.MessageScheme.RAW) {
-            // raw
-            return;
-        }
+        if (scheme == MeloMod.MessageScheme.DEBUG) isDebug = true;
+        if (scheme == MeloMod.MessageScheme.RAW) return;
         this.add(scheme.generatePrefix(false), MeloMod.MessageScheme.generatePrefixHover(), "https://discord.gg/NVPUTYSk3u", StringUtils.VComponentSettings.INHERIT_NONE);
         this.addSpace();
         String tag = scheme.generateTag(false);

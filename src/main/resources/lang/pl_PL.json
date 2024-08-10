@@ -1,8 +1,8 @@
 {
     "errors": {
-        "could_not_connect": "Nie można połączyć się z serwerem",
-        "client_received_invalid_data": "Klient otrzymał nieprawidłowe dane z serwera! Zgłoś to.",
-        "unexpected": "Klient znalazł nieoczekiwany błąd (Check console) Proszę to zgłosić.",
+        "could_not_connect": "Nie udało się połączyć z serwerem",
+        "client_received_invalid_data": "Klient otrzymał nieprawidłowe dane z serwera! Proszę to zgłosić.",
+        "unexpected": "Klient znalazł nieoczekiwany błąd (Sprawdź konsolę) Proszę to zgłosić.",
         "unknown": "Nie podano powodu. Proszę to zgłosić.",
         "potentially_severe": "Potencjalnie poważny błąd (proszę to zgłosić)",
         "incompatible_version": "Niekompatybilna wersja!",
@@ -15,8 +15,8 @@
         "version": "Wersja",
         "status": "Stan",
         "left_click_to_join": "Kliknij lewym przyciskiem myszy, aby dołączyć!",
-        "report_error": "Zgłoś ten błąd na serwer Discord.",
-        "report_warning": "Zgłoś to ostrzeżenie na serwer Discord.",
+        "report_error": "Proszę zgłosić ten błąd na serwer Discord.",
+        "report_warning": "Proszę zgłaszać poważne błędy na serwerze Discord.",
         "click_to_reply": "Kliknij, aby odpowiedzieć!",
         "page": "Strona",
         "available_commands": "Dostępne polecenia",
@@ -36,22 +36,22 @@
         "debug": {
             "debug": "Debug",
             "click_to_disable": "Kliknij, aby wyłączyć tryb debugowania.",
-            "added_to_queue": "Wiadomość czatu dodana do kolejki",
-            "joined_world": "Dołączyłeś do świata",
-            "hypixel_detected": "Typ serwera został wykryty jako: Hypixel",
+            "added_to_queue": "Dodano wiadomość do kolejki",
+            "joined_world": "Pomyślnie dołączyłeś do świata",
+            "hypixel_detected": "Wykryto instancję serwera jako Hypixel",
             "failed_sync": "Nie udało się zsynchronizować {int} wiadomośc(i) czatu w kolejce wiadomości. Próbuję ponownie...",
-            "disconnect": "Rozłączono z serwerem.",
+            "disconnect": "Pomyślnie odłączono od serwera.",
             "message": "Wiadomość",
             "messenger": "Komunikator",
             "target": "odbiorca",
             "data": "dane",
             "chat_component": "Komponent czatu",
-            "inserted": "Wstawione",
+            "inserted": "Wstawiono",
             "sent_packet": "Pomyślnie wysłano pakiet {1} z ID pakietu {2}"
         },
         "warning": {
-            "failed_to_execute": "Nie można wysłać polecenia",
-            "detected_oversized_component": "Wykryto zbyt duży składnik IChatComponent: Konwersja...",
+            "failed_to_execute": "Nie udało się wykonać polecenia",
+            "detected_oversized_component": "Wykryto zbyt duży składnik IChatComponent: Konwertuję...",
             "socket_closed": "Gniazdo zamknięte",
             "client_out_of_date": "Klient jest nieaktualny!",
             "connection_terminated": "Połączenie zostało przymusowo zakończone przez serwer. To NIE jest błąd.",
@@ -59,35 +59,35 @@
             "malformed_packet": "Niepoprawny pakiet danych"
         },
         "commands": {
-            "enabled_debug": "Tryb debugowania: włączona",
-            "disabled_debug": "Tryb debugowania: wyłączona"
+            "enabled_debug": "Włączono tryb debugowania",
+            "disabled_debug": "Wyłączono tryb debugowania"
         },
         "client": "Klient",
         "server": "Serwer",
         "update_link": "Aktualizuj link",
         "connection_lost": "Utracono połączenie",
         "reason": "Powód",
-        "sent_to_self": "Twoja wiadomość została utracona na wiatru...",
+        "sent_to_self": "Twoja wiadomość została utracona w wietrze...",
         "private_message": "Prywatna wiadomość",
         "from": "Od",
         "to": "Do",
         "banned": "Up! Jesteś obecnie zbanowany!",
-        "banned_2": "Dotyczy to tylko czatu.",
+        "banned_2": "To dotyczy tylko czatu.",
         "ban_info": {
-            "summary": "Summary",
+            "summary": "Podsumowanie",
             "reason": "Powód",
             "admin": "Zbanowany przez",
-            "duration": "Długość banu",
+            "duration": "Długość bana",
             "issued": "Wydano",
             "expiry": "Wygasa",
             "remaining": "Pozostały czas"
         },
         "system": {
-            "connected": "połączony",
-            "disconnected": "rozłączony",
-            "game_disconnect": "rozłączony z grą! (Skieta jest nadal połączona)"
+            "connected": "połączono",
+            "disconnected": "rozłączono",
+            "game_disconnect": "rozłączono z grą! (Gniazdo jest nadal połączone)"
         },
         "up_to_date": "Jesteś aktualny!",
-        "hover": "Hover"
+        "hover": "Najechać"
     }
 }

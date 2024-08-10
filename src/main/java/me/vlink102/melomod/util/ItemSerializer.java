@@ -5,6 +5,7 @@ import net.minecraft.nbt.JsonToNBT;
 import net.minecraft.nbt.NBTException;
 import net.minecraft.nbt.NBTTagCompound;
 
+import java.io.UnsupportedEncodingException;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 
@@ -20,8 +21,12 @@ public class ItemSerializer {
     }
 
     public String deserializeFromBase64(String stack) {
-        Base64.Decoder decoder = Base64.getDecoder();
-        return cc(new String(decoder.decode(stack), StandardCharsets.UTF_8));
+        try {
+            Base64.Decoder decoder = Base64.getDecoder();
+            return cc(new String(decoder.decode(stack), StandardCharsets.UTF_8));
+        } catch (IllegalArgumentException e) {
+            return cc(stack);
+        }
     }
 
     public ItemStack deserializeFromNBT(String nbt) {

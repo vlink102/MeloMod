@@ -2,56 +2,56 @@
     "errors": {
         "could_not_connect": "Не удалось подключиться к серверу",
         "client_received_invalid_data": "Клиент получил неверные данные с сервера! Пожалуйста, сообщите об этом.",
-        "unexpected": "Клиент обнаружил непредвиденную ошибку (Check console) Пожалуйста, сообщите об этом.",
+        "unexpected": "Клиент обнаружил непредвиденную ошибку (проверьте консоль). Пожалуйста, сообщите об этом.",
         "unknown": "Причина не указана. Пожалуйста, сообщите об этом.",
         "potentially_severe": "Потенциально серьезная ошибка (пожалуйста, сообщите об этом)",
         "incompatible_version": "Несовместимая версия!",
         "lost_connection": "Потеряно соединение с сервером"
     },
     "generic": {
-        "none": "Нет",
-        "click": "Click",
+        "none": "Никакой",
+        "click": "Нажмите",
         "authors": "Авторы",
-        "version": "Версии",
+        "version": "Версия",
         "status": "Статус",
         "left_click_to_join": "Щелкните левой кнопкой мыши для присоединения!",
-        "report_error": "Пожалуйста, сообщите об этой ошибке Discord.",
-        "report_warning": "Пожалуйста, сообщите о серьезных предупреждениях Discord.",
+        "report_error": "Пожалуйста, сообщите об этой ошибке в Discord.",
+        "report_warning": "Пожалуйста, сообщите о серьезных предупреждениях в Discord.",
         "click_to_reply": "Нажмите, чтобы ответить!",
         "page": "Страница",
         "available_commands": "Доступные команды",
-        "online_players": "Игроки онлайн",
+        "online_players": "Онлайн - игроки",
         "single_player": "Одиночная игра",
-        "offline": "оффлайн",
+        "offline": "офлайн",
         "map": "Карта",
         "does_contain_delimiter": "Сообщение содержит разделитель.",
         "channels": {
             "chat": "ЧАТ",
             "direct_message": "ЛС",
             "system_notification": "СИСТЕМА",
-            "debug": "DEBUG",
+            "debug": "ОТЛАДКА",
             "error": "ОШИБКА",
             "warning": "ПРЕДУПРЕЖДЕНИЕ"
         },
         "debug": {
             "debug": "Debug",
             "click_to_disable": "Нажмите, чтобы отключить режим отладки.",
-            "added_to_queue": "Добавлено сообщение в очередь",
-            "joined_world": "Вы успешно присоединились к миру",
-            "hypixel_detected": "Обнаружен экземпляр сервера как Hypixel",
-            "failed_sync": "Не удалось синхронизировать чат {int} в очереди (чатах). Повторить...",
-            "disconnect": "Успешно отключено от сервера.",
+            "added_to_queue": "Сообщение добавлено в очередь",
+            "joined_world": "Успешно присоединились к миру",
+            "hypixel_detected": "Экземпляр сервера обнаружен как Hypixel",
+            "failed_sync": "Не удалось синхронизировать {int} чат(ах) в очереди. Повторная попытка...",
+            "disconnect": "Успешное отключение от сервера.",
             "message": "Сообщение",
-            "messenger": "Посланник",
+            "messenger": "Мессенджер",
             "target": "получатель",
             "data": "данные",
             "chat_component": "Компонент чата",
             "inserted": "Вставлено",
-            "sent_packet": "Пакет {1} успешно отправлен с ID пакета {2}"
+            "sent_packet": "Успешно отправлен пакет {1} с ID пакета {2}"
         },
         "warning": {
             "failed_to_execute": "Не удалось выполнить команду",
-            "detected_oversized_component": "Обнаружен слишком большой IChatComponent: Превращение...",
+            "detected_oversized_component": "Обнаружен слишком большой IChatComponent: Преобразование...",
             "socket_closed": "Сокет закрыт",
             "client_out_of_date": "Клиент устарел!",
             "connection_terminated": "Соединение было принудительно прервано сервером. Это НЕ ошибка.",
@@ -60,7 +60,7 @@
         },
         "commands": {
             "enabled_debug": "Режим отладки включен",
-            "disabled_debug": "Режим отладки отключён"
+            "disabled_debug": "Режим отладки отключен"
         },
         "client": "Клиент",
         "server": "Сервер",
@@ -70,24 +70,24 @@
         "sent_to_self": "Ваше сообщение было потеряно в ветре...",
         "private_message": "Личное сообщение",
         "from": "От",
-        "to": "Кому",
-        "banned": "Ой-ой! Вы забанены!",
+        "to": "К",
+        "banned": "О о! Вы сейчас забанены!",
         "banned_2": "Это относится только к чату.",
         "ban_info": {
-            "summary": "Summary",
+            "summary": "Сводка",
             "reason": "Причина",
-            "admin": "Заблокирован",
+            "admin": "Бан выдан",
             "duration": "Длина бана",
-            "issued": "Issued",
+            "issued": "Выдан",
             "expiry": "Истекает",
-            "remaining": "Осталось"
+            "remaining": "Оставшееся время"
         },
         "system": {
             "connected": "подключен",
             "disconnected": "отключен",
-            "game_disconnect": "отключено от игры! (Сокет все еще подключен)"
+            "game_disconnect": "отключен от игры! (Сокет все еще подключен)"
         },
         "up_to_date": "Вы в курсе!",
-        "hover": "Hover"
+        "hover": "Наведите курсор"
     }
 }

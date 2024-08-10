@@ -35,33 +35,35 @@ public class ConnectionHandler {
     public void onJoin(WorldLoadEvent event) {
         online = true;
         MeloMod.addDebug("&e" + Feature.GENERIC_DEBUG_JOINED_WORLD + ": &7" + event.toString());
-        ScheduledExecutorService service = new ScheduledThreadPoolExecutor(1);
-        service.schedule(() -> {
-            if (!HypixelUtils.INSTANCE.isHypixel()) {
-                ServerBoundLocrawPacket packet = new ServerBoundLocrawPacket(null, null, null, null, LocrawHandler.getType(), LocrawHandler.serverIP());
-                CommunicationHandler.thread.sendPacket(packet);
-                ServerTracker.isHypixel = false;
-            } else {
-                ServerTracker.isHypixel = true;
-                MeloMod.addDebug("&e" + Feature.GENERIC_DEBUG_HYPIXEL_DETECTED + "&r");
-            }
-            if (!MeloMod.queue.isEmpty()) {
-                List<VChatComponent> currentQueue = new ArrayList<>(MeloMod.queue);
-                List<VChatComponent> worked = new ArrayList<>();
-                for (VChatComponent s : currentQueue) {
-                    if (MeloMod.addMessage(s)) {
-                        worked.add(s);
+        MeloMod.INSTANCE.getNewScheduler().scheduleDelayedTask(new SkyblockRunnable() {
+            @Override
+            public void run() {
+                if (!HypixelUtils.INSTANCE.isHypixel()) {
+                    ServerBoundLocrawPacket packet = new ServerBoundLocrawPacket(null, null, null, null, LocrawHandler.getType(), LocrawHandler.serverIP());
+                    CommunicationHandler.thread.sendPacket(packet);
+                    ServerTracker.isHypixel = false;
+                } else {
+                    ServerTracker.isHypixel = true;
+                    MeloMod.addDebug("&e" + Feature.GENERIC_DEBUG_HYPIXEL_DETECTED + "&r");
+                }
+                if (!MeloMod.queue.isEmpty()) {
+                    List<VChatComponent> currentQueue = new ArrayList<>(MeloMod.queue);
+                    List<VChatComponent> worked = new ArrayList<>();
+                    for (VChatComponent s : currentQueue) {
+                        if (MeloMod.addMessage(s)) {
+                            worked.add(s);
+                        }
+                    }
+                    MeloMod.queue.removeAll(worked);
+                    int left = currentQueue.size() - worked.size();
+                    if (left > 0) {
+                        String languageValue = Feature.GENERIC_DEBUG_FAILED_SYNC.getMessage();
+                        String[] splitLanguage = languageValue.split("\\{int}");
+                        MeloMod.addWarn("&6" + splitLanguage[0] + "&e" + left + "&6" + splitLanguage[1] + "&r");
                     }
                 }
-                MeloMod.queue.removeAll(worked);
-                int left = currentQueue.size() - worked.size();
-                if (left > 0) {
-                    String languageValue = Feature.GENERIC_DEBUG_FAILED_SYNC.getMessage();
-                    String[] splitLanguage = languageValue.split("\\{int}");
-                    MeloMod.addWarn("&6" + splitLanguage[0] + "&e" + left + "&6" + splitLanguage[1] + "&r");
-                }
             }
-        }, 2L, TimeUnit.SECONDS);
+        }, 2 * 20);
 
     }
 

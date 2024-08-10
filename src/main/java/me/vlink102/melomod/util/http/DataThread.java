@@ -1,5 +1,6 @@
 package me.vlink102.melomod.util.http;
 
+import cc.polyfrost.oneconfig.events.EventManager;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -9,6 +10,7 @@ import me.vlink102.melomod.MeloMod;
 import me.vlink102.melomod.configuration.ChatConfiguration;
 import me.vlink102.melomod.configuration.MainConfiguration;
 import me.vlink102.melomod.events.LocrawHandler;
+import me.vlink102.melomod.util.ItemSerializer;
 import me.vlink102.melomod.util.StringUtils;
 import me.vlink102.melomod.util.VChatComponent;
 import me.vlink102.melomod.util.game.neu.Utils;
@@ -166,7 +168,8 @@ public class DataThread extends Thread {
                                 MeloMod.addDebug("&7" + Feature.GENERIC_DEBUG_TARGET + ": " + targetName);
                                 VChatComponent dataComponent = new VChatComponent(MeloMod.MessageScheme.DEBUG);
                                 dataComponent.add("&7" + Feature.GENERIC_DEBUG_DATA + ": ");
-                                dataComponent.add("&8(" + Feature.GENERIC_HOVER + ")&r", MeloMod.gson.toJson(dataAddon), (ClickEvent) null, StringUtils.VComponentSettings.INHERIT_NONE);
+                                String dataAddonParsed = ItemSerializer.INSTANCE.deserializeFromBase64(dataAddon);
+                                dataComponent.add("&8(" + Feature.GENERIC_HOVER + ")&r", MeloMod.gson.toJson(dataAddonParsed), (ClickEvent) null, StringUtils.VComponentSettings.INHERIT_NONE);
                                 MeloMod.addMessage(dataComponent);
                                 if (message == null) {
                                     break;
@@ -231,7 +234,7 @@ public class DataThread extends Thread {
                     }
                 }
 
-                MeloMod.addDebug("&7" + Feature.GENERIC_DEBUG_DATA + ": &8" + data);
+                MeloMod.addDebug("&7" + Feature.GENERIC_DEBUG_DATA + ": &8" + MeloMod.gson.toJson(ItemSerializer.INSTANCE.deserializeFromBase64(data)));
             }
 
             //closeSocket(CloseReason.INVALID_DATA);
@@ -259,9 +262,9 @@ public class DataThread extends Thread {
 
     public void sendPacket(Object packet) {
         if (MainConfiguration.debugMessages) {
-            String simpleName = packet.getClass().getSimpleName();
+            String simpleName = packet.getClass().getCanonicalName() == null ? packet.getClass().toString() : packet.getClass().getCanonicalName();
             int packetID = Packet.from(packet.toString()).getPacketID();
-            MeloMod.addDebug("&e" + Feature.GENERIC_DEBUG_SENT_PACKET.getMessage().replaceAll("\\{1}", "&7" + simpleName + "&e").replaceAll("\\{2}", "&7" + packetID + "&e."));
+            MeloMod.addDebug("&e" + Feature.GENERIC_DEBUG_SENT_PACKET.toString().replaceAll("\\{1}", "&7" + simpleName + "&e").replaceAll("\\{2}", "&7" + packetID + "&e."));
         }
         printWriter.println(packet.toString());
         printWriter.flush();

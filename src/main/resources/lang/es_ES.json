@@ -18,7 +18,7 @@
         "report_error": "Por favor, reporta este error al Discord.",
         "report_warning": "Por favor, informe de advertencias serias al Discord.",
         "click_to_reply": "¡Clic para responder!",
-        "page": "Pgina",
+        "page": "Pagina",
         "available_commands": "Comandos disponibles",
         "online_players": "Jugadores en línea",
         "single_player": "Un jugador",
@@ -27,7 +27,7 @@
         "does_contain_delimiter": "El mensaje contiene delimitador.",
         "channels": {
             "chat": "CHAT",
-            "direct_message": "DM",
+            "direct_message": "MD",
             "system_notification": "SISTEMA",
             "debug": "DEBUG",
             "error": "ERROR",

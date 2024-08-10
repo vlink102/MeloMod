@@ -16,6 +16,11 @@ import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 public class CommunicationHandler {
+    private final MeloMod mod;
+
+    public CommunicationHandler(MeloMod mod) {
+        this.mod = mod;
+    }
 
     public static final List<DataThread.CloseReason> reasons = new ArrayList<DataThread.CloseReason>() {{
         this.add(DataThread.CloseReason.INVALID_DATA);
@@ -42,7 +47,7 @@ public class CommunicationHandler {
     }
 
     public void beginKeepAlive(UUID uuid, String name) {
-        MeloMod.INSTANCE.getNewScheduler().runAsync(new SkyblockRunnable() {
+        mod.getNewScheduler().runAsync(new SkyblockRunnable() {
             @Override
             public void run() {
                 if (thread == null || reasons.contains(DataThread.closed)) {

@@ -41,9 +41,9 @@ public class MainCommand {
     private void debug() {
         MainConfiguration.debugMessages = !MainConfiguration.debugMessages;
         if (MainConfiguration.debugMessages) {
-            MeloMod.addDebug("&9" + Feature.GENERIC_COMMANDS_ENABLED_DEBUG + "&r");
+            MeloMod.addSystemNotification("&9" + Feature.GENERIC_COMMANDS_ENABLED_DEBUG + "&r");
         } else {
-            MeloMod.addDebug("&9" + Feature.GENERIC_COMMANDS_DISABLED_DEBUG + "&r");
+            MeloMod.addSystemNotification("&9" + Feature.GENERIC_COMMANDS_DISABLED_DEBUG + "&r");
         }
     }
 

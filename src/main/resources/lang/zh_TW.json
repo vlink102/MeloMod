@@ -5,7 +5,7 @@
         "unexpected": "用戶端發現意外錯誤（檢查控制台）請回報此情況。",
         "unknown": "沒有提供理由。請報告此事。",
         "potentially_severe": "潛在的嚴重錯誤（請報告此）",
-        "incompatible_version": "版本不相容！",
+        "incompatible_version": "版本不相同！",
         "lost_connection": "與伺服器失去連接"
     },
     "generic": {
@@ -13,21 +13,21 @@
         "click": "點選",
         "authors": "作者",
         "version": "版本",
-        "status": "地位",
+        "status": "狀態",
         "left_click_to_join": "左鍵點擊加入！",
         "report_error": "請向 Discord 回報此錯誤。",
-        "report_warning": "請向 Discord 報告嚴重警告。",
+        "report_warning": "請把嚴重的錯誤回報到Discord 。",
         "click_to_reply": "點擊回覆！",
         "page": "頁",
-        "available_commands": "可用指令",
-        "online_players": "線上玩家",
+        "available_commands": "可用的指令",
+        "online_players": "在線玩家",
         "single_player": "單人遊戲",
         "offline": "離線",
         "map": "地圖",
         "does_contain_delimiter": "訊息確實包含分隔符號。",
         "channels": {
             "chat": "聊天",
-            "direct_message": "DM",
+            "direct_message": "私訊",
             "system_notification": "系統",
             "debug": "偵錯",
             "error": "錯誤",
@@ -67,12 +67,12 @@
         "update_link": "更新連結",
         "connection_lost": "連線遺失",
         "reason": "原因",
-        "sent_to_self": "你的留言消失在風中…",
+        "sent_to_self": "你的留言在風中消失了…",
         "private_message": "私訊",
         "from": "從",
         "to": "到",
-        "banned": "呃-哦！您目前已被禁止！",
-        "banned_2": "這僅適用於聊天。",
+        "banned": "呃-哦！您目前已被禁止了！",
+        "banned_2": "這只適用於聊天。",
         "ban_info": {
             "summary": "概括",
             "reason": "原因",
@@ -87,7 +87,7 @@
             "disconnected": "斷開連接",
             "game_disconnect": "與遊戲斷開連線！ （套接字仍處於連線狀態）"
         },
-        "up_to_date": "你是最新的！",
+        "up_to_date": "你的版本是最新的！",
         "hover": "徘徊"
     }
 }

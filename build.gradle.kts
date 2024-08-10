@@ -90,7 +90,6 @@ repositories {
     //maven("https://repo.hypixel.net/repository/Hypixel/")
     maven("https://repo.polyfrost.org/releases")
     maven("https://repo.hypixel.net/repository/Hypixel/")
-    maven("https://repo.loohpjames.com/repository")
     maven("https://jitpack.io")
 
 }
@@ -112,11 +111,9 @@ dependencies {
     forge("net.minecraftforge:forge:1.8.9-11.15.1.2318-1.8.9")
     // Adds DevAuth, which we can use to log in to Minecraft in development.
     implementation("net.hypixel:mod-api:0.3.1")
-    implementation("com.loohp:InteractiveChatDiscordSrvAddon:4.2.11.0")
     modRuntimeOnly("me.djtheredstoner:DevAuth-${if (platform.isFabric) "fabric" else if (platform.isLegacyForge) "forge-legacy" else "forge-latest"}:1.2.0")
     implementation("com.github.ILikePlayingGames:DiscordIPC:-SNAPSHOT")
 
-    testImplementation("org.junit.jupiter:junit-jupiter:5.9.1")
     // If we are building for legacy forge, includes the launch wrapper with `shade` as we configured earlier, as well as mixin 0.7.11
     if (platform.isLegacyForge) {
         compileOnly("org.spongepowered:mixin:0.7.11-SNAPSHOT")

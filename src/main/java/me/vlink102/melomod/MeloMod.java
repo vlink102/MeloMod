@@ -70,8 +70,11 @@ public class MeloMod {
     private static final ThreadPoolExecutor THREAD_EXECUTOR = new ThreadPoolExecutor(0, 1, 60L, TimeUnit.SECONDS,
             new LinkedBlockingQueue<>(), new ThreadFactoryBuilder().setNameFormat(MeloMod.MODID + " - #%d").build());
 
-    @Getter
-    private final NewScheduler newScheduler;
+    public NewScheduler getNewScheduler() {
+        return newScheduler;
+    }
+
+    private NewScheduler newScheduler;
     public static boolean isObfuscated;
     public static Version VERSION_NEW;
     public static Version.Compatibility compatibility = Version.Compatibility.INCOMPATIBLE; //updated on runtime and version packet
@@ -166,6 +169,9 @@ public class MeloMod {
     }
 
     public static boolean addMessage(VChatComponent chatComponent) {
+        if (chatComponent.isDebug() && !MainConfiguration.debugMessages) {
+            return false;
+        }
         if (isOnline() && Minecraft.getMinecraft().ingameGUI != null) {
             Minecraft.getMinecraft().thePlayer.addChatMessage(chatComponent.build());
             return true;
@@ -260,13 +266,11 @@ public class MeloMod {
         isObfuscated = isObfuscated();
     }
 
-    public MeloMod() {
-        newScheduler = new NewScheduler();
-    }
-
     // Register the config and commands.
     @Mod.EventHandler
     public void onInit(FMLInitializationEvent event) {
+        new MeloMod();
+        newScheduler = new NewScheduler();
         playerUUID = Minecraft.getMinecraft().getSession().getProfile().getId();
         playerName = Minecraft.getMinecraft().getSession().getUsername();
 
@@ -274,8 +278,6 @@ public class MeloMod {
 
         config = new MainConfiguration();
         gson = new GsonBuilder().setPrettyPrinting().create();
-
-        new MeloMod();
 
         MinecraftForge.EVENT_BUS.register(new ServerTracker());
         skyblockUtil = new SkyblockUtil(this);
@@ -294,12 +296,11 @@ public class MeloMod {
         EventManager.INSTANCE.register(new TickHandler());
         Render render = new Render();
         MinecraftForge.EVENT_BUS.register(render);
+        MinecraftForge.EVENT_BUS.register(newScheduler);
 
-
-        //MinecraftForge.EVENT_BUS.register(internalLocraw);
         new ConnectionHandler();
 
-        handler = new CommunicationHandler();
+        handler = new CommunicationHandler(this);
         handler.beginKeepAlive(playerUUID, playerName);
     }
 
