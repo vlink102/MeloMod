@@ -3,30 +3,27 @@ package me.vlink102.melomod.util.http.packets;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import me.vlink102.melomod.util.http.Ban;
+import me.vlink102.melomod.util.http.BanPacket;
 import me.vlink102.melomod.util.http.Packet;
 import me.vlink102.melomod.util.game.SkyblockUtil;
-
-import java.util.Objects;
-import java.util.concurrent.TimeUnit;
 
 public class ClientBoundForceDisconnectPacket extends Packet {
     private final String closedID;
     private final String reason;
     private final String bannedBy;
     private final Boolean isBan;
-    private final Ban ban;
+    private final BanPacket banPacket;
 
-    public ClientBoundForceDisconnectPacket(String closedID, String reason, String bannedBy, Boolean isBan, Ban ban) {
+    public ClientBoundForceDisconnectPacket(String closedID, String reason, String bannedBy, Boolean isBan, BanPacket banPacket) {
         this.closedID = closedID;
         this.reason = reason;
         this.bannedBy = bannedBy;
         this.isBan = isBan;
-        this.ban = ban;
+        this.banPacket = banPacket;
     }
 
-    public Ban getBan() {
-        return ban;
+    public BanPacket getBan() {
+        return banPacket;
     }
 
     public boolean isBan() {
@@ -53,7 +50,7 @@ public class ClientBoundForceDisconnectPacket extends Packet {
         o.addProperty("reason", reason);
         o.addProperty("is-ban", bannedBy);
         if (isBan) {
-            JsonObject object = ban.toJson();
+            JsonObject object = banPacket.toJson();
             object.add("ban", object);
         }
         o.addProperty("packet-id", bind().getPacketID());
@@ -76,11 +73,11 @@ public class ClientBoundForceDisconnectPacket extends Packet {
             String reason = SkyblockUtil.getAsString("reason",o);
             String bannedBy = SkyblockUtil.getAsString("admin",o);
             boolean isBan = o.get("is-ban").getAsBoolean();
-            Ban banParsed = null;
+            BanPacket banPacketParsed = null;
             if (isBan) {
-                banParsed = Ban.parse(o.getAsJsonObject("ban"));
+                banPacketParsed = BanPacket.parse(o.getAsJsonObject("ban"));
             }
-            return new ClientBoundForceDisconnectPacket(closedID, reason, bannedBy, isBan, banParsed);
+            return new ClientBoundForceDisconnectPacket(closedID, reason, bannedBy, isBan, banPacketParsed);
         }
         return null;
     }

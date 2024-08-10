@@ -1,0 +1,93 @@
+{
+    "errors": {
+        "could_not_connect": "No s'ha pogut connectar al servidor",
+        "client_received_invalid_data": "El client ha rebut dades no vàlides del servidor! Informeu-ho.",
+        "unexpected": "El client ha trobat un error inesperat (Comproveu la consola) Informeu-ho.",
+        "unknown": "No s'ha donat cap motiu. Informeu-ho.",
+        "potentially_severe": "Error potencialment greu (informeu-ho)",
+        "incompatible_version": "Versió incompatible!",
+        "lost_connection": "S'ha perdut la connexió al servidor"
+    },
+    "generic": {
+        "none": "Cap",
+        "click": "Feu clic",
+        "authors": "Autors",
+        "version": "Versió",
+        "status": "Estat",
+        "left_click_to_join": "Fes clic amb el botó esquerre per unir-te!",
+        "report_error": "Informeu aquest error a Discord.",
+        "report_warning": "Si us plau, informa d'advertiments greus a Discord.",
+        "click_to_reply": "Feu clic per respondre!",
+        "page": "Pàgina",
+        "available_commands": "Ordres disponibles",
+        "online_players": "Jugadors en línia",
+        "single_player": "Un sol jugador",
+        "offline": "fora de línia",
+        "map": "Mapa",
+        "does_contain_delimiter": "El missatge conté un delimitador.",
+        "channels": {
+            "chat": "XAT",
+            "direct_message": "DM",
+            "system_notification": "SISTEMA",
+            "debug": "DEpuració",
+            "error": "ERROR",
+            "warning": "ADVERTIMENT"
+        },
+        "debug": {
+            "debug": "Depuració",
+            "click_to_disable": "Feu clic per desactivar el mode de depuració.",
+            "added_to_queue": "S'ha afegit un missatge a la cua",
+            "joined_world": "S'ha unit amb èxit al món",
+            "hypixel_detected": "La instància del servidor s'ha detectat com a Hypixel",
+            "failed_sync": "No s'han pogut sincronitzar {int} xats a la cua. S'està tornant a provar...",
+            "disconnect": "S'ha desconnectat correctament del servidor.",
+            "message": "Missatge",
+            "messenger": "Missatger",
+            "target": "destinatari",
+            "data": "dades",
+            "chat_component": "Component de xat",
+            "inserted": "S'ha inserit",
+            "sent_packet": "S'ha enviat el paquet {1} amb l'identificador de paquet {2}"
+        },
+        "warning": {
+            "failed_to_execute": "No s'ha pogut executar l'ordre",
+            "detected_oversized_component": "S'ha detectat que IChatComponent és massa gran: s'està convertint...",
+            "socket_closed": "Presa tancada",
+            "client_out_of_date": "El client està desfasat!",
+            "connection_terminated": "El servidor va cancel·lar la connexió a la força. Això NO és un error.",
+            "outdated_version": "Versió obsoleta",
+            "malformed_packet": "Paquet de dades mal format"
+        },
+        "commands": {
+            "enabled_debug": "Mode de depuració activat",
+            "disabled_debug": "Mode de depuració desactivat"
+        },
+        "client": "Client",
+        "server": "Servidor",
+        "update_link": "Actualitza l'enllaç",
+        "connection_lost": "Connexió perduda",
+        "reason": "Raó",
+        "sent_to_self": "El teu missatge es va perdre en el vent...",
+        "private_message": "Missatge privat",
+        "from": "Des de",
+        "to": "A",
+        "banned": "Uh-oh! Actualment estàs prohibit!",
+        "banned_2": "Això només s'aplica al xat.",
+        "ban_info": {
+            "summary": "Resum",
+            "reason": "Raó",
+            "admin": "Prohibit per",
+            "duration": "Durada de la prohibició",
+            "issued": "Emès",
+            "expiry": "Caduca",
+            "remaining": "Queda Temps"
+        },
+        "system": {
+            "connected": "connectat",
+            "disconnected": "desconnectat",
+            "game_disconnect": "desconnectat del joc! (La presa encara està connectada)"
+        },
+        "up_to_date": "Estàs al dia!",
+        "hover": "Passa el cursor"
+    }
+}

@@ -1,10 +1,9 @@
 package me.vlink102.melomod.util;
 
 public class LerpingFloat {
+    private final int timeToReachTarget;
     private int timeSpent;
     private long lastMillis;
-    private final int timeToReachTarget;
-
     private float targetValue;
     private float lerpValue;
 
@@ -19,7 +18,7 @@ public class LerpingFloat {
 
     public void tick() {
         int lastTimeSpent = timeSpent;
-        this.timeSpent += System.currentTimeMillis() - lastMillis;
+        this.timeSpent += (int) (System.currentTimeMillis() - lastMillis);
 
         float lastDistPercentToTarget = lastTimeSpent / (float) timeToReachTarget;
         float distPercentToTarget = timeSpent / (float) timeToReachTarget;
@@ -49,19 +48,19 @@ public class LerpingFloat {
         this.lastMillis = System.currentTimeMillis();
     }
 
-    public void setTarget(float targetValue) {
-        this.targetValue = targetValue;
+    public float getValue() {
+        return lerpValue;
     }
 
     public void setValue(float value) {
         this.targetValue = this.lerpValue = value;
     }
 
-    public float getValue() {
-        return lerpValue;
-    }
-
     public float getTarget() {
         return targetValue;
+    }
+
+    public void setTarget(float targetValue) {
+        this.targetValue = targetValue;
     }
 }

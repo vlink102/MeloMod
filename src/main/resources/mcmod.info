@@ -5,7 +5,7 @@
     "description": "Wouldn't you like to know.",
     "version": "${version}",
     "mcversion": "${mcVersionStr}",
-    "url": "",
+    "url": "https://github.com/vlink102/MeloMod",
     "updateUrl": "https://github.com/vlink102/MeloMod/releases/latest",
     "authorList": [
       "Melo",

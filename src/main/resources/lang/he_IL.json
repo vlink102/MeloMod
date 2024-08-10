@@ -1,0 +1,93 @@
+{
+    "errors": {
+        "could_not_connect": "לא ניתן להתחבר לשרת",
+        "client_received_invalid_data": "הלקוח קיבל נתונים לא חוקיים מהשרת! נא לדווח על כך.",
+        "unexpected": "הלקוח מצא שגיאה בלתי צפויה (בדוק מסוף) אנא דווח על כך.",
+        "unknown": "לא סופקה סיבה. נא לדווח על כך.",
+        "potentially_severe": "שגיאה עלולה להיות חמורה (נא לדווח על כך)",
+        "incompatible_version": "גרסה לא תואמת!",
+        "lost_connection": "אבד החיבור לשרת"
+    },
+    "generic": {
+        "none": "אַף לֹא אֶחָד",
+        "click": "נְקִישָׁה",
+        "authors": "מחברים",
+        "version": "גִרְסָה",
+        "status": "סטָטוּס",
+        "left_click_to_join": "לחץ לחיצה ימנית כדי להצטרף!",
+        "report_error": "אנא דווח על שגיאה זו לדיסקורד.",
+        "report_warning": "אנא דווח על אזהרות רציניות לדיסקורד.",
+        "click_to_reply": "לחץ כדי להשיב!",
+        "page": "עַמוּד",
+        "available_commands": "פקודות זמינות",
+        "online_players": "שחקנים מקוונים",
+        "single_player": "שחקן יחיד",
+        "offline": "במצב לא מקוון",
+        "map": "מַפָּה",
+        "does_contain_delimiter": "ההודעה אכן מכילה תוחם.",
+        "channels": {
+            "chat": "לְשׂוֹחֵחַ",
+            "direct_message": "DM",
+            "system_notification": "מַעֲרֶכֶת",
+            "debug": "לְנַפּוֹת",
+            "error": "שְׁגִיאָה",
+            "warning": "אַזהָרָה"
+        },
+        "debug": {
+            "debug": "לְנַפּוֹת",
+            "click_to_disable": "לחץ כדי להשבית את מצב ניפוי באגים.",
+            "added_to_queue": "נוספה הודעה לתור",
+            "joined_world": "הצטרף בהצלחה לעולם",
+            "hypixel_detected": "מופע שרת זוהה כהיפקסל",
+            "failed_sync": "נכשל סנכרון של {int} צ'אט(ים) בתור. מנסה שוב...",
+            "disconnect": "התנתק מהשרת בהצלחה.",
+            "message": "הוֹדָעָה",
+            "messenger": "שָׁלִיחַ",
+            "target": "מְקַבֵּל",
+            "data": "נְתוּנִים",
+            "chat_component": "רכיב צ'אט",
+            "inserted": "מוּכנָס",
+            "sent_packet": "חבילה {1} נשלחה בהצלחה עם מזהה מנה {2}"
+        },
+        "warning": {
+            "failed_to_execute": "נכשל בביצוע הפקודה",
+            "detected_oversized_component": "זוהה IChatComponent גדול מדי: ממיר...",
+            "socket_closed": "שקע סגור",
+            "client_out_of_date": "הלקוח לא מעודכן!",
+            "connection_terminated": "החיבור הופסק בכוח על ידי השרת. זה לא באג.",
+            "outdated_version": "גרסה מיושנת",
+            "malformed_packet": "חבילת נתונים שגויה"
+        },
+        "commands": {
+            "enabled_debug": "מצב ניפוי באגים מופעל",
+            "disabled_debug": "מצב ניפוי באגים מושבת"
+        },
+        "client": "לָקוּחַ",
+        "server": "שרת",
+        "update_link": "עדכן קישור",
+        "connection_lost": "החיבור אבד",
+        "reason": "לְנַמֵק",
+        "sent_to_self": "ההודעה שלך אבדה ברוח...",
+        "private_message": "הודעה פרטית",
+        "from": "מִן",
+        "to": "אֶל",
+        "banned": "אה-הו! אתה חסום כרגע!",
+        "banned_2": "זה חל רק על צ'אט.",
+        "ban_info": {
+            "summary": "תַקצִיר",
+            "reason": "לְנַמֵק",
+            "admin": "נאסר על ידי",
+            "duration": "אורך איסור",
+            "issued": "הונפק",
+            "expiry": "פג תוקף",
+            "remaining": "זמן שנותר"
+        },
+        "system": {
+            "connected": "מְחוּבָּר",
+            "disconnected": "מְנוּתָק",
+            "game_disconnect": "מנותק מהמשחק! (השקע עדיין מחובר)"
+        },
+        "up_to_date": "אתה מעודכן!",
+        "hover": "לְרַחֵף"
+    }
+}

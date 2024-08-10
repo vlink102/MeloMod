@@ -1,0 +1,93 @@
+{
+    "errors": {
+        "could_not_connect": "Не вдалося підключитися до сервера",
+        "client_received_invalid_data": "Клієнт отримав некоректні дані з сервера! Будь ласка, повідомте про це.",
+        "unexpected": "Виявлено неочікувану помилку (перевірте консоль), будь ласка повідомте про це.",
+        "unknown": "Причини не вказано. Будь ласка, повідомте про це.",
+        "potentially_severe": "Потенційно серйозна помилка (будь ласка, повідомте про це)",
+        "incompatible_version": "Несумісна версія!",
+        "lost_connection": "Втрачено з'єднання з сервером"
+    },
+    "generic": {
+        "none": "Без ефекту",
+        "click": "Click",
+        "authors": "Автори",
+        "version": "Версія",
+        "status": "Статус",
+        "left_click_to_join": "Щоб приєднатись до лівої клавіші!",
+        "report_error": "Будь ласка, повідомте про цю помилку в Discord.",
+        "report_warning": "Будь ласка, повідомте про серйозні попередження Discord.",
+        "click_to_reply": "Натисніть, щоб відповісти!",
+        "page": "Сторінка",
+        "available_commands": "Доступні команди",
+        "online_players": "Гравці онлайн",
+        "single_player": "Одиночна гра",
+        "offline": "не в мережі",
+        "map": "Карта",
+        "does_contain_delimiter": "Повідомлення містить роздільник.",
+        "channels": {
+            "chat": "ЧАТ",
+            "direct_message": "ПП",
+            "system_notification": "СИСТЕМА",
+            "debug": "DEBUG",
+            "error": "Помилка",
+            "warning": "УВАГА"
+        },
+        "debug": {
+            "debug": "Debug",
+            "click_to_disable": "Натисніть, щоб вимкнути режим налагодження.",
+            "added_to_queue": "Додано повідомлення до черги",
+            "joined_world": "Успішно приєднався до світу",
+            "hypixel_detected": "Екземпляр сервера виявлено як Гіпіксель",
+            "failed_sync": "Не вдалося синхронізувати {int} чат(ів) у черзі. Повторна спроба...",
+            "disconnect": "Успішно відключено від сервера.",
+            "message": "Повідомлення",
+            "messenger": "Месенджер",
+            "target": "одержувач",
+            "data": "дані",
+            "chat_component": "Чат-компонент",
+            "inserted": "Вставлений",
+            "sent_packet": "Успішно надіслано пакет {1} з ідентифікатором пакета {2}"
+        },
+        "warning": {
+            "failed_to_execute": "Не вдалося виконати команду",
+            "detected_oversized_component": "Виявлено IChatComponent занадто великий: перетворення...",
+            "socket_closed": "Сокет закрито",
+            "client_out_of_date": "Клієнт застарілий!",
+            "connection_terminated": "З'єднання було примусово припинено сервером. Це не помилка.",
+            "outdated_version": "Застаріла версія",
+            "malformed_packet": "Неправильний пакет даних"
+        },
+        "commands": {
+            "enabled_debug": "Увімкнений режим налагодження",
+            "disabled_debug": "Вимкнений режим налагодження"
+        },
+        "client": "Клієнт",
+        "server": "Сервер",
+        "update_link": "Оновити посилання",
+        "connection_lost": "З'єднання втрачено",
+        "reason": "Підстава",
+        "sent_to_self": "Ваше повідомлення було втрачено через вітер...",
+        "private_message": "Приватне повідомлення",
+        "from": "Від",
+        "to": "На",
+        "banned": "Ой-ой! Ви в даний час заблоковані!",
+        "banned_2": "Це стосується тільки чату.",
+        "ban_info": {
+            "summary": "Summary",
+            "reason": "Підстава",
+            "admin": "Заблокован",
+            "duration": "Довжина бана",
+            "issued": "Видано",
+            "expiry": "Закінчується",
+            "remaining": "Залишилось часу"
+        },
+        "system": {
+            "connected": "підключено",
+            "disconnected": "відключився",
+            "game_disconnect": "відключено від гри! (ocket досі підключено)"
+        },
+        "up_to_date": "Остання версія!",
+        "hover": "Hover"
+    }
+}

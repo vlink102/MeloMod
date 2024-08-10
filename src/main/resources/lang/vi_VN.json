@@ -1,0 +1,93 @@
+{
+    "errors": {
+        "could_not_connect": "Không thể kết nối tới máy chủ",
+        "client_received_invalid_data": "Khách hàng nhận được dữ liệu không hợp lệ từ máy chủ! Vui lòng báo cáo điều này.",
+        "unexpected": "Khách hàng phát hiện lỗi không mong muốn (Kiểm tra bảng điều khiển) Vui lòng báo cáo lỗi này.",
+        "unknown": "Không có lý do nào được cung cấp. Vui lòng báo cáo điều này.",
+        "potentially_severe": "Lỗi có khả năng nghiêm trọng (Vui lòng báo cáo lỗi này)",
+        "incompatible_version": "Phiên bản không tương thích!",
+        "lost_connection": "Mất kết nối với máy chủ"
+    },
+    "generic": {
+        "none": "Không có",
+        "click": "Nhấp chuột",
+        "authors": "Tác giả",
+        "version": "Phiên bản",
+        "status": "Trạng thái",
+        "left_click_to_join": "Nhấp chuột trái để tham gia!",
+        "report_error": "Vui lòng báo cáo lỗi này cho Discord.",
+        "report_warning": "Vui lòng báo cáo những cảnh báo nghiêm trọng cho Discord.",
+        "click_to_reply": "Nhấp để trả lời!",
+        "page": "Trang",
+        "available_commands": "Các lệnh có sẵn",
+        "online_players": "Người chơi trực tuyến",
+        "single_player": "Chơi đơn",
+        "offline": "ngoại tuyến",
+        "map": "Bản đồ",
+        "does_contain_delimiter": "Tin nhắn có chứa dấu phân cách.",
+        "channels": {
+            "chat": "TRÒ CHUYỆN",
+            "direct_message": "DM",
+            "system_notification": "HỆ THỐNG",
+            "debug": "GỠ LỖI",
+            "error": "LỖI",
+            "warning": "CẢNH BÁO"
+        },
+        "debug": {
+            "debug": "Gỡ lỗi",
+            "click_to_disable": "Nhấp để tắt chế độ gỡ lỗi.",
+            "added_to_queue": "Đã thêm tin nhắn vào hàng đợi",
+            "joined_world": "Đã tham gia thế giới thành công",
+            "hypixel_detected": "Phiên bản máy chủ được phát hiện là Hypixel",
+            "failed_sync": "Không đồng bộ được {int} các cuộc trò chuyện đang xếp hàng. Đang thử lại...",
+            "disconnect": "Đã ngắt kết nối thành công khỏi máy chủ.",
+            "message": "Tin nhắn",
+            "messenger": "Tin nhắn",
+            "target": "người nhận",
+            "data": "dữ liệu",
+            "chat_component": "Thành phần trò chuyện",
+            "inserted": "Đã chèn",
+            "sent_packet": "Đã gửi thành công gói tin {1} với ID gói tin {2}"
+        },
+        "warning": {
+            "failed_to_execute": "Không thực hiện được lệnh",
+            "detected_oversized_component": "Phát hiện IChatComponent quá lớn: Đang chuyển đổi...",
+            "socket_closed": "Ổ cắm đóng",
+            "client_out_of_date": "Máy khách đã lỗi thời!",
+            "connection_terminated": "Kết nối đã bị máy chủ buộc chấm dứt. Đây KHÔNG phải là lỗi.",
+            "outdated_version": "Phiên bản lỗi thời",
+            "malformed_packet": "Gói dữ liệu bị lỗi"
+        },
+        "commands": {
+            "enabled_debug": "Đã bật chế độ gỡ lỗi",
+            "disabled_debug": "Chế độ gỡ lỗi bị vô hiệu hóa"
+        },
+        "client": "Khách hàng",
+        "server": "Máy chủ",
+        "update_link": "Cập nhật liên kết",
+        "connection_lost": "Mất kết nối",
+        "reason": "Lý do",
+        "sent_to_self": "Tin nhắn của bạn đã bị gió thổi bay mất...",
+        "private_message": "Tin nhắn riêng",
+        "from": "Từ",
+        "to": "ĐẾN",
+        "banned": "Ồ không! Hiện tại bạn đã bị cấm!",
+        "banned_2": "Điều này chỉ áp dụng cho trò chuyện.",
+        "ban_info": {
+            "summary": "Bản tóm tắt",
+            "reason": "Lý do",
+            "admin": "Bị cấm bởi",
+            "duration": "Độ dài lệnh cấm",
+            "issued": "Đã phát hành",
+            "expiry": "Hết hạn",
+            "remaining": "Thời gian còn lại"
+        },
+        "system": {
+            "connected": "đã kết nối",
+            "disconnected": "ngắt kết nối",
+            "game_disconnect": "đã ngắt kết nối khỏi trò chơi! (Ổ cắm vẫn được kết nối)"
+        },
+        "up_to_date": "Bạn đã cập nhật rồi!",
+        "hover": "Di chuột"
+    }
+}

@@ -1,0 +1,93 @@
+{
+    "errors": {
+        "could_not_connect": "サーバーに接続できませんでした",
+        "client_received_invalid_data": "クライアントはサーバーから無効なデータを受信しました！報告してください。",
+        "unexpected": "クライアントが予期しないエラーを発見しました (コンソールを確認してください) これを報告してください。",
+        "unknown": "理由はありません。報告してください。",
+        "potentially_severe": "潜在的に深刻なエラー（報告してください）",
+        "incompatible_version": "互換性のないバージョンです！",
+        "lost_connection": "サーバーへの接続が切断されました"
+    },
+    "generic": {
+        "none": "なし",
+        "click": "Click",
+        "authors": "著者",
+        "version": "バージョン",
+        "status": "ステータス",
+        "left_click_to_join": "左クリックで参加！",
+        "report_error": "このエラーをDiscordに報告してください。",
+        "report_warning": "注意深い警告を Discordに報告してください。",
+        "click_to_reply": "クリックして返信！",
+        "page": "ページ",
+        "available_commands": "使用可能なコマンド",
+        "online_players": "オンラインプレイヤー",
+        "single_player": "シングルプレイヤー",
+        "offline": "オフライン",
+        "map": "地図",
+        "does_contain_delimiter": "メッセージには区切り文字が含まれています。",
+        "channels": {
+            "chat": "チャット",
+            "direct_message": "DM",
+            "system_notification": "システム",
+            "debug": "DEBUG",
+            "error": "エラー",
+            "warning": "警告"
+        },
+        "debug": {
+            "debug": "Debug",
+            "click_to_disable": "クリックしてデバッグモードを無効にします。",
+            "added_to_queue": "キューにメッセージを追加しました",
+            "joined_world": "ワールドに参加しました",
+            "hypixel_detected": "サーバーインスタンスが Hypixel として検出されました",
+            "failed_sync": "{int} キューに入れられたチャットの同期に失敗しました。再試行中...",
+            "disconnect": "サーバーから切断されました。",
+            "message": "メッセージ",
+            "messenger": "Messenger",
+            "target": "受信者",
+            "data": "データ",
+            "chat_component": "チャットコンポーネント",
+            "inserted": "挿入された",
+            "sent_packet": "パケット ID {2}のパケット {1} を正常に送信しました"
+        },
+        "warning": {
+            "failed_to_execute": "コマンドの実行に失敗しました",
+            "detected_oversized_component": "検出されたIChatComponentが大きすぎます: 変換中...",
+            "socket_closed": "ソケットを閉じました",
+            "client_out_of_date": "クライアントが古いです！",
+            "connection_terminated": "サーバーによって強制的に接続が切断されました。これはバグではありません。",
+            "outdated_version": "古いバージョン",
+            "malformed_packet": "不正なデータパケット"
+        },
+        "commands": {
+            "enabled_debug": "デバッグモードを有効にしました",
+            "disabled_debug": "デバッグモードを無効にしました"
+        },
+        "client": "クライアント",
+        "server": "サーバー",
+        "update_link": "リンクを更新",
+        "connection_lost": "接続が切断されました",
+        "reason": "理由：",
+        "sent_to_self": "あなたのメッセージは風で失われましたchar@@0",
+        "private_message": "プライベートメッセージ",
+        "from": "差出人:",
+        "to": "終了日",
+        "banned": "うわー！あなたは現在禁止されています！",
+        "banned_2": "これはチャットにのみ適用されます。",
+        "ban_info": {
+            "summary": "Summary",
+            "reason": "理由：",
+            "admin": "アクセス禁止",
+            "duration": "禁止の長さ",
+            "issued": "発行済み",
+            "expiry": "期限切れ",
+            "remaining": "残り時間"
+        },
+        "system": {
+            "connected": "接続済み",
+            "disconnected": "切断されました",
+            "game_disconnect": "ゲームから切断されました（ロケットはまだ接続されています）"
+        },
+        "up_to_date": "最新の状態です！",
+        "hover": "Hover"
+    }
+}

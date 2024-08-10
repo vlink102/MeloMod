@@ -1,0 +1,93 @@
+{
+    "errors": {
+        "could_not_connect": "Kunne ikke forbinde til serveren",
+        "client_received_invalid_data": "Klienten modtog ugyldige data fra serveren! Rapporter venligst dette.",
+        "unexpected": "Klienten fandt en uventet fejl (tjek konsol) Rapporter venligst dette.",
+        "unknown": "Ingen grund angivet. Rapporter venligst dette.",
+        "potentially_severe": "Potentielt alvorlig fejl (bedes du rapportere dette)",
+        "incompatible_version": "Inkompatibel Version!",
+        "lost_connection": "Mistet forbindelse til serveren"
+    },
+    "generic": {
+        "none": "Ingen",
+        "click": "Click",
+        "authors": "Forfattere",
+        "version": "Version",
+        "status": "Status",
+        "left_click_to_join": "Venstreklik for at deltage!",
+        "report_error": "Rapporter venligst denne fejl til Discord.",
+        "report_warning": "Vær venlig at indberette alvorlige advarsler til Discord.",
+        "click_to_reply": "Klik for at svare!",
+        "page": "Side",
+        "available_commands": "Tilgængelige Kommandoer",
+        "online_players": "Online Spillere",
+        "single_player": "Singleplayer",
+        "offline": "offline",
+        "map": "Kort",
+        "does_contain_delimiter": "Beskeden indeholder afgrænser.",
+        "channels": {
+            "chat": "CHAT",
+            "direct_message": "DM",
+            "system_notification": "SYSTEM",
+            "debug": "DEBUG",
+            "error": "FEJL",
+            "warning": "ADVARSEL"
+        },
+        "debug": {
+            "debug": "Debug",
+            "click_to_disable": "Klik for at deaktivere fejlfindingstilstand.",
+            "added_to_queue": "Tilføjet besked til kø",
+            "joined_world": "Deltog med verden",
+            "hypixel_detected": "Server instans detekteret som Hypixel",
+            "failed_sync": "Mislykkedes at synkronisere {int} chat(er). Prøv igen...",
+            "disconnect": "Forbindelsen blev afbrudt fra serveren.",
+            "message": "Besked",
+            "messenger": "Budbringer",
+            "target": "modtager",
+            "data": "data",
+            "chat_component": "Chat Komponent",
+            "inserted": "Indsat",
+            "sent_packet": "Afsendt pakke {1} med pakke ID {2}"
+        },
+        "warning": {
+            "failed_to_execute": "Kunne ikke udføre kommando",
+            "detected_oversized_component": "Opdaget IChatComponent for stort: Konverterer...",
+            "socket_closed": "Sokkel lukket",
+            "client_out_of_date": "Kunden er forældet!",
+            "connection_terminated": "Forbindelsen blev med magt afsluttet af serveren. Dette er IKKE en fejl.",
+            "outdated_version": "Forældet Version",
+            "malformed_packet": "Misdannet datapakke"
+        },
+        "commands": {
+            "enabled_debug": "Aktiveret Fejlfindingstilstand",
+            "disabled_debug": "Deaktiveret Fejlfindingstilstand"
+        },
+        "client": "Klient",
+        "server": "Server",
+        "update_link": "Opdater Link",
+        "connection_lost": "Forbindelse tabt",
+        "reason": "Årsag",
+        "sent_to_self": "Din besked blev tabt i vinden ...",
+        "private_message": "Privat Besked",
+        "from": "Fra",
+        "to": "Til",
+        "banned": "Uh-oh! Du er i øjeblikket bandlyst!",
+        "banned_2": "Dette gælder kun for chat.",
+        "ban_info": {
+            "summary": "Summary",
+            "reason": "Årsag",
+            "admin": "Udelukket af",
+            "duration": "Bandlys Længde",
+            "issued": "Udstedt",
+            "expiry": "Udløber",
+            "remaining": "Tid Til Venstre"
+        },
+        "system": {
+            "connected": "tilsluttet",
+            "disconnected": "afbrudt",
+            "game_disconnect": "frakoblet spillet! (Socket er stadig forbundet)"
+        },
+        "up_to_date": "Du er opdateret!",
+        "hover": "Hover"
+    }
+}

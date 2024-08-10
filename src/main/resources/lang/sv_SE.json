@@ -1,0 +1,93 @@
+{
+    "errors": {
+        "could_not_connect": "Kunde inte ansluta till servern",
+        "client_received_invalid_data": "Klienten mottog ogiltig data från servern! Vänligen rapportera detta.",
+        "unexpected": "Klienten hittade oväntat fel (Kontrollera konsolen) Vänligen rapportera detta.",
+        "unknown": "Ingen anledning anges. Vänligen rapportera detta.",
+        "potentially_severe": "Eventuellt allvarligt fel (vänligen rapportera detta)",
+        "incompatible_version": "Inkompatibel version!",
+        "lost_connection": "Förlorad anslutning till servern"
+    },
+    "generic": {
+        "none": "Ingen",
+        "click": "Click",
+        "authors": "Författare",
+        "version": "Version",
+        "status": "Status",
+        "left_click_to_join": "Vänsterklicka för att gå med!",
+        "report_error": "Rapportera detta fel till Discord.",
+        "report_warning": "Var snäll och rapportera allvarliga varningar till Discord.",
+        "click_to_reply": "Klicka för att svara!",
+        "page": "Sida",
+        "available_commands": "Tillgängliga kommandon",
+        "online_players": "Spelare online",
+        "single_player": "En spelare",
+        "offline": "offline",
+        "map": "Karta",
+        "does_contain_delimiter": "Meddelandet innehåller avgränsare.",
+        "channels": {
+            "chat": "CHATT",
+            "direct_message": "DM",
+            "system_notification": "SYSTEM",
+            "debug": "DEBUG",
+            "error": "FEL",
+            "warning": "VARNING"
+        },
+        "debug": {
+            "debug": "Debug",
+            "click_to_disable": "Klicka för att inaktivera felsökningsläge.",
+            "added_to_queue": "Lade till meddelande i kö",
+            "joined_world": "Framgångsrikt anslöt till världen",
+            "hypixel_detected": "Serverinstans upptäckt som Hypixel",
+            "failed_sync": "Det gick inte att synkronisera {int} köad chatt(er). Försök igen...",
+            "disconnect": "Frånkopplad från servern.",
+            "message": "Meddelande",
+            "messenger": "Budbärare",
+            "target": "mottagare",
+            "data": "data",
+            "chat_component": "Chatt Komponent",
+            "inserted": "Infogad",
+            "sent_packet": "Paketet {1} skickades framgångsrikt med paket-ID {2}"
+        },
+        "warning": {
+            "failed_to_execute": "Det gick inte att köra kommandot",
+            "detected_oversized_component": "Upptäckt IChatComponent för stor: Konverterar...",
+            "socket_closed": "Socket stängt",
+            "client_out_of_date": "Klienten är föråldrad!",
+            "connection_terminated": "Anslutningen avslutades med tvång av servern. Detta är INTE en bugg.",
+            "outdated_version": "Föråldrad version",
+            "malformed_packet": "Felaktigt datapaket"
+        },
+        "commands": {
+            "enabled_debug": "Aktiverat felsökningsläge",
+            "disabled_debug": "Avaktiverade felsökningsläge"
+        },
+        "client": "Klient",
+        "server": "Server",
+        "update_link": "Uppdatera länk",
+        "connection_lost": "Anslutning förlorad",
+        "reason": "Anledning",
+        "sent_to_self": "Ditt meddelande gick förlorat i vinden...",
+        "private_message": "Privat meddelande",
+        "from": "Från",
+        "to": "Till",
+        "banned": "Oh-oh! Du är för närvarande bannad!",
+        "banned_2": "Detta gäller endast chatten.",
+        "ban_info": {
+            "summary": "Summary",
+            "reason": "Anledning",
+            "admin": "Bannlyst av",
+            "duration": "Bannlys längd",
+            "issued": "Utfärdad",
+            "expiry": "Förfaller",
+            "remaining": "Tid kvar"
+        },
+        "system": {
+            "connected": "ansluten",
+            "disconnected": "frånkopplad",
+            "game_disconnect": "frånkopplad från spelet! (Socket är fortfarande anslutet)"
+        },
+        "up_to_date": "Du är uppdaterad!",
+        "hover": "Hover"
+    }
+}

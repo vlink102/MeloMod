@@ -3,19 +3,14 @@ package me.vlink102.melomod.util;
 import com.google.common.base.Splitter;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
-import java.util.Iterator;
+import net.minecraft.nbt.*;
+
 import java.util.List;
 import java.util.Stack;
 import java.util.regex.Pattern;
 
-import net.minecraft.nbt.*;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
 public class MojangsonParser {
-
-    private static final Logger a = LogManager.getLogger();
-    private static final Pattern b = Pattern.compile("\\[[-+\\d|,\\s]+\\]");
+    private static final Pattern b = Pattern.compile("\\[[-+\\d|,\\s]+]");
 
     public static NBTTagCompound parse(String s) throws MojangsonParseException {
         s = s.trim();
@@ -31,7 +26,7 @@ public class MojangsonParser {
     static int b(String s) throws MojangsonParseException {
         int i = 0;
         boolean flag = false;
-        Stack stack = new Stack();
+        Stack<Character> stack = new Stack<>();
 
         for (int j = 0; j < s.length(); ++j) {
             char c0 = s.charAt(j);
@@ -46,13 +41,7 @@ public class MojangsonParser {
                 }
             } else if (!flag) {
                 if (c0 != 123 && c0 != 91) {
-                    if (c0 == 125 && (stack.isEmpty() || ((Character) stack.pop()).charValue() != 123)) {
-                        throw new MojangsonParseException("Unbalanced curly brackets {}: " + s);
-                    }
-
-                    if (c0 == 93 && (stack.isEmpty() || ((Character) stack.pop()).charValue() != 91)) {
-                        throw new MojangsonParseException("Unbalanced square brackets []: " + s);
-                    }
+                    throwExceptions(s, stack, c0);
                 } else {
                     if (stack.isEmpty()) {
                         ++i;
@@ -84,28 +73,20 @@ public class MojangsonParser {
         s1 = s1.trim();
         String s2;
         boolean flag;
-        char c0;
 
         if (s1.startsWith("{")) {
             s1 = s1.substring(1, s1.length() - 1);
 
             MojangsonParser.MojangsonCompoundParser mojangsonparser_mojangsoncompoundparser;
 
-            for (mojangsonparser_mojangsoncompoundparser = new MojangsonParser.MojangsonCompoundParser(s); s1.length() > 0; s1 = s1.substring(s2.length() + 1)) {
+            for (mojangsonparser_mojangsoncompoundparser = new MojangsonParser.MojangsonCompoundParser(s); !s1.isEmpty(); s1 = s1.substring(s2.length() + 1)) {
                 s2 = b(s1, true);
                 if (!s2.isEmpty()) {
                     flag = false;
                     mojangsonparser_mojangsoncompoundparser.b.add(a(s2, flag));
                 }
 
-                if (s1.length() < s2.length() + 1) {
-                    break;
-                }
-
-                c0 = s1.charAt(s2.length());
-                if (c0 != 44 && c0 != 123 && c0 != 125 && c0 != 91 && c0 != 93) {
-                    throw new MojangsonParseException("Unexpected token \'" + c0 + "\' at: " + s1.substring(s2.length()));
-                }
+                if (lengthChecks(s1, s2)) break;
             }
 
             return mojangsonparser_mojangsoncompoundparser;
@@ -114,21 +95,14 @@ public class MojangsonParser {
 
             MojangsonParser.MojangsonListParser mojangsonparser_mojangsonlistparser;
 
-            for (mojangsonparser_mojangsonlistparser = new MojangsonParser.MojangsonListParser(s); s1.length() > 0; s1 = s1.substring(s2.length() + 1)) {
+            for (mojangsonparser_mojangsonlistparser = new MojangsonParser.MojangsonListParser(s); !s1.isEmpty(); s1 = s1.substring(s2.length() + 1)) {
                 s2 = b(s1, false);
                 if (!s2.isEmpty()) {
                     flag = true;
                     mojangsonparser_mojangsonlistparser.b.add(a(s2, flag));
                 }
 
-                if (s1.length() < s2.length() + 1) {
-                    break;
-                }
-
-                c0 = s1.charAt(s2.length());
-                if (c0 != 44 && c0 != 123 && c0 != 125 && c0 != 91 && c0 != 93) {
-                    throw new MojangsonParseException("Unexpected token \'" + c0 + "\' at: " + s1.substring(s2.length()));
-                }
+                if (lengthChecks(s1, s2)) break;
             }
 
             return mojangsonparser_mojangsonlistparser;
@@ -137,11 +111,24 @@ public class MojangsonParser {
         }
     }
 
+    private static boolean lengthChecks(String s1, String s2) throws MojangsonParseException {
+        char c0;
+        if (s1.length() < s2.length() + 1) {
+            return true;
+        }
+
+        c0 = s1.charAt(s2.length());
+        if (c0 != 44 && c0 != 123 && c0 != 125 && c0 != 91 && c0 != 93) {
+            throw new MojangsonParseException("Unexpected token '" + c0 + "' at: " + s1.substring(s2.length()));
+        }
+        return false;
+    }
+
     private static MojangsonParser.MojangsonTypeParser a(String s, boolean flag) throws MojangsonParseException {
         String s1 = c(s, flag);
         String s2 = d(s, flag);
 
-        return a(new String[] { s1, s2});
+        return a(new String[]{s1, s2});
     }
 
     private static String b(String s, boolean flag) throws MojangsonParseException {
@@ -164,7 +151,7 @@ public class MojangsonParser {
     }
 
     private static String a(String s, int i) throws MojangsonParseException {
-        Stack stack = new Stack();
+        Stack<Character> stack = new Stack<>();
         int j = i + 1;
         boolean flag = false;
         boolean flag1 = false;
@@ -190,13 +177,7 @@ public class MojangsonParser {
                 }
             } else if (!flag) {
                 if (c0 != 123 && c0 != 91) {
-                    if (c0 == 125 && (stack.isEmpty() || ((Character) stack.pop()).charValue() != 123)) {
-                        throw new MojangsonParseException("Unbalanced curly brackets {}: " + s);
-                    }
-
-                    if (c0 == 93 && (stack.isEmpty() || ((Character) stack.pop()).charValue() != 91)) {
-                        throw new MojangsonParseException("Unbalanced square brackets []: " + s);
-                    }
+                    throwExceptions(s, stack, c0);
 
                     if (c0 == 44 && stack.isEmpty()) {
                         return s.substring(0, j);
@@ -216,6 +197,16 @@ public class MojangsonParser {
         }
 
         return s.substring(0, j);
+    }
+
+    private static void throwExceptions(String s, Stack<Character> stack, char c0) throws MojangsonParseException {
+        if (c0 == 125 && (stack.isEmpty() || stack.pop() != 123)) {
+            throw new MojangsonParseException("Unbalanced curly brackets {}: " + s);
+        }
+
+        if (c0 == 93 && (stack.isEmpty() || stack.pop() != 91)) {
+            throw new MojangsonParseException("Unbalanced square brackets []: " + s);
+        }
     }
 
     private static String c(String s, boolean flag) throws MojangsonParseException {
@@ -345,7 +336,7 @@ public class MojangsonParser {
 
             if (this.b.startsWith("[") && this.b.endsWith("]")) {
                 String s = this.b.substring(1, this.b.length() - 1);
-                String[] astring = (String[]) Iterables.toArray(MojangsonParser.MojangsonPrimitiveParser.j.split(s), String.class);
+                String[] astring = Iterables.toArray(MojangsonPrimitiveParser.j.split(s), String.class);
 
                 try {
                     int[] aint = new int[astring.length];
@@ -422,7 +413,8 @@ public class MojangsonParser {
 
         protected String a;
 
-        MojangsonTypeParser() {}
+        MojangsonTypeParser() {
+        }
 
         public abstract NBTBase a() throws MojangsonParseException;
     }

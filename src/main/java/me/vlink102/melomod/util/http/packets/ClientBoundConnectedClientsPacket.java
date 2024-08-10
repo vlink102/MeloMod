@@ -1,12 +1,10 @@
 package me.vlink102.melomod.util.http.packets;
 
 import com.google.gson.*;
-import me.vlink102.melomod.events.InternalLocraw;
+import me.vlink102.melomod.events.LocrawHandler;
 import me.vlink102.melomod.util.game.SkyblockUtil;
 import me.vlink102.melomod.util.http.Packet;
-import me.vlink102.melomod.util.game.SkyblockUtil;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
@@ -26,8 +24,8 @@ public class ClientBoundConnectedClientsPacket extends Packet {
 
     }
 
-    public HashMap<String, InternalLocraw.LocrawInfo> getPlayerList() {
-        HashMap<String, InternalLocraw.LocrawInfo> list = new HashMap<>();
+    public HashMap<String, LocrawHandler.LocrawInfo> getPlayerList() {
+        HashMap<String, LocrawHandler.LocrawInfo> list = new HashMap<>();
         for (JsonElement player : players) {
             JsonObject playerObj = player.getAsJsonObject();
             String name = SkyblockUtil.getAsString("name",playerObj);
@@ -37,7 +35,7 @@ public class ClientBoundConnectedClientsPacket extends Packet {
             String serverID = SkyblockUtil.getAsString("serverID",playerObj);
             String serverIP = SkyblockUtil.getAsString("serverIP",playerObj);
             ServerBoundLocrawPacket.ServerType isHypixel = ServerBoundLocrawPacket.ServerType.valueOf(playerObj.get("isHypixel").getAsString());
-            list.put(name, new InternalLocraw.LocrawInfo(serverID, gamemode, gametype, map, serverIP, isHypixel));
+            list.put(name, new LocrawHandler.LocrawInfo(serverID, gamemode, gametype, map, serverIP, isHypixel));
         }
         return list;
     }

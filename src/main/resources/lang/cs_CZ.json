@@ -1,0 +1,93 @@
+{
+    "errors": {
+        "could_not_connect": "Nelze se připojit k serveru",
+        "client_received_invalid_data": "Klient obdržel neplatná data ze serveru! Prosím nahlaste to.",
+        "unexpected": "Klient nalezl neočekávanou chybu (Check console). Prosím nahlaste to.",
+        "unknown": "Není uveden žádný důvod. Prosím nahlaste to.",
+        "potentially_severe": "Potenciálně závažná chyba (prosím nahlašte toto)",
+        "incompatible_version": "Nekompatibilní verze!",
+        "lost_connection": "Ztraceno připojení k serveru"
+    },
+    "generic": {
+        "none": "Nic",
+        "click": "Click",
+        "authors": "Autoři",
+        "version": "Verze",
+        "status": "Stav",
+        "left_click_to_join": "Kliknutím levým tlačítkem myši se připojíte!",
+        "report_error": "Prosím nahlaste tuto chybu Discordu.",
+        "report_warning": "Prosím nahlaste vážná varování Discordu.",
+        "click_to_reply": "Klikněte pro odpověď!",
+        "page": "Stránka",
+        "available_commands": "Dostupné příkazy",
+        "online_players": "Online hráči",
+        "single_player": "Jeden přehrávač",
+        "offline": "offline",
+        "map": "Mapa",
+        "does_contain_delimiter": "Zpráva obsahuje oddělovač.",
+        "channels": {
+            "chat": "CHAT",
+            "direct_message": "DM",
+            "system_notification": "SYSTÉM",
+            "debug": "DEBUG",
+            "error": "CHYBA",
+            "warning": "VAROVÁNÍ"
+        },
+        "debug": {
+            "debug": "Debug",
+            "click_to_disable": "Kliknutím vypnete režim ladění.",
+            "added_to_queue": "Přidána zpráva do fronty",
+            "joined_world": "Úspěšně připojen ke světu",
+            "hypixel_detected": "Instance serveru byla zjištěna jako Hypixel",
+            "failed_sync": "Synchronizace chatu {int} ve frontě se nezdařila. Opakuji...",
+            "disconnect": "Úspěšně odpojeno od serveru.",
+            "message": "Zpráva",
+            "messenger": "Messenger",
+            "target": "příjemce",
+            "data": "údaje",
+            "chat_component": "Komponenta chatu",
+            "inserted": "Vloženo",
+            "sent_packet": "Balíček {1} s ID paketu {2} byl úspěšně odeslán"
+        },
+        "warning": {
+            "failed_to_execute": "Provedení příkazu se nezdařilo",
+            "detected_oversized_component": "Detekován IChatComponent příliš velký: Převádění...",
+            "socket_closed": "Raketa uzavřena",
+            "client_out_of_date": "Klient je zastaralý!",
+            "connection_terminated": "Připojení bylo serverem nuceně ukončeno. NENÍ to chyba.",
+            "outdated_version": "Zastaralá verze",
+            "malformed_packet": "Poškozený datový paket"
+        },
+        "commands": {
+            "enabled_debug": "Režim ladění povolen",
+            "disabled_debug": "Debug mód vypnut"
+        },
+        "client": "Zákazník",
+        "server": "Server",
+        "update_link": "Aktualizovat odkaz",
+        "connection_lost": "Spojení ztraceno",
+        "reason": "Důvod",
+        "sent_to_self": "Vaše zpráva byla ztracena ve vítru...",
+        "private_message": "Soukromá zpráva",
+        "from": "Od",
+        "to": "Komu",
+        "banned": "Jejda! Momentálně jste zabanován!",
+        "banned_2": "To platí pouze pro chat.",
+        "ban_info": {
+            "summary": "Summary",
+            "reason": "Důvod",
+            "admin": "Zabanováno",
+            "duration": "Délka banu",
+            "issued": "Vydáno",
+            "expiry": "Vyprší",
+            "remaining": "Zbývající čas"
+        },
+        "system": {
+            "connected": "připojeno",
+            "disconnected": "odpojeno",
+            "game_disconnect": "odpojeno od hry! (raketa je stále připojena)"
+        },
+        "up_to_date": "Jste aktuální!",
+        "hover": "Hover"
+    }
+}

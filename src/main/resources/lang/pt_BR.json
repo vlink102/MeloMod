@@ -1,0 +1,93 @@
+{
+    "errors": {
+        "could_not_connect": "Não foi possível conectar ao servidor.",
+        "client_received_invalid_data": "O cliente recebeu dados inválidos do servidor! Por favor, reporte isso.",
+        "unexpected": "O cliente encontrou um erro inesperado (console de verificação) Por favor, reporte isto.",
+        "unknown": "Nenhum motivo fornecido. Por favor, reporte isto.",
+        "potentially_severe": "Erro potencialmente severo (Por favor reporte isto)",
+        "incompatible_version": "Versão incompatível!",
+        "lost_connection": "Conexão perdida com o servidor"
+    },
+    "generic": {
+        "none": "Nenhuma",
+        "click": "Click",
+        "authors": "Autores",
+        "version": "Versão",
+        "status": "SItuação",
+        "left_click_to_join": "Clique esquerdo para entrar!",
+        "report_error": "Por favor, reporte esse erro ao Discord.",
+        "report_warning": "Por favor, relate sérias advertências ao Discord.",
+        "click_to_reply": "Clique para responder!",
+        "page": "Página",
+        "available_commands": "Comandos Disponíveis",
+        "online_players": "Jogadores Online",
+        "single_player": "Jogador",
+        "offline": "desconectado",
+        "map": "Mapear",
+        "does_contain_delimiter": "A mensagem contém delimitador.",
+        "channels": {
+            "chat": "BATE-PAPO",
+            "direct_message": "DM",
+            "system_notification": "SISTEMA",
+            "debug": "DEBUG",
+            "error": "ERRO",
+            "warning": "ATENÇÃO"
+        },
+        "debug": {
+            "debug": "Debug",
+            "click_to_disable": "Clique para desativar o modo de depuração.",
+            "added_to_queue": "Mensagem adicionada à fila",
+            "joined_world": "Juntou-se ao mundo com sucesso",
+            "hypixel_detected": "Instância de servidor detectada como Hypixel",
+            "failed_sync": "Falha ao sincronizar {int} chat(s) na fila. Tentando novamente...",
+            "disconnect": "Desconectado do servidor com sucesso.",
+            "message": "mensagem",
+            "messenger": "Mensageiro",
+            "target": "Destinatário",
+            "data": "Dados",
+            "chat_component": "Componente de Chat",
+            "inserted": "Inserido",
+            "sent_packet": "O pacote {1} foi enviado com sucesso com ID do pacote {2}"
+        },
+        "warning": {
+            "failed_to_execute": "Falha ao executar o comando",
+            "detected_oversized_component": "IChatComponente detectado muito grande: Convertendo...",
+            "socket_closed": "Socket fechado",
+            "client_out_of_date": "O cliente está desatualizado!",
+            "connection_terminated": "A conexão foi terminada à força pelo servidor. Isso não é um bug.",
+            "outdated_version": "Versão desatualizada",
+            "malformed_packet": "Pacote de dados malformado"
+        },
+        "commands": {
+            "enabled_debug": "Modo de depuração ativado",
+            "disabled_debug": "Modo de depuração desativado"
+        },
+        "client": "Cliente",
+        "server": "Servidor",
+        "update_link": "Atualizar Link",
+        "connection_lost": "Conexão perdida",
+        "reason": "Motivo",
+        "sent_to_self": "Sua mensagem foi perdida ao vento...",
+        "private_message": "Mensagem Privada",
+        "from": "De",
+        "to": "Para",
+        "banned": "Ops! Você está banido no momento!",
+        "banned_2": "Isso só se aplica ao chat.",
+        "ban_info": {
+            "summary": "Summary",
+            "reason": "Motivo",
+            "admin": "Banido por",
+            "duration": "Comprimento do banimento",
+            "issued": "Emitido",
+            "expiry": "Expira",
+            "remaining": "Tempo restante"
+        },
+        "system": {
+            "connected": "Conectado",
+            "disconnected": "Desconectado",
+            "game_disconnect": "Desconectado do jogo! (Socket ainda está conectado)"
+        },
+        "up_to_date": "Você está atualizado!",
+        "hover": "Hover"
+    }
+}

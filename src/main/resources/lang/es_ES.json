@@ -1,0 +1,93 @@
+{
+    "errors": {
+        "could_not_connect": "No se pudo conectar al servidor",
+        "client_received_invalid_data": "¡El cliente ha recibido datos no válidos del servidor! Por favor reporte esto.",
+        "unexpected": "El cliente encontró un error inesperado (Comprueba consola) Por favor reporta esto.",
+        "unknown": "Ningún motivo proporcionado. Por favor reporta esto.",
+        "potentially_severe": "Errores potencialmente graves (por favor reporte esto)",
+        "incompatible_version": "¡Versión incompatible!",
+        "lost_connection": "Conexión perdida con el servidor"
+    },
+    "generic": {
+        "none": "Ninguna",
+        "click": "Click",
+        "authors": "Autores",
+        "version": "Versión",
+        "status": "Estado",
+        "left_click_to_join": "¡Clic izquierdo para unirse!",
+        "report_error": "Por favor, reporta este error al Discord.",
+        "report_warning": "Por favor, informe de advertencias serias al Discord.",
+        "click_to_reply": "¡Clic para responder!",
+        "page": "Pgina",
+        "available_commands": "Comandos disponibles",
+        "online_players": "Jugadores en línea",
+        "single_player": "Un jugador",
+        "offline": "fuera de línea",
+        "map": "Mapa",
+        "does_contain_delimiter": "El mensaje contiene delimitador.",
+        "channels": {
+            "chat": "CHAT",
+            "direct_message": "DM",
+            "system_notification": "SISTEMA",
+            "debug": "DEBUG",
+            "error": "ERROR",
+            "warning": "ATENCIÓN"
+        },
+        "debug": {
+            "debug": "Debug",
+            "click_to_disable": "Haga clic para desactivar el modo de depuración.",
+            "added_to_queue": "Mensaje añadido a la cola",
+            "joined_world": "Se unió al mundo con éxito",
+            "hypixel_detected": "Instancia del servidor detectada como Hypixel",
+            "failed_sync": "Error al sincronizar los chat(s) en cola {int} . Reintentando...",
+            "disconnect": "Desconectado del servidor con éxito.",
+            "message": "Mensaje",
+            "messenger": "Mensajero",
+            "target": "destinatario",
+            "data": "datos",
+            "chat_component": "Componente de Chat",
+            "inserted": "Insertado",
+            "sent_packet": "Paquete enviado con éxito {1} con ID de paquete {2}"
+        },
+        "warning": {
+            "failed_to_execute": "Error al ejecutar el comando",
+            "detected_oversized_component": "IChatComponent detectado demasiado grande: Convirtiendo...",
+            "socket_closed": "Conector cerrado",
+            "client_out_of_date": "¡El cliente está desactualizado!",
+            "connection_terminated": "La conexión fue interrumpida por la fuerza por el servidor. Esto NO es un error.",
+            "outdated_version": "Versión obsoleta",
+            "malformed_packet": "Paquete de datos mal formado"
+        },
+        "commands": {
+            "enabled_debug": "Modo debug activado",
+            "disabled_debug": "Modo debug desactivado"
+        },
+        "client": "Cliente",
+        "server": "Servidor",
+        "update_link": "Actualizar enlace",
+        "connection_lost": "Conexión perdida",
+        "reason": "Razón",
+        "sent_to_self": "Tu mensaje se ha perdido en el viento...",
+        "private_message": "Mensaje privado",
+        "from": "De",
+        "to": "A",
+        "banned": "¡Uh-oh! ¡Estás baneado!",
+        "banned_2": "Esto sólo se aplica al chat.",
+        "ban_info": {
+            "summary": "Summary",
+            "reason": "Razón",
+            "admin": "Bloqueado por",
+            "duration": "Longitud de ban",
+            "issued": "Emitido",
+            "expiry": "Caduca",
+            "remaining": "Tiempo restante"
+        },
+        "system": {
+            "connected": "conectado",
+            "disconnected": "desconectado",
+            "game_disconnect": "¡desconectado del juego! (El conector todavía está conectado)"
+        },
+        "up_to_date": "¡Estás actualizado!",
+        "hover": "Hover"
+    }
+}

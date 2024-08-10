@@ -14,7 +14,7 @@ public class Version {
     }
 
     // todo add outdated minor and outdated patch (green, yellow, orange, red)
-    public enum VersionCompatibility {
+    public enum Compatibility {
         UP_TO_DATE(MeloMod.AbstractColor.GREEN, '✔', "&2Up to date"),
         OUTDATED(MeloMod.AbstractColor.YELLOW, '⚠', "&6Outdated"),
         INCOMPATIBLE(MeloMod.AbstractColor.RED, '❌', "&4Incompatible");
@@ -23,7 +23,7 @@ public class Version {
         private final char icon;
         private final String pretty;
 
-        VersionCompatibility(MeloMod.AbstractColor color, final char icon, final String pretty) {
+        Compatibility(MeloMod.AbstractColor color, final char icon, final String pretty) {
             this.color = color;
             this.icon = icon;
             this.pretty = pretty;
@@ -89,15 +89,15 @@ public class Version {
         return patchVersion;
     }
 
-    public static VersionCompatibility getCompatibility(Version one, Version two) {
+    public static Compatibility getCompatibility(Version one, Version two) {
         if (isCompatible(one, two)) {
             if (one.patchVersion.equals(two.patchVersion)) {
-                return VersionCompatibility.UP_TO_DATE;
+                return Compatibility.UP_TO_DATE;
             } else {
-                return VersionCompatibility.OUTDATED;
+                return Compatibility.OUTDATED;
             }
         } else {
-            return VersionCompatibility.INCOMPATIBLE;
+            return Compatibility.INCOMPATIBLE;
         }
     }
 }

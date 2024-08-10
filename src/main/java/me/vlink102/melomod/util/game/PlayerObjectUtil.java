@@ -1,6 +1,7 @@
 package me.vlink102.melomod.util.game;
 
 import me.vlink102.melomod.MeloMod;
+import me.vlink102.melomod.util.translation.Feature;
 import net.minecraft.client.Minecraft;
 import net.minecraft.item.ItemStack;
 
@@ -17,7 +18,7 @@ public class PlayerObjectUtil {
 
     public static String getHeldItemName() {
         ItemStack heldItem = getHeldItem();
-        if (heldItem == null || !heldItem.hasDisplayName()) return MeloMod.AbstractColor.RED.getColor() + "None";
+        if (heldItem == null || !heldItem.hasDisplayName()) return MeloMod.AbstractColor.RED.getColor() + Feature.GENERIC_NONE.toString();
         return getHeldItem().getDisplayName();
     }
 }

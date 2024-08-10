@@ -1,0 +1,93 @@
+{
+    "errors": {
+        "could_not_connect": "Nu s-a putut conecta la server",
+        "client_received_invalid_data": "Clientul a primit date invalide de la server! Vă rugăm să raportați acest lucru.",
+        "unexpected": "Clientul a găsit o eroare neașteptată (Verificați consola) Raportați acest lucru.",
+        "unknown": "Nici un motiv specificat. Vă rugăm să raportați acest lucru.",
+        "potentially_severe": "Eventual eroare gravă (Vă rugăm să raportați acest lucru)",
+        "incompatible_version": "Versiune incompatibilă!",
+        "lost_connection": "Conexiune pierdută la server"
+    },
+    "generic": {
+        "none": "Niciunul",
+        "click": "Click",
+        "authors": "Autori",
+        "version": "Versiune",
+        "status": "Status",
+        "left_click_to_join": "Click stânga pentru a te alătura!",
+        "report_error": "Te rugăm să raportezi această eroare către Discord.",
+        "report_warning": "Vă rugăm să raportați avertismente serioase către Discord.",
+        "click_to_reply": "Click pentru a răspunde!",
+        "page": "Pagină",
+        "available_commands": "Comenzi disponibile",
+        "online_players": "Jucători online",
+        "single_player": "Jucător unic",
+        "offline": "deconectat",
+        "map": "Hartă",
+        "does_contain_delimiter": "Mesajul conţine delimitator.",
+        "channels": {
+            "chat": "Conversație",
+            "direct_message": "MD",
+            "system_notification": "SISTEM",
+            "debug": "DEBUG",
+            "error": "EROARE",
+            "warning": "AVERTIZARE"
+        },
+        "debug": {
+            "debug": "Debug",
+            "click_to_disable": "Click pentru a dezactiva modul de depanare.",
+            "added_to_queue": "Mesaj adăugat în coadă",
+            "joined_world": "S-a alăturat cu succes lumii",
+            "hypixel_detected": "Instanță server detectată ca Hypixel",
+            "failed_sync": "Sincronizarea chatului(lor) {int} nu a reușit. Reîncearcă...",
+            "disconnect": "Deconectat cu succes de la server.",
+            "message": "Mesaj",
+            "messenger": "Mesager",
+            "target": "destinatar",
+            "data": "date",
+            "chat_component": "Componenta de chat",
+            "inserted": "Inserat",
+            "sent_packet": "Pachet {1} cu ID-ul de pachet {2} trimis cu succes"
+        },
+        "warning": {
+            "failed_to_execute": "Executare comandă eșuată",
+            "detected_oversized_component": "IChatComponenta detectată prea mare: Convertit...",
+            "socket_closed": "Socket inchis",
+            "client_out_of_date": "Pasagerul nu mai este de actualitate!",
+            "connection_terminated": "Conexiunea a fost oprită forțat de către server. Aceasta NU este o eroare.",
+            "outdated_version": "Versiunea învechită",
+            "malformed_packet": "Pachet de date informat"
+        },
+        "commands": {
+            "enabled_debug": "Mod de depanare activat",
+            "disabled_debug": "Modul de depanare dezactivat"
+        },
+        "client": "Client",
+        "server": "Server",
+        "update_link": "Actualizare link",
+        "connection_lost": "Conexiune pierdută",
+        "reason": "Motiv",
+        "sent_to_self": "Mesajul tău a fost pierdut în vânt...",
+        "private_message": "Mesaj privat",
+        "from": "De la",
+        "to": "La",
+        "banned": "Uh-oh! Momentan ești interzis!",
+        "banned_2": "Acest lucru este valabil doar pentru chat.",
+        "ban_info": {
+            "summary": "Summary",
+            "reason": "Motiv",
+            "admin": "Interzis de",
+            "duration": "Lungime ban",
+            "issued": "Emis",
+            "expiry": "Expiră",
+            "remaining": "Timp rămas"
+        },
+        "system": {
+            "connected": "conectat",
+            "disconnected": "deconectat",
+            "game_disconnect": "deconectat de la joc! (Socket este încă conectat)"
+        },
+        "up_to_date": "Ești la curent!",
+        "hover": "Hover"
+    }
+}

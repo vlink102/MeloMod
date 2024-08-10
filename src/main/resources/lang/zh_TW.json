@@ -1,0 +1,93 @@
+{
+    "errors": {
+        "could_not_connect": "無法連接到伺服器",
+        "client_received_invalid_data": "客戶端從伺服器收到無效資料！請報告此事。",
+        "unexpected": "用戶端發現意外錯誤（檢查控制台）請回報此情況。",
+        "unknown": "沒有提供理由。請報告此事。",
+        "potentially_severe": "潛在的嚴重錯誤（請報告此）",
+        "incompatible_version": "版本不相容！",
+        "lost_connection": "與伺服器失去連接"
+    },
+    "generic": {
+        "none": "沒有任何",
+        "click": "點選",
+        "authors": "作者",
+        "version": "版本",
+        "status": "地位",
+        "left_click_to_join": "左鍵點擊加入！",
+        "report_error": "請向 Discord 回報此錯誤。",
+        "report_warning": "請向 Discord 報告嚴重警告。",
+        "click_to_reply": "點擊回覆！",
+        "page": "頁",
+        "available_commands": "可用指令",
+        "online_players": "線上玩家",
+        "single_player": "單人遊戲",
+        "offline": "離線",
+        "map": "地圖",
+        "does_contain_delimiter": "訊息確實包含分隔符號。",
+        "channels": {
+            "chat": "聊天",
+            "direct_message": "DM",
+            "system_notification": "系統",
+            "debug": "偵錯",
+            "error": "錯誤",
+            "warning": "警告"
+        },
+        "debug": {
+            "debug": "偵錯",
+            "click_to_disable": "按一下可停用調試模式。",
+            "added_to_queue": "將訊息新增至佇列",
+            "joined_world": "成功加入世界",
+            "hypixel_detected": "伺服器實例檢測為 Hypixel",
+            "failed_sync": "無法同步 {int} 排隊聊天。正在重試...",
+            "disconnect": "成功與伺服器斷開連線。",
+            "message": "訊息",
+            "messenger": "信差",
+            "target": "接受者",
+            "data": "數據",
+            "chat_component": "聊天元件",
+            "inserted": "已插入",
+            "sent_packet": "成功傳送封包 {1} ，封包 ID {2}"
+        },
+        "warning": {
+            "failed_to_execute": "執行命令失敗",
+            "detected_oversized_component": "偵測到 IChatComponent 太大：正在轉換...",
+            "socket_closed": "插座已關閉",
+            "client_out_of_date": "客戶端已經過時了！",
+            "connection_terminated": "連線被伺服器強制終止。這不是一個錯誤。",
+            "outdated_version": "過時的版本",
+            "malformed_packet": "資料包格式錯誤"
+        },
+        "commands": {
+            "enabled_debug": "啟用調試模式",
+            "disabled_debug": "禁用調試模式"
+        },
+        "client": "客戶",
+        "server": "伺服器",
+        "update_link": "更新連結",
+        "connection_lost": "連線遺失",
+        "reason": "原因",
+        "sent_to_self": "你的留言消失在風中…",
+        "private_message": "私訊",
+        "from": "從",
+        "to": "到",
+        "banned": "呃-哦！您目前已被禁止！",
+        "banned_2": "這僅適用於聊天。",
+        "ban_info": {
+            "summary": "概括",
+            "reason": "原因",
+            "admin": "禁止者",
+            "duration": "禁令長度",
+            "issued": "發布",
+            "expiry": "過期",
+            "remaining": "剩餘時間"
+        },
+        "system": {
+            "connected": "已連接",
+            "disconnected": "斷開連接",
+            "game_disconnect": "與遊戲斷開連線！ （套接字仍處於連線狀態）"
+        },
+        "up_to_date": "你是最新的！",
+        "hover": "徘徊"
+    }
+}

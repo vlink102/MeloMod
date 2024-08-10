@@ -1,0 +1,93 @@
+{
+    "errors": {
+        "could_not_connect": "Не удалось подключиться к серверу",
+        "client_received_invalid_data": "Клиент получил неверные данные с сервера! Пожалуйста, сообщите об этом.",
+        "unexpected": "Клиент обнаружил непредвиденную ошибку (Check console) Пожалуйста, сообщите об этом.",
+        "unknown": "Причина не указана. Пожалуйста, сообщите об этом.",
+        "potentially_severe": "Потенциально серьезная ошибка (пожалуйста, сообщите об этом)",
+        "incompatible_version": "Несовместимая версия!",
+        "lost_connection": "Потеряно соединение с сервером"
+    },
+    "generic": {
+        "none": "Нет",
+        "click": "Click",
+        "authors": "Авторы",
+        "version": "Версии",
+        "status": "Статус",
+        "left_click_to_join": "Щелкните левой кнопкой мыши для присоединения!",
+        "report_error": "Пожалуйста, сообщите об этой ошибке Discord.",
+        "report_warning": "Пожалуйста, сообщите о серьезных предупреждениях Discord.",
+        "click_to_reply": "Нажмите, чтобы ответить!",
+        "page": "Страница",
+        "available_commands": "Доступные команды",
+        "online_players": "Игроки онлайн",
+        "single_player": "Одиночная игра",
+        "offline": "оффлайн",
+        "map": "Карта",
+        "does_contain_delimiter": "Сообщение содержит разделитель.",
+        "channels": {
+            "chat": "ЧАТ",
+            "direct_message": "ЛС",
+            "system_notification": "СИСТЕМА",
+            "debug": "DEBUG",
+            "error": "ОШИБКА",
+            "warning": "ПРЕДУПРЕЖДЕНИЕ"
+        },
+        "debug": {
+            "debug": "Debug",
+            "click_to_disable": "Нажмите, чтобы отключить режим отладки.",
+            "added_to_queue": "Добавлено сообщение в очередь",
+            "joined_world": "Вы успешно присоединились к миру",
+            "hypixel_detected": "Обнаружен экземпляр сервера как Hypixel",
+            "failed_sync": "Не удалось синхронизировать чат {int} в очереди (чатах). Повторить...",
+            "disconnect": "Успешно отключено от сервера.",
+            "message": "Сообщение",
+            "messenger": "Посланник",
+            "target": "получатель",
+            "data": "данные",
+            "chat_component": "Компонент чата",
+            "inserted": "Вставлено",
+            "sent_packet": "Пакет {1} успешно отправлен с ID пакета {2}"
+        },
+        "warning": {
+            "failed_to_execute": "Не удалось выполнить команду",
+            "detected_oversized_component": "Обнаружен слишком большой IChatComponent: Превращение...",
+            "socket_closed": "Сокет закрыт",
+            "client_out_of_date": "Клиент устарел!",
+            "connection_terminated": "Соединение было принудительно прервано сервером. Это НЕ ошибка.",
+            "outdated_version": "Устаревшая версия",
+            "malformed_packet": "Неправильный пакет данных"
+        },
+        "commands": {
+            "enabled_debug": "Режим отладки включен",
+            "disabled_debug": "Режим отладки отключён"
+        },
+        "client": "Клиент",
+        "server": "Сервер",
+        "update_link": "Ссылка на обновление",
+        "connection_lost": "Соединение потеряно",
+        "reason": "Причина",
+        "sent_to_self": "Ваше сообщение было потеряно в ветре...",
+        "private_message": "Личное сообщение",
+        "from": "От",
+        "to": "Кому",
+        "banned": "Ой-ой! Вы забанены!",
+        "banned_2": "Это относится только к чату.",
+        "ban_info": {
+            "summary": "Summary",
+            "reason": "Причина",
+            "admin": "Заблокирован",
+            "duration": "Длина бана",
+            "issued": "Issued",
+            "expiry": "Истекает",
+            "remaining": "Осталось"
+        },
+        "system": {
+            "connected": "подключен",
+            "disconnected": "отключен",
+            "game_disconnect": "отключено от игры! (Сокет все еще подключен)"
+        },
+        "up_to_date": "Вы в курсе!",
+        "hover": "Hover"
+    }
+}

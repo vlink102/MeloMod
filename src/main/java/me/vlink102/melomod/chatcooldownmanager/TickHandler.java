@@ -4,21 +4,15 @@ import cc.polyfrost.oneconfig.events.event.Stage;
 import cc.polyfrost.oneconfig.events.event.TickEvent;
 import cc.polyfrost.oneconfig.libs.eventbus.Subscribe;
 import me.vlink102.melomod.MeloMod;
-import me.vlink102.melomod.config.ChatConfig;
+import me.vlink102.melomod.configuration.ChatConfiguration;
+import me.vlink102.melomod.util.translation.Feature;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.play.client.C01PacketChatMessage;
 import net.minecraftforge.client.ClientCommandHandler;
-import net.minecraftforge.fml.common.eventhandler.EventPriority;
-import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
-import java.util.ArrayList;
 import java.util.LinkedList;
-import java.util.List;
-
-import static me.vlink102.melomod.chatcooldownmanager.ServerTracker.hasChatCooldown;
-import static me.vlink102.melomod.chatcooldownmanager.ServerTracker.isHypixel;
 
 public class TickHandler
 {
@@ -27,7 +21,7 @@ public class TickHandler
     private long lastExecutionTime = System.currentTimeMillis();
 
     public static void addToQueue(String message) {
-        MeloMod.addDebug("&eAdded message to queue: &7" + message);
+        MeloMod.addDebug("&e" + Feature.GENERIC_DEBUG_ADDED_TO_QUEUE + ": &7" + message);
         scheduledCommands.add(message);
     }
 
@@ -49,7 +43,7 @@ public class TickHandler
             sendCommand(message);
             return;
         }
-        if (ChatConfig.chatCaching) {
+        if (ChatConfiguration.chatCaching) {
             Minecraft.getMinecraft().ingameGUI.getChatGUI().addToSentMessages(message);
         }
         
@@ -60,14 +54,14 @@ public class TickHandler
     @SideOnly (Side.CLIENT)
     public static void sendCommand(String command)
     {
-        if (ChatConfig.chatCaching) {
+        if (ChatConfiguration.chatCaching) {
             Minecraft.getMinecraft().ingameGUI.getChatGUI().addToSentMessages(command);
         }
 
         int executeResult = ClientCommandHandler.instance.executeCommand(Minecraft.getMinecraft().thePlayer, command);
 
         if (executeResult != 0) {
-            MeloMod.addWarn("&eFailed to execute command: &8Status: " + executeResult);
+            MeloMod.addWarn("&e" + Feature.GENERIC_WARNING_FAILED_TO_EXECUTE + ": &8" + Feature.GENERIC_STATUS + ": " + executeResult);
             return;
         }
 

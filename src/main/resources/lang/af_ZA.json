@@ -1,0 +1,93 @@
+{
+    "errors": {
+        "could_not_connect": "Kon nie aan bediener koppel nie",
+        "client_received_invalid_data": "Kliënt het ongeldige data van die bediener ontvang! Rapporteer dit asseblief.",
+        "unexpected": "Kliënt het onverwagte fout gevind (Gaan konsole na) Rapporteer dit asseblief.",
+        "unknown": "Geen rede verskaf nie. Rapporteer dit asseblief.",
+        "potentially_severe": "Potensieel ernstige fout (rapporteer dit asseblief)",
+        "incompatible_version": "Onversoenbare weergawe!",
+        "lost_connection": "Het verbinding met bediener verloor"
+    },
+    "generic": {
+        "none": "Geen",
+        "click": "Klik",
+        "authors": "Skrywers",
+        "version": "Weergawe",
+        "status": "Status",
+        "left_click_to_join": "Links-kliek om aan te sluit!",
+        "report_error": "Rapporteer asseblief hierdie fout by die Discord.",
+        "report_warning": "Rapporteer asseblief ernstige waarskuwings aan die Discord.",
+        "click_to_reply": "Klik om te antwoord!",
+        "page": "Bladsy",
+        "available_commands": "Beskikbare opdragte",
+        "online_players": "Aanlyn Spelers",
+        "single_player": "Enkelspeler",
+        "offline": "vanlyn",
+        "map": "Kaart",
+        "does_contain_delimiter": "Boodskap bevat wel afbakening.",
+        "channels": {
+            "chat": "KLETS",
+            "direct_message": "DM",
+            "system_notification": "STELSEL",
+            "debug": "DEBUG",
+            "error": "FOUT",
+            "warning": "WAARSKUWING"
+        },
+        "debug": {
+            "debug": "Ontfout",
+            "click_to_disable": "Klik om ontfoutmodus te deaktiveer.",
+            "added_to_queue": "Boodskap by tou gevoeg",
+            "joined_world": "Suksesvol by die wêreld aangesluit",
+            "hypixel_detected": "Bedienergeval bespeur as Hypixel",
+            "failed_sync": "Kon nie {int} klets(e) in tou sinkroniseer nie. Probeer tans weer …",
+            "disconnect": "Suksesvol van bediener ontkoppel.",
+            "message": "Boodskap",
+            "messenger": "Boodskapper",
+            "target": "ontvanger",
+            "data": "data",
+            "chat_component": "Kletskomponent",
+            "inserted": "Ingevoeg",
+            "sent_packet": "Suksesvol gestuur pakkie {1} met pakkie ID {2}"
+        },
+        "warning": {
+            "failed_to_execute": "Kon nie opdrag uitvoer nie",
+            "detected_oversized_component": "Bespeur IChatComponent te groot: Skakel tans om...",
+            "socket_closed": "Sok gesluit",
+            "client_out_of_date": "Kliënt is verouderd!",
+            "connection_terminated": "Die verbinding is met geweld deur die bediener beëindig. Hierdie is NIE 'n fout nie.",
+            "outdated_version": "Verouderde weergawe",
+            "malformed_packet": "Misvormde datapakkie"
+        },
+        "commands": {
+            "enabled_debug": "Ontfoutmodus geaktiveer",
+            "disabled_debug": "Ontfoutmodus gedeaktiveer"
+        },
+        "client": "Kliënt",
+        "server": "Bediener",
+        "update_link": "Dateer skakel op",
+        "connection_lost": "Verbinding verloor",
+        "reason": "Rede",
+        "sent_to_self": "Jou boodskap was verlore in die wind...",
+        "private_message": "Privaat Boodskap",
+        "from": "Van",
+        "to": "Om",
+        "banned": "Uh-o! Jy is tans verban!",
+        "banned_2": "Dit geld net vir klets.",
+        "ban_info": {
+            "summary": "Opsomming",
+            "reason": "Rede",
+            "admin": "Verban deur",
+            "duration": "Ban Lengte",
+            "issued": "Uitgereik",
+            "expiry": "Verval",
+            "remaining": "Tyd oor"
+        },
+        "system": {
+            "connected": "verbind",
+            "disconnected": "ontkoppel",
+            "game_disconnect": "ontkoppel van die spel! (Sok is steeds gekoppel)"
+        },
+        "up_to_date": "Jy is op datum!",
+        "hover": "Beweeg"
+    }
+}

@@ -1,0 +1,93 @@
+{
+    "errors": {
+        "could_not_connect": "Keine Verbindung zum Server möglich",
+        "client_received_invalid_data": "Der Client hat ungültige Daten vom Server erhalten! Bitte melden Sie dies.",
+        "unexpected": "Unerwarteter Fehler gefunden (Konsole überprüfen) Bitte melden Sie dies.",
+        "unknown": "Kein Grund angegeben. Bitte melden Sie das.",
+        "potentially_severe": "Eventuell schwerer Fehler (Bitte melden Sie dies)",
+        "incompatible_version": "Inkompatible Version!",
+        "lost_connection": "Verbindung zum Server verloren"
+    },
+    "generic": {
+        "none": "Keine",
+        "click": "Click",
+        "authors": "Autoren",
+        "version": "Version",
+        "status": "Status",
+        "left_click_to_join": "Linksklick, um beizutreten!",
+        "report_error": "Bitte melde diesen Fehler an die Discord.",
+        "report_warning": "Bitte melde ernsthafte Warnungen an die Discord.",
+        "click_to_reply": "Klicke, um zu antworten!",
+        "page": "Seite",
+        "available_commands": "Verfügbare Befehle",
+        "online_players": "Online-Spieler",
+        "single_player": "Einzelspieler",
+        "offline": "offline",
+        "map": "Karte",
+        "does_contain_delimiter": "Nachricht enthält Trennzeichen.",
+        "channels": {
+            "chat": "CHAT",
+            "direct_message": "TM",
+            "system_notification": "SYSTEM",
+            "debug": "DEBUG",
+            "error": "FEHLER",
+            "warning": "WARNUNG"
+        },
+        "debug": {
+            "debug": "Debug",
+            "click_to_disable": "Klicken, um den Debug-Modus zu deaktivieren.",
+            "added_to_queue": "Nachricht zur Warteschlange hinzugefügt",
+            "joined_world": "Erfolgreich Welt beigetreten",
+            "hypixel_detected": "Serverinstanz als Hypixel erkannt",
+            "failed_sync": "Fehler beim Synchronisieren von {int} Warteschlange(n). Wiederholen...",
+            "disconnect": "Verbindung erfolgreich vom Server getrennt.",
+            "message": "Nachricht",
+            "messenger": "Messenger",
+            "target": "empfänger",
+            "data": "daten",
+            "chat_component": "Chat-Komponente",
+            "inserted": "Eingefügt",
+            "sent_packet": "Paket {1} erfolgreich mit Paket-ID {2} gesendet"
+        },
+        "warning": {
+            "failed_to_execute": "Fehler beim Ausführen des Befehls",
+            "detected_oversized_component": "IChatComponent zu groß: Konvertieren...",
+            "socket_closed": "Sockel geschlossen",
+            "client_out_of_date": "Client ist veraltet!",
+            "connection_terminated": "Die Verbindung wurde vom Server erzwungenermaßen beendet. Dies ist kein Fehler.",
+            "outdated_version": "Veraltete Version",
+            "malformed_packet": "Falsches Datenpaket"
+        },
+        "commands": {
+            "enabled_debug": "Debug-Modus aktiviert",
+            "disabled_debug": "Debug-Modus deaktiviert"
+        },
+        "client": "Kunde",
+        "server": "Server",
+        "update_link": "Link aktualisieren",
+        "connection_lost": "Verbindung verloren",
+        "reason": "Grund",
+        "sent_to_self": "Deine Nachricht ist im Wind verloren...",
+        "private_message": "Private Nachricht",
+        "from": "Von",
+        "to": "An",
+        "banned": "Uh-oh! Du bist derzeit gebannt!",
+        "banned_2": "Dies gilt nur für Chat.",
+        "ban_info": {
+            "summary": "Summary",
+            "reason": "Grund",
+            "admin": "Gesperrt von",
+            "duration": "Bann-Länge",
+            "issued": "Ausgestellt",
+            "expiry": "Gültig bis",
+            "remaining": "Verbleibende Zeit"
+        },
+        "system": {
+            "connected": "verbunden",
+            "disconnected": "getrennt",
+            "game_disconnect": "getrennt vom Spiel! (Socket ist noch verbunden)"
+        },
+        "up_to_date": "Du bist auf dem Laufenden!",
+        "hover": "Hover"
+    }
+}

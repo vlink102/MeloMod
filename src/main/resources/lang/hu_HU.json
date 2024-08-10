@@ -1,0 +1,93 @@
+{
+    "errors": {
+        "could_not_connect": "Nem sikerült csatlakozni a szerverhez",
+        "client_received_invalid_data": "A kliens érvénytelen adatokat kapott a szervertől! Kérem jelentse ezt.",
+        "unexpected": "Az ügyfél váratlan hibát talált (Check console) Kérjük, jelentse ezt.",
+        "unknown": "Indoklás nélkül. Kérem jelentse ezt.",
+        "potentially_severe": "Potenciálisan súlyos hiba (kérjük, jelentse ezt)",
+        "incompatible_version": "Nem kompatibilis verzió!",
+        "lost_connection": "Megszakadt a kapcsolat a szerverrel"
+    },
+    "generic": {
+        "none": "Egyik sem",
+        "click": "Kattintson",
+        "authors": "Szerzői",
+        "version": "Változat",
+        "status": "Állapot",
+        "left_click_to_join": "Kattintson a bal gombbal a csatlakozáshoz!",
+        "report_error": "Kérjük, jelentse ezt a hibát a Discord felé.",
+        "report_warning": "Kérjük, jelentse a súlyos figyelmeztetéseket a Discord felé.",
+        "click_to_reply": "Kattintson a válaszhoz!",
+        "page": "oldal",
+        "available_commands": "Elérhető parancsok",
+        "online_players": "Online játékosok",
+        "single_player": "Egyjátékos",
+        "offline": "offline módban",
+        "map": "Térkép",
+        "does_contain_delimiter": "Az üzenet határolót tartalmaz.",
+        "channels": {
+            "chat": "CSEVEGÉS",
+            "direct_message": "DM",
+            "system_notification": "RENDSZER",
+            "debug": "DEBUG",
+            "error": "HIBA",
+            "warning": "FIGYELMEZTETÉS"
+        },
+        "debug": {
+            "debug": "Hibakeresés",
+            "click_to_disable": "Kattintson a hibakeresési mód letiltásához.",
+            "added_to_queue": "Üzenet hozzáadva a sorhoz",
+            "joined_world": "Sikeresen csatlakozott a világhoz",
+            "hypixel_detected": "A szerverpéldány Hypixelként észlelve",
+            "failed_sync": "{int} sorban álló csevegés(ek) szinkronizálása nem sikerült. Újrapróbálkozás...",
+            "disconnect": "Sikeresen leválasztották a szerverről.",
+            "message": "Üzenet",
+            "messenger": "Hírnök",
+            "target": "befogadó",
+            "data": "adat",
+            "chat_component": "Chat komponens",
+            "inserted": "Beszúrva",
+            "sent_packet": "A {1} csomag sikeresen elküldve {2}csomagazonosítóval"
+        },
+        "warning": {
+            "failed_to_execute": "Nem sikerült végrehajtani a parancsot",
+            "detected_oversized_component": "Az észlelt IChatComponent túl nagy: Konvertálás...",
+            "socket_closed": "Aljzat zárva",
+            "client_out_of_date": "Az ügyfél elavult!",
+            "connection_terminated": "A kapcsolatot a szerver erőszakkal megszakította. Ez NEM hiba.",
+            "outdated_version": "Elavult verzió",
+            "malformed_packet": "Rosszul formázott adatcsomag"
+        },
+        "commands": {
+            "enabled_debug": "Engedélyezett hibakeresési mód",
+            "disabled_debug": "Letiltott hibakeresési mód"
+        },
+        "client": "Ügyfél",
+        "server": "Szerver",
+        "update_link": "Link frissítése",
+        "connection_lost": "Megszakadt a kapcsolat",
+        "reason": "Ok",
+        "sent_to_self": "Üzenete elveszett a szélben...",
+        "private_message": "Privát Üzenet",
+        "from": "Tól",
+        "to": "To",
+        "banned": "Ó-ó! Jelenleg kitiltva vagy!",
+        "banned_2": "Ez csak a chatre vonatkozik.",
+        "ban_info": {
+            "summary": "Összegzés",
+            "reason": "Ok",
+            "admin": "Kitiltotta",
+            "duration": "Ban Length",
+            "issued": "Kiadva",
+            "expiry": "Lejár",
+            "remaining": "Hátralévő idő"
+        },
+        "system": {
+            "connected": "csatlakoztatva",
+            "disconnected": "szétkapcsolt",
+            "game_disconnect": "lekapcsolva a játékról! (A konnektor még mindig csatlakoztatva van)"
+        },
+        "up_to_date": "Ön naprakész!",
+        "hover": "Lebeg"
+    }
+}

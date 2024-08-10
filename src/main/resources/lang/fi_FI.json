@@ -1,0 +1,93 @@
+{
+    "errors": {
+        "could_not_connect": "Palvelimeen ei saatu yhteyttä",
+        "client_received_invalid_data": "Asiakas sai virheellisiä tietoja palvelimelta! Ole hyvä ja ilmoita tästä.",
+        "unexpected": "Client found unexpected error (Check console) Ilmoita tästä.",
+        "unknown": "Ei mitään syytä. Ilmoita tästä.",
+        "potentially_severe": "Mahdollisesti vakava virhe (Ilmoita tästä)",
+        "incompatible_version": "Yhteensopimaton Versio!",
+        "lost_connection": "Yhteys palvelimeen katosi"
+    },
+    "generic": {
+        "none": "Ei Mitään",
+        "click": "Click",
+        "authors": "Tekijät",
+        "version": "Versio",
+        "status": "Tila",
+        "left_click_to_join": "Liittyäksesi vasemmalla klikkauksella!",
+        "report_error": "Ole hyvä ja ilmoita tämä virhe Discordille.",
+        "report_warning": "Olkaa hyvä ja ilmoittakaa Discordille vakavista varoituksista.",
+        "click_to_reply": "Klikkaa vastataksesi!",
+        "page": "Sivu",
+        "available_commands": "Käytettävissä Olevat Komennot",
+        "online_players": "Verkossa Olevat Pelaajat",
+        "single_player": "Yksinpeli",
+        "offline": "offline-tilassa",
+        "map": "Kartta",
+        "does_contain_delimiter": "Viesti ei sisällä erottimia.",
+        "channels": {
+            "chat": "CHAT",
+            "direct_message": "DM",
+            "system_notification": "JÄRJESTELMÄ",
+            "debug": "DEBUG",
+            "error": "VIRHE",
+            "warning": "VAROITUS"
+        },
+        "debug": {
+            "debug": "Debug",
+            "click_to_disable": "Napsauta poistaaksesi vianetsintätilan käytöstä.",
+            "added_to_queue": "Viesti lisätty jonoon",
+            "joined_world": "Maailmaan liittyminen onnistui",
+            "hypixel_detected": "Palvelimen ilmentymä havaittu Hypixel:nä",
+            "failed_sync": "{int} jonossa olevaa chattia ei voitu synkronoida...",
+            "disconnect": "Yhteys palvelimeen katkaistu onnistuneesti.",
+            "message": "Viesti",
+            "messenger": "Sanansaattaja",
+            "target": "vastaanottaja",
+            "data": "tiedot",
+            "chat_component": "Chatin Komponentti",
+            "inserted": "Lisätty",
+            "sent_packet": "Onnistuneesti lähetetty paketti {1} pakettitunnuksella {2}"
+        },
+        "warning": {
+            "failed_to_execute": "Komennon suorittaminen epäonnistui",
+            "detected_oversized_component": "Havaittu IChatComponent liian suuri: muuntaa...",
+            "socket_closed": "Pistoke suljettu",
+            "client_out_of_date": "Asiakas on vanhentunut!",
+            "connection_terminated": "Yhteys katkesi väkisin palvelimella. Tämä EI ole vika.",
+            "outdated_version": "Vanhentunut Versio",
+            "malformed_packet": "Väärä tietopaketti"
+        },
+        "commands": {
+            "enabled_debug": "Käytössä Vianetsintätila",
+            "disabled_debug": "Pois Käytöstä Vianetsintätila"
+        },
+        "client": "Asiakas",
+        "server": "Palvelin",
+        "update_link": "Päivitä Linkki",
+        "connection_lost": "Yhteys katkesi",
+        "reason": "Syy",
+        "sent_to_self": "Viestisi oli kadonnut tuulessa...",
+        "private_message": "Yksityinen Viesti",
+        "from": "Alkaen",
+        "to": "Vastaanottaja",
+        "banned": "Hups! Olet tällä hetkellä bannattu!",
+        "banned_2": "Tämä koskee vain keskustelua.",
+        "ban_info": {
+            "summary": "Summary",
+            "reason": "Syy",
+            "admin": "Estetty",
+            "duration": "Estä Pituus",
+            "issued": "Myönnetty",
+            "expiry": "Vanhenee",
+            "remaining": "Aikaa Jäljellä"
+        },
+        "system": {
+            "connected": "yhdistetty",
+            "disconnected": "yhteys katkaistu",
+            "game_disconnect": "katkaistu yhteys pelistä! (Socket on vielä yhdistetty)"
+        },
+        "up_to_date": "Olet ajan tasalla!",
+        "hover": "Hover"
+    }
+}

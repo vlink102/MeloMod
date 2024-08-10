@@ -1,0 +1,93 @@
+{
+    "errors": {
+        "could_not_connect": "Could not connect to server",
+        "client_received_invalid_data": "Client received invalid data from the server! Please report this.",
+        "unexpected": "Client found unexpected error (Check console) Please report this.",
+        "unknown": "No reason provided. Please report this.",
+        "potentially_severe": "Potentially severe error (Please report this)",
+        "incompatible_version": "Incompatible Version!",
+        "lost_connection": "Lost connection to server"
+    },
+    "generic": {
+        "none": "None",
+        "click": "Click",
+        "authors": "Authors",
+        "version": "Version",
+        "status": "Status",
+        "left_click_to_join": "Left-click to join!",
+        "report_error": "Please report this error to the Discord.",
+        "report_warning": "Please report serious warnings to the Discord.",
+        "click_to_reply": "Click to reply!",
+        "page": "Page",
+        "available_commands": "Available Commands",
+        "online_players": "Online Players",
+        "single_player": "Singleplayer",
+        "offline": "offline",
+        "map": "Map",
+        "does_contain_delimiter": "Message does contain delimiter.",
+        "channels": {
+            "chat": "CHAT",
+            "direct_message": "DM",
+            "system_notification": "SYSTEM",
+            "debug": "DEBUG",
+            "error": "ERROR",
+            "warning": "WARNING"
+        },
+        "debug": {
+            "debug": "Debug",
+            "click_to_disable": "Click to disable debug mode.",
+            "added_to_queue": "Added message to queue",
+            "joined_world": "Successfully joined world",
+            "hypixel_detected": "Server instance detected as Hypixel",
+            "failed_sync": "Failed to sync {int} queued chat(s). Retrying...",
+            "disconnect": "Successfully disconnected from server.",
+            "message": "Message",
+            "messenger": "Messenger",
+            "target": "recipient",
+            "data": "data",
+            "chat_component": "Chat Component",
+            "inserted": "Inserted",
+            "sent_packet": "Successfully sent packet {1} with packet ID {2}"
+        },
+        "warning": {
+            "failed_to_execute": "Failed to execute command",
+            "detected_oversized_component": "Detected IChatComponent too large: Converting...",
+            "socket_closed": "Socket closed",
+            "client_out_of_date": "Client is out of date!",
+            "connection_terminated": "The connection was forcibly terminated by the server. This is NOT a bug.",
+            "outdated_version": "Outdated Version",
+            "malformed_packet": "Malformed data packet"
+        },
+        "commands": {
+            "enabled_debug": "Enabled Debug Mode",
+            "disabled_debug": "Disabled Debug Mode"
+        },
+        "client": "Client",
+        "server": "Server",
+        "update_link": "Update Link",
+        "connection_lost": "Connection lost",
+        "reason": "Reason",
+        "sent_to_self": "Your message was lost in the wind...",
+        "private_message": "Private Message",
+        "from": "From",
+        "to": "To",
+        "banned": "Uh-oh! You are currently banned!",
+        "banned_2": "This only applies to chat.",
+        "ban_info": {
+            "summary": "Summary",
+            "reason": "Reason",
+            "admin": "Banned by",
+            "duration": "Ban Length",
+            "issued": "Issued",
+            "expiry": "Expires",
+            "remaining": "Time Left"
+        },
+        "system": {
+            "connected": "connected",
+            "disconnected": "disconnected",
+            "game_disconnect": "disconnected from the game! (Socket is still connected)"
+        },
+        "up_to_date": "You are up to date!",
+        "hover": "Hover"
+    }
+}

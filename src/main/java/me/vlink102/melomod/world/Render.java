@@ -1,9 +1,10 @@
 package me.vlink102.melomod.world;
 
-import me.vlink102.melomod.config.MiningHelper;
+import me.vlink102.melomod.configuration.MiningHelperConfiguration;
+import me.vlink102.melomod.util.enums.skyblock.ItemType;
 import me.vlink102.melomod.util.game.SkyblockUtil;
+import me.vlink102.melomod.util.game.neu.SpecialColour;
 import me.vlink102.melomod.util.math.MathUtils;
-import me.vlink102.melomod.util.game.SpecialColour;
 import net.minecraft.block.*;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.Minecraft;
@@ -50,7 +51,7 @@ public class Render {
         if (block == Blocks.prismarine) {
             if (state.getValue(BlockPrismarine.VARIANT) == BlockPrismarine.EnumType.DARK) return true;
             if (state.getValue(BlockPrismarine.VARIANT) == BlockPrismarine.EnumType.ROUGH) return true;
-            if (state.getValue(BlockPrismarine.VARIANT) == BlockPrismarine.EnumType.BRICKS) return true;
+            return state.getValue(BlockPrismarine.VARIANT) == BlockPrismarine.EnumType.BRICKS;
         }
 
         return false;
@@ -86,7 +87,7 @@ public class Render {
             if (state.getValue(BlockStainedGlassPane.COLOR) == EnumDyeColor.PURPLE) return true;
             if (state.getValue(BlockStainedGlassPane.COLOR) == EnumDyeColor.LIME) return true;
             if (state.getValue(BlockStainedGlassPane.COLOR) == EnumDyeColor.MAGENTA) return true;
-            if (state.getValue(BlockStainedGlassPane.COLOR) == EnumDyeColor.RED) return true;
+            return state.getValue(BlockStainedGlassPane.COLOR) == EnumDyeColor.RED;
         }
         return false;
     }
@@ -119,7 +120,7 @@ public class Render {
                 continue;
             }
             Block worldBlock = Minecraft.getMinecraft().theWorld.getBlockState(block).getBlock();
-            if (isMatch(MiningHelper.miningHighlightType, block)) {
+            if (isMatch(MiningHelperConfiguration.miningHighlightType, block)) {
                 if (intersectsWith(
                         event,
                         getMin(worldBlock),
@@ -135,6 +136,7 @@ public class Render {
     public static BlockPos getMin(Block block) {
         return new BlockPos(block.getBlockBoundsMinX(), block.getBlockBoundsMinY(), block.getBlockBoundsMinZ());
     }
+
     public static BlockPos getMax(Block block) {
         return new BlockPos(block.getBlockBoundsMaxX(), block.getBlockBoundsMaxY(), block.getBlockBoundsMaxZ());
     }
@@ -143,28 +145,40 @@ public class Render {
         float dmin = 0;
 
         Vec3 center = player.getPositionEyes(event.partialTicks);
-        Vec3 bmin = new Vec3(a);
-        Vec3 bmax = new Vec3(b);
+        Vec3 bMin = new Vec3(a);
+        Vec3 bMax = new Vec3(b);
 
-        if (center.xCoord < bmin.xCoord) {
-            dmin += (float) Math.pow(center.xCoord - bmin.xCoord, 2);
-        } else if (center.xCoord > bmax.xCoord) {
-            dmin += (float) Math.pow(center.xCoord - bmax.xCoord, 2);
+        if (center.xCoord < bMin.xCoord) {
+            dmin += (float) Math.pow(center.xCoord - bMin.xCoord, 2);
+        } else if (center.xCoord > bMax.xCoord) {
+            dmin += (float) Math.pow(center.xCoord - bMax.xCoord, 2);
         }
 
-        if (center.yCoord < bmin.yCoord) {
-            dmin += (float) Math.pow(center.yCoord - bmin.yCoord, 2);
-        } else if (center.yCoord > bmax.yCoord) {
-            dmin += (float) Math.pow(center.yCoord - bmax.yCoord, 2);
+        if (center.yCoord < bMin.yCoord) {
+            dmin += (float) Math.pow(center.yCoord - bMin.yCoord, 2);
+        } else if (center.yCoord > bMax.yCoord) {
+            dmin += (float) Math.pow(center.yCoord - bMax.yCoord, 2);
         }
 
-        if (center.zCoord < bmin.zCoord) {
-            dmin += (float) Math.pow(center.zCoord - bmin.zCoord, 2);
-        } else if (center.zCoord > bmax.zCoord) {
-            dmin += (float) Math.pow(center.zCoord - bmax.zCoord, 2);
+        if (center.zCoord < bMin.zCoord) {
+            dmin += (float) Math.pow(center.zCoord - bMin.zCoord, 2);
+        } else if (center.zCoord > bMax.zCoord) {
+            dmin += (float) Math.pow(center.zCoord - bMax.zCoord, 2);
         }
 
         return dmin <= Math.pow(blocksInReach, 2);
+    }
+
+    private static boolean isPickaxe(String internalName) {
+        if (internalName == null) return false;
+
+        if (internalName.endsWith("_PICKAXE")) {
+            return true;
+        } else if (internalName.contains("_DRILL_")) {
+            char lastChar = internalName.charAt(internalName.length() - 1);
+            return lastChar >= '0' && lastChar <= '9';
+        } else
+            return internalName.equals("GEMSTONE_GAUNTLET") || internalName.equals("PICKONIMBUS") || internalName.equals("DIVAN_DRILL");
     }
 
     public double distance(Vec3 v0, Vec3 v1) {
@@ -178,20 +192,20 @@ public class Render {
         double d0 = player.lastTickPosX + (player.posX - player.lastTickPosX) * (double) event.partialTicks;
         double d1 = player.lastTickPosY + (player.posY - player.lastTickPosY) * (double) event.partialTicks;
         double d2 = player.lastTickPosZ + (player.posZ - player.lastTickPosZ) * (double) event.partialTicks;
-        SkyblockUtil.ItemType type =SkyblockUtil.ItemType.parseFromItemStack(held);
+        ItemType type = ItemType.parseFromItemStack(held);
         if (type == null) return;
         if (event.target.typeOfHit == MovingObjectPosition.MovingObjectType.BLOCK) {
-            if (type == SkyblockUtil.ItemType.DRILL || type == SkyblockUtil.ItemType.GAUNTLET || type == SkyblockUtil.ItemType.PICKAXE) {
-                if (!MiningHelper.enableHighlights) return;
+            if (type == ItemType.DRILL || type == ItemType.GAUNTLET || type == ItemType.PICKAXE) {
+                if (!MiningHelperConfiguration.enableHighlights) return;
                 GlStateManager.enableBlend();
                 GlStateManager.tryBlendFuncSeparate(770, 771, 1, 0);
                 GlStateManager.color(0.0F, 0.0F, 0.0F, 0.4F);
                 GlStateManager.disableTexture2D();
                 GlStateManager.depthMask(false);
-                if (!MiningHelper.renderDepth) {
+                if (!MiningHelperConfiguration.renderDepth) {
                     GlStateManager.disableDepth();
                 }
-                if (isMatch(MiningHelper.miningHighlightType, event.target.getBlockPos())) {
+                if (isMatch(MiningHelperConfiguration.miningHighlightType, event.target.getBlockPos())) {
 
                     HashSet<BlockPos> candidatesOld = new HashSet<>();
                     LinkedList<BlockPos> candidates = new LinkedList<>();
@@ -199,7 +213,7 @@ public class Render {
                     candidatesNew.add(event.target.getBlockPos());
 
                     int blocks = 0;
-                    int max = MiningHelper.renderAmount;
+                    int max = MiningHelperConfiguration.renderAmount;
 
                     while (blocks < max) {
                         if (candidatesNew.isEmpty()) {
@@ -227,7 +241,7 @@ public class Render {
                                             if (!candidatesOld.contains(posNew) && !candidates.contains(posNew) && !candidatesNew.contains(posNew)) {
                                                 double minimal = MathUtils.getMinimalDistance(player.getPositionEyes(event.partialTicks), Minecraft.getMinecraft().theWorld.getBlockState(posNew).getBlock(), posNew);
 
-                                                if (isMatch(MiningHelper.miningHighlightType, posNew) && minimal <= MiningHelper.blockReach) {
+                                                if (isMatch(MiningHelperConfiguration.miningHighlightType, posNew) && minimal <= MiningHelperConfiguration.blockReach) {
                                                     candidatesNew.add(posNew);
                                                 }
                                             }
@@ -238,54 +252,54 @@ public class Render {
                             block.setBlockBoundsBasedOnState(Minecraft.getMinecraft().theWorld, candidate);
 
                             if (block == Blocks.stone && Minecraft.getMinecraft().theWorld.getBlockState(candidate).getValue(BlockStone.VARIANT) == BlockStone.EnumType.DIORITE_SMOOTH) {
-                                if (MiningHelper.titaniumRenderType == 0) {
+                                if (MiningHelperConfiguration.titaniumRenderType == 0) {
 
                                     RenderUtils.drawOutlineBoundingBox(block.getSelectedBoundingBox(Minecraft.getMinecraft().theWorld, candidate)
                                                     .expand(0.001D, 0.001D, 0.001D)
                                                     .offset(-d0, -d1, -d2),
                                             random ? 0.5f : 1f, SpecialColour.special(
-                                                    MiningHelper.titaniumHighlightColor.getDataBit(),
-                                                    MiningHelper.titaniumHighlightColor.getAlpha(),
-                                                    MiningHelper.titaniumHighlightColor.getRed(),
-                                                    MiningHelper.titaniumHighlightColor.getGreen(),
-                                                    MiningHelper.titaniumHighlightColor.getBlue())
+                                                    MiningHelperConfiguration.titaniumHighlightColor.getDataBit(),
+                                                    MiningHelperConfiguration.titaniumHighlightColor.getAlpha(),
+                                                    MiningHelperConfiguration.titaniumHighlightColor.getRed(),
+                                                    MiningHelperConfiguration.titaniumHighlightColor.getGreen(),
+                                                    MiningHelperConfiguration.titaniumHighlightColor.getBlue())
                                     );
-                                } else if (MiningHelper.titaniumRenderType == 1) {
+                                } else if (MiningHelperConfiguration.titaniumRenderType == 1) {
                                     RenderUtils.drawFilledBoundingBox(block.getSelectedBoundingBox(Minecraft.getMinecraft().theWorld, candidate)
                                                     .expand(0.001D, 0.001D, 0.001D)
                                                     .offset(-d0, -d1, -d2),
                                             random ? 0.5f : 1f, SpecialColour.special(
-                                                    MiningHelper.titaniumHighlightColor.getDataBit(),
-                                                    MiningHelper.titaniumHighlightColor.getAlpha(),
-                                                    MiningHelper.titaniumHighlightColor.getRed(),
-                                                    MiningHelper.titaniumHighlightColor.getGreen(),
-                                                    MiningHelper.titaniumHighlightColor.getBlue())
+                                                    MiningHelperConfiguration.titaniumHighlightColor.getDataBit(),
+                                                    MiningHelperConfiguration.titaniumHighlightColor.getAlpha(),
+                                                    MiningHelperConfiguration.titaniumHighlightColor.getRed(),
+                                                    MiningHelperConfiguration.titaniumHighlightColor.getGreen(),
+                                                    MiningHelperConfiguration.titaniumHighlightColor.getBlue())
                                     );
                                 }
 
                             } else {
-                                if (MiningHelper.defaultRenderType == 0) {
+                                if (MiningHelperConfiguration.defaultRenderType == 0) {
                                     RenderUtils.drawOutlineBoundingBox(block.getSelectedBoundingBox(Minecraft.getMinecraft().theWorld, candidate)
                                                     .expand(0.001D, 0.001D, 0.001D)
                                                     .offset(-d0, -d1, -d2),
                                             random ? 0.5f : 1f, SpecialColour.special(
-                                                    MiningHelper.miningHighlightColor.getDataBit(),
-                                                    MiningHelper.miningHighlightColor.getAlpha(),
-                                                    MiningHelper.miningHighlightColor.getRed(),
-                                                    MiningHelper.miningHighlightColor.getGreen(),
-                                                    MiningHelper.miningHighlightColor.getBlue())
+                                                    MiningHelperConfiguration.miningHighlightColor.getDataBit(),
+                                                    MiningHelperConfiguration.miningHighlightColor.getAlpha(),
+                                                    MiningHelperConfiguration.miningHighlightColor.getRed(),
+                                                    MiningHelperConfiguration.miningHighlightColor.getGreen(),
+                                                    MiningHelperConfiguration.miningHighlightColor.getBlue())
                                     );
-                                } else if (MiningHelper.defaultRenderType == 1) {
+                                } else if (MiningHelperConfiguration.defaultRenderType == 1) {
 
                                     RenderUtils.drawFilledBoundingBox(block.getSelectedBoundingBox(Minecraft.getMinecraft().theWorld, candidate)
                                                     .expand(0.001D, 0.001D, 0.001D)
                                                     .offset(-d0, -d1, -d2),
                                             random ? 0.5f : 1f, SpecialColour.special(
-                                                    MiningHelper.miningHighlightColor.getDataBit(),
-                                                    MiningHelper.miningHighlightColor.getAlpha(),
-                                                    MiningHelper.miningHighlightColor.getRed(),
-                                                    MiningHelper.miningHighlightColor.getGreen(),
-                                                    MiningHelper.miningHighlightColor.getBlue())
+                                                    MiningHelperConfiguration.miningHighlightColor.getDataBit(),
+                                                    MiningHelperConfiguration.miningHighlightColor.getAlpha(),
+                                                    MiningHelperConfiguration.miningHighlightColor.getRed(),
+                                                    MiningHelperConfiguration.miningHighlightColor.getGreen(),
+                                                    MiningHelperConfiguration.miningHighlightColor.getBlue())
                                     );
                                 }
 
@@ -295,7 +309,7 @@ public class Render {
                         }
                     }
                 }
-                if (!MiningHelper.renderDepth) {
+                if (!MiningHelperConfiguration.renderDepth) {
                     GlStateManager.enableDepth();
                 }
                 GlStateManager.depthMask(true);
@@ -369,16 +383,6 @@ public class Render {
         }
     }
 
-    private static class RaycastResult {
-        IBlockState state;
-        BlockPos pos;
-
-        public RaycastResult(IBlockState state, BlockPos pos) {
-            this.state = state;
-            this.pos = pos;
-        }
-    }
-
     private RaycastResult raycast(EntityPlayerSP player, float partialTicks, float dist, float step) {
         Vector3f pos = new Vector3f((float) player.posX, (float) player.posY + player.getEyeHeight(), (float) player.posZ);
 
@@ -418,15 +422,15 @@ public class Render {
 
         return null;
     }
-    private static boolean isPickaxe(String internalname) {
-        if (internalname == null) return false;
 
-        if (internalname.endsWith("_PICKAXE")) {
-            return true;
-        } else if (internalname.contains("_DRILL_")) {
-            char lastChar = internalname.charAt(internalname.length() - 1);
-            return lastChar >= '0' && lastChar <= '9';
-        } else return internalname.equals("GEMSTONE_GAUNTLET") || internalname.equals("PICKONIMBUS") || internalname.equals("DIVAN_DRILL");
+    private static class RaycastResult {
+        IBlockState state;
+        BlockPos pos;
+
+        public RaycastResult(IBlockState state, BlockPos pos) {
+            this.state = state;
+            this.pos = pos;
+        }
     }
     /*
 

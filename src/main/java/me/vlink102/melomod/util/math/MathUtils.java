@@ -18,7 +18,7 @@ public class MathUtils {
     }
 
     public static double[] getNearest(double xQ, double yQ, double zQ, double x0, double y0, double z0, double x1, double y1, double z1) {
-        return new double[] {clamp(xQ, x0, x1), clamp(yQ, y0, y1), clamp(zQ, z0, z1)};
+        return new double[]{clamp(xQ, x0, x1), clamp(yQ, y0, y1), clamp(zQ, z0, z1)};
     }
 
     public static Vec3 nearest(double xQ, double yQ, double zQ, double x0, double y0, double z0, double x1, double y1, double z1) {
@@ -70,7 +70,7 @@ public class MathUtils {
         if (w > c2) {
             z = c2;
         }
-        return Math.sqrt(Math.pow((x-u), 2) + Math.pow((y-v), 2) + Math.pow((z-w), 2));
+        return Math.sqrt(Math.pow((x - u), 2) + Math.pow((y - v), 2) + Math.pow((z - w), 2));
     }
 
     public static double getMinimalDistance(Vec3 eyes, Block block, BlockPos pos) {
@@ -90,6 +90,9 @@ public class MathUtils {
 
         private class Expression {
             private String expression;
+            private int pos = -1;
+            private int character = -1;
+
             public Expression(String string) {
                 this.expression = string;
             }
@@ -101,9 +104,6 @@ public class MathUtils {
             public void setExpression(String expression) {
                 this.expression = expression;
             }
-
-            private int pos = -1;
-            private int character = -1;
 
             private void next(String string) {
                 character = (++pos < string.length() ? string.charAt(pos) : -1);
@@ -126,7 +126,7 @@ public class MathUtils {
             double parseExpression(String string) {
                 double x = parseTerm(string);
                 while (true) {
-                    if (find (string,'+')) {
+                    if (find(string, '+')) {
                         x += parseTerm(string);
                     } else if (find(string, '-')) {
                         x -= parseTerm(string);
@@ -141,7 +141,7 @@ public class MathUtils {
                 while (true) {
                     if (find(string, '*')) {
                         x *= parseFactor(string);
-                    } else if (find(string,'/')) {
+                    } else if (find(string, '/')) {
                         x /= parseFactor(string);
                     } else {
                         return x;
@@ -191,7 +191,8 @@ public class MathUtils {
                         case "tan":
                             x = Math.tan(Math.toRadians(x));
                             break;
-                        default: x = 0;
+                        default:
+                            x = 0;
                     }
                 }
 

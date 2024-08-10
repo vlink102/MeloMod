@@ -1,16 +1,24 @@
 package me.vlink102.melomod;
 
 import cc.polyfrost.oneconfig.events.EventManager;
+import cc.polyfrost.oneconfig.events.event.InitializationEvent;
+import cc.polyfrost.oneconfig.utils.commands.CommandManager;
 import cc.polyfrost.oneconfig.utils.hypixel.LocrawUtil;
 import com.google.gson.Gson;
-import me.vlink102.melomod.command.*;
-import me.vlink102.melomod.config.MeloConfiguration;
-import cc.polyfrost.oneconfig.events.event.InitializationEvent;
-import me.vlink102.melomod.events.ChatEvent;
-import me.vlink102.melomod.events.InternalLocraw;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonObject;
 import me.vlink102.melomod.chatcooldownmanager.ServerTracker;
 import me.vlink102.melomod.chatcooldownmanager.TickHandler;
-import me.vlink102.melomod.events.PlayerConnection;
+import me.vlink102.melomod.command.client.InternalTesting;
+import me.vlink102.melomod.command.client.MainCommand;
+import me.vlink102.melomod.command.client.RatMe;
+import me.vlink102.melomod.command.server.SocketMessage;
+import me.vlink102.melomod.command.server.SocketOnline;
+import me.vlink102.melomod.command.server.SocketPrivateMessage;
+import me.vlink102.melomod.configuration.MainConfiguration;
+import me.vlink102.melomod.events.ChatEventHandler;
+import me.vlink102.melomod.events.ConnectionHandler;
+import me.vlink102.melomod.events.LocrawHandler;
 import me.vlink102.melomod.util.StringUtils;
 import me.vlink102.melomod.util.VChatComponent;
 import me.vlink102.melomod.util.game.PlayerObjectUtil;
@@ -21,6 +29,9 @@ import me.vlink102.melomod.util.http.Version;
 import me.vlink102.melomod.util.jcolor.Ansi;
 import me.vlink102.melomod.util.jcolor.AnsiFormat;
 import me.vlink102.melomod.util.jcolor.Attribute;
+import me.vlink102.melomod.util.translation.DataUtils;
+import me.vlink102.melomod.util.translation.Feature;
+import me.vlink102.melomod.util.translation.Language;
 import me.vlink102.melomod.world.Render;
 import net.minecraft.client.Minecraft;
 import net.minecraft.event.ClickEvent;
@@ -28,9 +39,9 @@ import net.minecraft.event.HoverEvent;
 import net.minecraft.util.ChatComponentText;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.common.Mod;
-import cc.polyfrost.oneconfig.utils.commands.CommandManager;
 import net.minecraftforge.fml.common.event.FMLInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
+import org.apache.commons.lang3.mutable.MutableObject;
 
 import java.util.*;
 
@@ -44,6 +55,25 @@ import static me.vlink102.melomod.util.StringUtils.cc;
  */
 @Mod(modid = MeloMod.MODID, name = MeloMod.NAME, version = MeloMod.VERSION)
 public class MeloMod {
+    public Language getLanguage() {
+        return language.getValue();
+    }
+
+    public void setLanguage(Language language) {
+        this.language.setValue(language);
+    }
+
+    private final MutableObject<Language> language = new MutableObject<>(Language.ENGLISH);
+
+    private JsonObject languageConfig = new JsonObject();
+
+    public JsonObject getLanguageConfig() {
+        return this.languageConfig;
+    }
+
+    public void setLanguageConfig(JsonObject languageConfig) {
+        this.languageConfig = languageConfig;
+    }
 
     public enum AbstractColor {
         BLACK('0', Ansi.generateCode(new AnsiFormat(Attribute.BLACK_TEXT()))),
@@ -74,6 +104,7 @@ public class MeloMod {
             this.color = color;
             this.ansi = ansi;
         }
+
         private final String ansi;
         private final char color;
 
@@ -109,22 +140,21 @@ public class MeloMod {
     }
 
 
-
     public enum MessageScheme {
-        CHAT(AbstractColor.DARK_PURPLE, AbstractColor.LIGHT_PURPLE, "CHAT"),
-        PRIVATE_CHAT(AbstractColor.DARK_PURPLE, AbstractColor.DARK_AQUA, "DM"),
-        NOTIFICATION(AbstractColor.DARK_GREEN, AbstractColor.GREEN, "SYSTEM"),
-        DEBUG(AbstractColor.BLUE, AbstractColor.DARK_AQUA, "DEBUG"),
-        ERROR(AbstractColor.DARK_RED, AbstractColor.RED, "ERROR"),
-        WARN(AbstractColor.RED, AbstractColor.GOLD, "WARNING"),
+        CHAT(AbstractColor.DARK_PURPLE, AbstractColor.LIGHT_PURPLE, Feature.GENERIC_CHANNELS_CHAT),
+        PRIVATE_CHAT(AbstractColor.DARK_PURPLE, AbstractColor.DARK_AQUA, Feature.GENERIC_CHANNELS_DIRECT_MESSAGE),
+        NOTIFICATION(AbstractColor.DARK_GREEN, AbstractColor.GREEN, Feature.GENERIC_CHANNELS_SYSTEM_NOTIFICATION),
+        DEBUG(AbstractColor.BLUE, AbstractColor.DARK_AQUA, Feature.GENERIC_CHANNELS_DEBUG),
+        ERROR(AbstractColor.DARK_RED, AbstractColor.RED, Feature.GENERIC_CHANNELS_ERROR),
+        WARN(AbstractColor.RED, AbstractColor.GOLD, Feature.GENERIC_CHANNELS_WARNING),
         RAW(null, null, null),
         RAW_SIGNED(AbstractColor.DARK_AQUA, AbstractColor.AQUA, null);
 
         private final AbstractColor bracketColor;
         private final AbstractColor prefixColor;
-        private final String tag;
+        private final Feature tag;
 
-        MessageScheme(AbstractColor bracketColor, AbstractColor prefixColor, String tag) {
+        MessageScheme(AbstractColor bracketColor, AbstractColor prefixColor, Feature tag) {
             this.bracketColor = bracketColor;
             this.prefixColor = prefixColor;
             this.tag = tag;
@@ -143,14 +173,15 @@ public class MeloMod {
 
         public String generatePrefix(boolean system) {
             return this.bracketColor.generate(system) + "[" + this.prefixColor.generate(system) +
-                    "MM" +
+                    MainConfiguration.modChatPrefix +
                     this.bracketColor.generate(system) + "]" + (system ? Ansi.RESET : "");
         }
 
         public String generateTag(boolean system) {
+            String tag = getTag();
             if (tag != null && !tag.isEmpty()) {
                 return this.bracketColor.generate(system) + "[" + this.prefixColor.generate(system) +
-                        this.tag + this.bracketColor.generate(system) + "]" + (system ? Ansi.RESET : "");
+                        tag + this.bracketColor.generate(system) + "]" + (system ? Ansi.RESET : "");
             }
             return null;
         }
@@ -159,23 +190,21 @@ public class MeloMod {
             StringJoiner joiner = new StringJoiner("\n");
             joiner.add("&3&lMeloMod");
             joiner.add("");
-            joiner.add("&8Authors:");
+            joiner.add("&8" + Feature.GENERIC_AUTHORS + ":");
             joiner.add(" &8→ &eMelo &8(__MeloMio)");
             joiner.add(" &8→ &evlink102 &8(ZenmosM)");
             joiner.add("");
-            Version.VersionCompatibility stability = MeloMod.versionCompatibility;
-            joiner.add("&8Version: " + stability.getColor().getColor() + MeloMod.VERSION + " " + stability.getIcon());
-            joiner.add("&8Status: " + stability.getPretty());
+            Version.Compatibility stability = MeloMod.compatibility;
+            joiner.add("&8" + Feature.GENERIC_VERSION + ": " + stability.getColor().getColor() + MeloMod.VERSION + " " + stability.getIcon());
+            joiner.add("&8" + Feature.GENERIC_STATUS + ": " + stability.getPretty());
             joiner.add("");
             joiner.add("&8discord.gg/NVPUTYSk3u");
-            joiner.add("&eLeft-click to join!");
+            joiner.add("&e" + Feature.GENERIC_LEFT_CLICK_JOIN + "&r");
             return cc(joiner.toString());
         }
 
-        // move to vchatcomponent
-
         public String getTag() {
-            return tag;
+            return tag.getMessage();
         }
 
         public AbstractColor getBracketColor() {
@@ -195,16 +224,16 @@ public class MeloMod {
 
     public static Version VERSION_NEW;
 
-    public static Version.VersionCompatibility versionCompatibility = Version.VersionCompatibility.INCOMPATIBLE; //updated on runtime and version packet
+    public static Version.Compatibility compatibility = Version.Compatibility.INCOMPATIBLE; //updated on runtime and version packet
     public static Version serverVersion = null;
 
     @Mod.Instance(MODID)
     public static MeloMod INSTANCE; // Adds the instance of the mod, so we can access other variables.
-    public static MeloConfiguration config;
+    public static MainConfiguration config;
     public static Gson gson;
 
-    public static InternalLocraw internalLocraw = null;
-    public static ChatEvent chatEvent = null;
+    public static LocrawHandler locrawHandler = null;
+    public static ChatEventHandler chatEventHandler = null;
     public static LocrawUtil locrawUtil;
 
     public static UUID playerUUID;
@@ -242,26 +271,29 @@ public class MeloMod {
 
         VERSION_NEW = Version.parse(VERSION);
 
-        config = new MeloConfiguration();
-        gson = new Gson();
+        config = new MainConfiguration();
+        gson = new GsonBuilder().setPrettyPrinting().create();
         MinecraftForge.EVENT_BUS.register(new ServerTracker());
         skyblockUtil = new SkyblockUtil(this);
         apiUtil = new ApiUtil();
-        CommandManager.INSTANCE.registerCommand(new MeloCommand(this));
-        CommandManager.INSTANCE.registerCommand(new MeloMsg(this));
-        CommandManager.INSTANCE.registerCommand(new MeloOnline());
-        CommandManager.INSTANCE.registerCommand(new MeloTest());
+        DataUtils.loadLocalizedStrings(Objects.requireNonNull(Language.getById(config.language)));
+        CommandManager.INSTANCE.registerCommand(new MainCommand(this));
+        CommandManager.INSTANCE.registerCommand(new SocketMessage(this));
+        CommandManager.INSTANCE.registerCommand(new SocketOnline());
+        CommandManager.INSTANCE.registerCommand(new InternalTesting());
         CommandManager.INSTANCE.registerCommand(new RatMe());
-        CommandManager.INSTANCE.registerCommand(new PrivateMessage());
+        CommandManager.INSTANCE.registerCommand(new SocketPrivateMessage());
         PlayerObjectUtil objectUtil = new PlayerObjectUtil(this);
         locrawUtil = new LocrawUtil();
-        internalLocraw = new InternalLocraw(this);
-        chatEvent = new ChatEvent(this);
+        locrawHandler = new LocrawHandler(this);
+        chatEventHandler = new ChatEventHandler(this);
         EventManager.INSTANCE.register(new TickHandler());
         Render render = new Render();
         MinecraftForge.EVENT_BUS.register(render);
+
+
         //MinecraftForge.EVENT_BUS.register(internalLocraw);
-        new PlayerConnection();
+        new ConnectionHandler();
 
         handler = new CommunicationHandler();
         handler.beginKeepAlive(playerUUID, playerName);
@@ -281,7 +313,7 @@ public class MeloMod {
         boolean result = addMessage(new VChatComponent(MessageScheme.ERROR)
                 .add(
                         message,
-                        "&cPlease report this error to the discord. &e(Click)",
+                        "&c" + Feature.GENERIC_REPORT_ERROR + " &e(" + Feature.GENERIC_CLICK + ")",
                         "https://discord.gg/NVPUTYSk3u",
                         StringUtils.VComponentSettings.INHERIT_NONE
                 )
@@ -300,7 +332,7 @@ public class MeloMod {
         boolean result = addMessage(new VChatComponent(MessageScheme.WARN)
                 .add(
                         message,
-                        "&cPlease report serious warnings to the discord. &6(Click)",
+                        "&c" + Feature.GENERIC_REPORT_WARNING + " &6(" + Feature.GENERIC_CLICK + ")",
                         "https://discord.gg/NVPUTYSk3u",
                         StringUtils.VComponentSettings.INHERIT_NONE
                 )
@@ -313,12 +345,12 @@ public class MeloMod {
     }
 
     public static boolean addDebug(String message) {
-        if (MeloConfiguration.debugMessages) {
-            System.out.println("Debug: " + message);
+        if (MainConfiguration.debugMessages) {
+            System.out.println(Feature.GENERIC_DEBUG_DEBUG + ": " + message);
             return addMessage(new VChatComponent(MessageScheme.DEBUG)
                     .add(
                             message,
-                           "&eClick to disable debug mode",
+                            "&e" + Feature.GENERIC_DEBUG_CLICK_TO_DISABLE + "&r",
                             new ClickEvent(
                                     ClickEvent.Action.RUN_COMMAND,
                                     "/melomod debug"
@@ -376,7 +408,7 @@ public class MeloMod {
                         message.build(),
                         new HoverEvent(
                                 HoverEvent.Action.SHOW_TEXT,
-                                new ChatComponentText(cc("&eClick to reply!"))
+                                new ChatComponentText(cc("&e" + Feature.GENERIC_CLICK_TO_REPLY + "&r"))
                         ),
                         new ClickEvent(
                                 ClickEvent.Action.SUGGEST_COMMAND,
@@ -390,7 +422,7 @@ public class MeloMod {
         return addMessage(new VChatComponent(MessageScheme.PRIVATE_CHAT)
                 .add(
                         message,
-                        "&eClick to reply!",
+                        "&e" + Feature.GENERIC_CLICK_TO_REPLY + "&r",
                         new ClickEvent(
                                 ClickEvent.Action.SUGGEST_COMMAND,
                                 "/melopriv " + recipient + " "
@@ -400,15 +432,11 @@ public class MeloMod {
         );
     }
 
-    private static boolean isObfuscated()
-    {
-        try
-        {
+    private static boolean isObfuscated() {
+        try {
             Minecraft.class.getDeclaredField("logger");
             return false;
-        }
-        catch (NoSuchFieldException e1)
-        {
+        } catch (NoSuchFieldException e1) {
             return true;
         }
     }

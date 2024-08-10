@@ -1,7 +1,7 @@
 package me.vlink102.melomod.world;
 
-import me.vlink102.melomod.config.MeloConfiguration;
-import me.vlink102.melomod.util.game.SpecialColour;
+import me.vlink102.melomod.configuration.MainConfiguration;
+import me.vlink102.melomod.util.game.neu.SpecialColour;
 import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.Minecraft;
@@ -22,7 +22,7 @@ public class RenderUtils {
 
 
     public static void drawFilledBoundingBox(AxisAlignedBB p_181561_0_, float alpha, String special) {Color c;
-        if (MeloConfiguration.enableChromaHighlighting) {
+        if (MainConfiguration.enableChromaHighlighting) {
             c = new Color(SpecialColour.specialToChromaRGB(special), true);
         } else {
             c = new Color(SpecialColour.specialToSimpleRGB(special));
@@ -163,7 +163,7 @@ public class RenderUtils {
 
     public static void drawFilledBoundingBoxSide(AxisAlignedBB p_181561_0_, EnumFacing facing, float alpha, String special) {
         Color c;
-        if (MeloConfiguration.enableChromaHighlighting) {
+        if (MainConfiguration.enableChromaHighlighting) {
             c = new Color(SpecialColour.specialToChromaRGB(special), true);
         } else {
             c = new Color(SpecialColour.specialToSimpleRGB(special));
@@ -220,7 +220,7 @@ public class RenderUtils {
 
     public static void drawOutlineBoundingBox(AxisAlignedBB p_181561_0_, float alpha, String special) {
         Color c;
-        if (MeloConfiguration.enableChromaHighlighting) {
+        if (MainConfiguration.enableChromaHighlighting) {
             c = new Color(SpecialColour.specialToChromaRGB(special), true);
         } else {
             c = new Color(SpecialColour.specialToSimpleRGB(special));

@@ -7,24 +7,6 @@ import com.google.gson.JsonParser;
 import me.vlink102.melomod.util.http.packets.*;
 
 public class Packet implements PacketParser {
-    public Packet parse(String json) {
-        return null;
-    }
-
-    public PacketID bind() {
-        return null;
-    }
-
-    public boolean detect(String json) {
-        JsonElement element = new JsonParser().parse(json);
-        if (element.isJsonObject()) {
-            JsonObject jsonObject = element.getAsJsonObject();
-            int id = jsonObject.get("packet-id").getAsInt();
-            return bind().packetID == id;
-        }
-        return false;
-    }
-
     public static PacketID from(String json) {
         JsonElement element = new JsonParser().parse(json);
         if (element.isJsonObject()) {
@@ -64,6 +46,24 @@ public class Packet implements PacketParser {
             default:
                 return null;
         }
+    }
+
+    public Packet parse(String json) {
+        return null;
+    }
+
+    public PacketID bind() {
+        return null;
+    }
+
+    public boolean detect(String json) {
+        JsonElement element = new JsonParser().parse(json);
+        if (element.isJsonObject()) {
+            JsonObject jsonObject = element.getAsJsonObject();
+            int id = jsonObject.get("packet-id").getAsInt();
+            return bind().packetID == id;
+        }
+        return false;
     }
 
     public enum PacketID {
@@ -119,14 +119,6 @@ public class Packet implements PacketParser {
             this.packetType = type;
         }
 
-        public PacketType getPacketType() {
-            return packetType;
-        }
-
-        public int getPacketID() {
-            return packetID;
-        }
-
         public static PacketID from(int packetID) {
             for (PacketID value : values()) {
                 if (value.getPacketID() == packetID) {
@@ -134,6 +126,14 @@ public class Packet implements PacketParser {
                 }
             }
             return ERROR_PACKET;
+        }
+
+        public PacketType getPacketType() {
+            return packetType;
+        }
+
+        public int getPacketID() {
+            return packetID;
         }
 
         public enum PacketType {

@@ -1,0 +1,93 @@
+{
+    "errors": {
+        "could_not_connect": "Impossibile connettersi al server",
+        "client_received_invalid_data": "Il client ha ricevuto dati non validi dal server! Si prega di segnalarlo.",
+        "unexpected": "Client trovato errore imprevisto (Controlla console) Si prega di segnalare questo.",
+        "unknown": "Nessun motivo fornito. Si prega di segnalare questo.",
+        "potentially_severe": "Errore potenzialmente grave (precisate questo)",
+        "incompatible_version": "Versione Incompatibile!",
+        "lost_connection": "Connessione al server persa"
+    },
+    "generic": {
+        "none": "Nessuno",
+        "click": "Click",
+        "authors": "Autori",
+        "version": "Versione",
+        "status": "Stato",
+        "left_click_to_join": "Click sinistro per unirsi!",
+        "report_error": "Si prega di segnalare questo errore al Discord.",
+        "report_warning": "Si prega di segnalare gravi avvertimenti al Discord.",
+        "click_to_reply": "Clicca per rispondere!",
+        "page": "Pagina",
+        "available_commands": "Comandi Disponibili",
+        "online_players": "Giocatori Online",
+        "single_player": "Singleplayer",
+        "offline": "offline",
+        "map": "Mappa",
+        "does_contain_delimiter": "Il messaggio contiene delimitatore.",
+        "channels": {
+            "chat": "CHAT",
+            "direct_message": "DM",
+            "system_notification": "SISTEMA",
+            "debug": "DEBUG",
+            "error": "ERRORE",
+            "warning": "ATTENZIONE"
+        },
+        "debug": {
+            "debug": "Debug",
+            "click_to_disable": "Fare clic per disabilitare la modalità debug.",
+            "added_to_queue": "Messaggio aggiunto alla coda",
+            "joined_world": "Uniti al mondo con successo",
+            "hypixel_detected": "Istanza del server rilevata come Hypixel",
+            "failed_sync": "Impossibile sincronizzare {int} chat in coda. Nuovo tentativo...",
+            "disconnect": "Disconnesso dal server con successo.",
+            "message": "Messaggio",
+            "messenger": "Messenger",
+            "target": "destinatario",
+            "data": "dati",
+            "chat_component": "Componente Chat",
+            "inserted": "Inserito",
+            "sent_packet": "Pacchetto {1} inviato con successo con ID pacchetto {2}"
+        },
+        "warning": {
+            "failed_to_execute": "Esecuzione del comando non riuscita",
+            "detected_oversized_component": "Rilevato IChatComponent troppo grande: Converting...",
+            "socket_closed": "Socket chiuso",
+            "client_out_of_date": "Il client è scaduto!",
+            "connection_terminated": "La connessione è stata interrotta forzatamente dal server. Non è un bug.",
+            "outdated_version": "Versione Andata",
+            "malformed_packet": "Pacchetto dati malformato"
+        },
+        "commands": {
+            "enabled_debug": "Modalità Debug Attivata",
+            "disabled_debug": "Modalità Debug Disabilitata"
+        },
+        "client": "Client",
+        "server": "Server",
+        "update_link": "Aggiorna Collegamento",
+        "connection_lost": "Connessione persa",
+        "reason": "Motivo",
+        "sent_to_self": "Il tuo messaggio è stato perso nel vento...",
+        "private_message": "Messaggio Privato",
+        "from": "Da",
+        "to": "A",
+        "banned": "Uh-oh! Sei attualmente bandito!",
+        "banned_2": "Questo vale solo per la chat.",
+        "ban_info": {
+            "summary": "Summary",
+            "reason": "Motivo",
+            "admin": "Bannato da",
+            "duration": "Lunghezza Ban",
+            "issued": "Emesso",
+            "expiry": "Scade",
+            "remaining": "Tempo Sinistro"
+        },
+        "system": {
+            "connected": "connesso",
+            "disconnected": "disconnesso",
+            "game_disconnect": "disconnesso dal gioco! (La tasca è ancora connessa)"
+        },
+        "up_to_date": "Sei aggiornato!",
+        "hover": "Hover"
+    }
+}

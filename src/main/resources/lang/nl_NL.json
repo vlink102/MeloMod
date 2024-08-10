@@ -1,0 +1,93 @@
+{
+    "errors": {
+        "could_not_connect": "Kan geen verbinding maken met server",
+        "client_received_invalid_data": "Klant heeft ongeldige gegevens ontvangen van de server! Gelieve dit te melden.",
+        "unexpected": "Client heeft onverwachte fout gevonden (Controleer console) Gelieve dit te melden.",
+        "unknown": "Geen reden opgegeven. Gelieve dit te melden.",
+        "potentially_severe": "Mogelijk een ernstige fout (gelieve dit te melden)",
+        "incompatible_version": "Incompatibele versie!",
+        "lost_connection": "Verbinding met server verbroken"
+    },
+    "generic": {
+        "none": "geen",
+        "click": "Click",
+        "authors": "Auteurs",
+        "version": "Versie",
+        "status": "status",
+        "left_click_to_join": "Linksklik om toe te treden!",
+        "report_error": "Gelieve deze fout te melden naar Discord.",
+        "report_warning": "Gelieve serieuze waarschuwingen te rapporteren aan de Discord.",
+        "click_to_reply": "Klik om te reageren!",
+        "page": "Pagina",
+        "available_commands": "Beschikbare commando's",
+        "online_players": "Online spelers",
+        "single_player": "Enkelspeler",
+        "offline": "offline",
+        "map": "Kaart",
+        "does_contain_delimiter": "Bericht bevat scheidingsteken.",
+        "channels": {
+            "chat": "KAAR",
+            "direct_message": "DM",
+            "system_notification": "SYSTEEM",
+            "debug": "DEBUG",
+            "error": "FOUT",
+            "warning": "Waarschuwing"
+        },
+        "debug": {
+            "debug": "Debug",
+            "click_to_disable": "Klik om foutopsporingsmodus uit te schakelen.",
+            "added_to_queue": "Bericht toegevoegd aan wachtrij",
+            "joined_world": "Succesvol toegetreden tot de wereld",
+            "hypixel_detected": "Server instantie gedetecteerd als Hypixel",
+            "failed_sync": "Synchroniseren {int} chat(s) mislukt in de wachtrij. Opnieuw proberen...",
+            "disconnect": "Verbinding met server succesvol verbroken.",
+            "message": "bericht",
+            "messenger": "Messenger",
+            "target": "ontvanger",
+            "data": "gegevens",
+            "chat_component": "Chat component",
+            "inserted": "Ingevoegd",
+            "sent_packet": "Pakket {1} met pakketnummer {2} is met succes verzonden"
+        },
+        "warning": {
+            "failed_to_execute": "Opdracht uitvoeren mislukt",
+            "detected_oversized_component": "Gedetecteerd IChatComponent te groot: Omzetten...",
+            "socket_closed": "Socket gesloten",
+            "client_out_of_date": "Klant is verouderd!",
+            "connection_terminated": "De verbinding is gedwongen beëindigd door de server. Dit is NIET een bug.",
+            "outdated_version": "Verouderde versie",
+            "malformed_packet": "Misvormd datapakket"
+        },
+        "commands": {
+            "enabled_debug": "Debug modus ingeschakeld",
+            "disabled_debug": "Debug modus uitgeschakeld"
+        },
+        "client": "Klant",
+        "server": "Server",
+        "update_link": "Koppeling bijwerken",
+        "connection_lost": "Verbinding verbroken",
+        "reason": "Reden",
+        "sent_to_self": "Je bericht is in de wind verloren...",
+        "private_message": "Privé bericht",
+        "from": "van",
+        "to": "tot",
+        "banned": "Uh-oh! Je bent momenteel verbannen!",
+        "banned_2": "Dit geldt alleen voor de chat.",
+        "ban_info": {
+            "summary": "Summary",
+            "reason": "Reden",
+            "admin": "Geblokkeerd door",
+            "duration": "Verban Lengte",
+            "issued": "Uitgegeven",
+            "expiry": "Verloopt",
+            "remaining": "Resterende tijd"
+        },
+        "system": {
+            "connected": "verbonden",
+            "disconnected": "losgekoppeld",
+            "game_disconnect": "losgekoppeld van het spel! (Socket is nog steeds verbonden)"
+        },
+        "up_to_date": "Je bent up to date!",
+        "hover": "Hover"
+    }
+}

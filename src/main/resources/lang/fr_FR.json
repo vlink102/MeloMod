@@ -1,0 +1,93 @@
+{
+    "errors": {
+        "could_not_connect": "Impossible de se connecter au serveur",
+        "client_received_invalid_data": "Le client a reçu des données non valides du serveur! Veuillez signaler ceci.",
+        "unexpected": "Le client a trouvé une erreur inattendue (Vérifiez la console) S'il vous plaît signaler cela.",
+        "unknown": "Aucune raison fournie. S'il vous plaît signalez cela.",
+        "potentially_severe": "Erreur potentiellement grave (veuillez le signaler)",
+        "incompatible_version": "Version incompatible !",
+        "lost_connection": "Connexion au serveur perdue"
+    },
+    "generic": {
+        "none": "Aucun",
+        "click": "Click",
+        "authors": "Auteurs",
+        "version": "Version",
+        "status": "Statut",
+        "left_click_to_join": "Clic gauche pour rejoindre!",
+        "report_error": "Veuillez signaler cette erreur à Discord.",
+        "report_warning": "Veuillez signaler les avertissements sérieux à Discord.",
+        "click_to_reply": "Cliquez pour répondre !",
+        "page": "Page",
+        "available_commands": "Commandes disponibles",
+        "online_players": "Joueurs en ligne",
+        "single_player": "Joueur solo",
+        "offline": "hors-ligne",
+        "map": "Carte",
+        "does_contain_delimiter": "Le message contient un délimiteur.",
+        "channels": {
+            "chat": "TCHAT",
+            "direct_message": "DM",
+            "system_notification": "SYSTÈME",
+            "debug": "DEBUG",
+            "error": "ERREUR",
+            "warning": "ATTENTION"
+        },
+        "debug": {
+            "debug": "Debug",
+            "click_to_disable": "Cliquez pour désactiver le mode débogage.",
+            "added_to_queue": "Message ajouté à la file d'attente",
+            "joined_world": "Vous avez rejoint le monde avec succès",
+            "hypixel_detected": "Instance de serveur détectée comme Hypixel",
+            "failed_sync": "Impossible de synchroniser {int} dans la file d'attente(s). Nouvelle tentative...",
+            "disconnect": "Déconnexion du serveur réussie.",
+            "message": "Message",
+            "messenger": "Messager",
+            "target": "destinataire",
+            "data": "données",
+            "chat_component": "Composant de chat",
+            "inserted": "Inséré",
+            "sent_packet": "Paquet {1} envoyé avec succès avec l'ID du paquet {2}"
+        },
+        "warning": {
+            "failed_to_execute": "Impossible d'exécuter la commande",
+            "detected_oversized_component": "IChatComponent détecté trop grand : Conversion ...",
+            "socket_closed": "Socket fermé",
+            "client_out_of_date": "Le client est obsolète!",
+            "connection_terminated": "La connexion a été fermée par le serveur. Ce n'est PAS un bug.",
+            "outdated_version": "Version obsolète",
+            "malformed_packet": "Paquet de données mal formé"
+        },
+        "commands": {
+            "enabled_debug": "Mode débogage activé",
+            "disabled_debug": "Mode débogage désactivé"
+        },
+        "client": "Client",
+        "server": "Serveur",
+        "update_link": "Lien de mise à jour",
+        "connection_lost": "Connexion perdue",
+        "reason": "Raison",
+        "sent_to_self": "Votre message a été perdu dans le vent...",
+        "private_message": "Message privé",
+        "from": "A partir de",
+        "to": "À",
+        "banned": "Oh-oh! Vous êtes actuellement banni !",
+        "banned_2": "Cela ne vaut que pour le chat.",
+        "ban_info": {
+            "summary": "Summary",
+            "reason": "Raison",
+            "admin": "Banni par",
+            "duration": "Longueur du bannissement",
+            "issued": "Délivré",
+            "expiry": "Expire",
+            "remaining": "Temps restant"
+        },
+        "system": {
+            "connected": "connecté",
+            "disconnected": "déconnecté",
+            "game_disconnect": "déconnecté de la partie ! (L'ocket est toujours connecté)"
+        },
+        "up_to_date": "Vous êtes à jour !",
+        "hover": "Hover"
+    }
+}

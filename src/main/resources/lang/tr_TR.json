@@ -1,0 +1,93 @@
+{
+    "errors": {
+        "could_not_connect": "Sunucuya bağlanılamadı",
+        "client_received_invalid_data": "İstemci sunucudan geçersiz veri aldı! Lütfen bunu bildirin.",
+        "unexpected": "İstemci beklenmeyen bir hata buldu (Konsolu kontrol edin) Lütfen bunu bildirin.",
+        "unknown": "Hiçbir sebep belirtilmedi. Lütfen bunu bildirin.",
+        "potentially_severe": "Potansiyel olarak ciddi bir hata (Lütfen bunu bildirin)",
+        "incompatible_version": "Uyumsuz Sürüm!",
+        "lost_connection": "Sunucuyla bağlantı kesildi"
+    },
+    "generic": {
+        "none": "Hiçbiri",
+        "click": "Tıklamak",
+        "authors": "Yazarlar",
+        "version": "Sürüm",
+        "status": "Durum",
+        "left_click_to_join": "Katılmak için sol tıklayın!",
+        "report_error": "Lütfen bu hatayı Discord'a bildirin.",
+        "report_warning": "Ciddi uyarıları lütfen Discord'a bildirin.",
+        "click_to_reply": "Cevaplamak için tıklayın!",
+        "page": "Sayfa",
+        "available_commands": "Mevcut Komutlar",
+        "online_players": "Çevrimiçi Oyuncular",
+        "single_player": "Tek oyunculu",
+        "offline": "çevrimdışı",
+        "map": "Harita",
+        "does_contain_delimiter": "Mesajda ayraç bulunmaktadır.",
+        "channels": {
+            "chat": "SOHBET",
+            "direct_message": "DM",
+            "system_notification": "SİSTEM",
+            "debug": "HATA AYIKLAMA",
+            "error": "HATA",
+            "warning": "UYARI"
+        },
+        "debug": {
+            "debug": "Hata ayıklama",
+            "click_to_disable": "Hata ayıklama modunu devre dışı bırakmak için tıklayın.",
+            "added_to_queue": "Sıraya mesaj eklendi",
+            "joined_world": "Dünya'ya başarıyla katıldı",
+            "hypixel_detected": "Sunucu örneği Hypixel olarak algılandı",
+            "failed_sync": "{int} sıradaki sohbeti senkronize edemedim. Yeniden deneniyor...",
+            "disconnect": "Sunucudan bağlantı başarıyla kesildi.",
+            "message": "Mesaj",
+            "messenger": "Haberci",
+            "target": "alıcı",
+            "data": "veri",
+            "chat_component": "Sohbet Bileşeni",
+            "inserted": "Eklendi",
+            "sent_packet": "Paket kimliği {2}olan {1} paketi başarıyla gönderildi"
+        },
+        "warning": {
+            "failed_to_execute": "Komut yürütülemedi",
+            "detected_oversized_component": "Algılanan IChatComponent çok büyük: Dönüştürülüyor...",
+            "socket_closed": "Soket kapalı",
+            "client_out_of_date": "İstemci güncel değil!",
+            "connection_terminated": "Bağlantı sunucu tarafından zorla sonlandırıldı. Bu bir hata DEĞİLDİR.",
+            "outdated_version": "Güncel Olmayan Sürüm",
+            "malformed_packet": "Kötü biçimlendirilmiş veri paketi"
+        },
+        "commands": {
+            "enabled_debug": "Hata Ayıklama Modu Etkinleştirildi",
+            "disabled_debug": "Devre Dışı Hata Ayıklama Modu"
+        },
+        "client": "Müşteri",
+        "server": "Sunucu",
+        "update_link": "Güncelleme Bağlantısı",
+        "connection_lost": "Bağlantı kesildi",
+        "reason": "Sebep",
+        "sent_to_self": "Mesajınız rüzgarda kayboldu...",
+        "private_message": "Özel Mesaj",
+        "from": "İtibaren",
+        "to": "İle",
+        "banned": "Uh-oh! Şu anda yasaklısınız!",
+        "banned_2": "Bu sadece sohbet için geçerlidir.",
+        "ban_info": {
+            "summary": "Özet",
+            "reason": "Sebep",
+            "admin": "Tarafından yasaklandı",
+            "duration": "Yasak Uzunluğu",
+            "issued": "Veriliş",
+            "expiry": "Sona eriyor",
+            "remaining": "Kalan zaman"
+        },
+        "system": {
+            "connected": "bağlı",
+            "disconnected": "bağlantısı kesildi",
+            "game_disconnect": "oyundan bağlantı kesildi! (Socket hala bağlı)"
+        },
+        "up_to_date": "Güncelsiniz!",
+        "hover": "Gezinme"
+    }
+}

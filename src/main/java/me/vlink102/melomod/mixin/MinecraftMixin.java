@@ -1,5 +1,6 @@
 package me.vlink102.melomod.mixin;
 
+import me.vlink102.melomod.MeloMod;
 import net.minecraft.client.Minecraft;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -16,6 +17,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public class MinecraftMixin {
     @Inject(method = "startGame", at = @At(value = "HEAD"))
     private void onStartGame(CallbackInfo ci) {
-        System.out.println("MeloMod initialized successfully!");
+        System.out.println(MeloMod.MODID + " initialized successfully!");
     }
 }

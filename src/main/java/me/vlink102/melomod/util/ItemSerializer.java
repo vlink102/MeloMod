@@ -1,27 +1,16 @@
 package me.vlink102.melomod.util;
 
-import com.google.common.reflect.TypeToken;
-import com.google.gson.*;
-import com.loohp.interactivechatdiscordsrvaddon.main.BlockModelRenderer;
-import net.minecraft.block.Block;
-import net.minecraft.block.BlockDirt;
-import net.minecraft.block.material.Material;
-import net.minecraft.client.Minecraft;
-import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.JsonToNBT;
 import net.minecraft.nbt.NBTException;
 import net.minecraft.nbt.NBTTagCompound;
 
-import java.io.BufferedWriter;
-import java.io.ByteArrayOutputStream;
-import java.io.StringWriter;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
-import java.util.Optional;
 
 import static me.vlink102.melomod.util.StringUtils.cc;
 
+@SuppressWarnings("unused")
 public class ItemSerializer {
     public static final ItemSerializer INSTANCE = new ItemSerializer();
 

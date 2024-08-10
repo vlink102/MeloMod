@@ -1,19 +1,24 @@
 package me.vlink102.melomod.util.http;
 
 
-import com.google.gson.*;
+import com.google.gson.Gson;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 import me.vlink102.melomod.MeloMod;
-import me.vlink102.melomod.config.ChatConfig;
-import me.vlink102.melomod.config.MeloConfiguration;
-import me.vlink102.melomod.events.InternalLocraw;
 import me.vlink102.melomod.chatcooldownmanager.TickHandler;
+import me.vlink102.melomod.configuration.ChatConfiguration;
+import me.vlink102.melomod.configuration.MainConfiguration;
+import me.vlink102.melomod.events.LocrawHandler;
 import me.vlink102.melomod.util.ItemSerializer;
-import me.vlink102.melomod.util.game.PlayerUtil;
+import me.vlink102.melomod.util.enums.http.StatusCodes;
+import me.vlink102.melomod.util.enums.skyblock.Location;
 import me.vlink102.melomod.util.game.SkyblockUtil;
 import me.vlink102.melomod.util.http.packets.PacketPlayOutChat;
+import me.vlink102.melomod.util.wrappers.hypixel.Guild;
+import me.vlink102.melomod.util.wrappers.hypixel.PlayerUtil;
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.util.ChatComponentText;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.text.WordUtils;
 import org.apache.commons.lang3.time.DurationFormatUtils;
@@ -25,267 +30,69 @@ import javax.net.ssl.HttpsURLConnection;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
-import java.net.URISyntaxException;
-import java.net.URL;
-import java.net.URLConnection;
+import java.net.*;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
-import java.util.concurrent.*;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.function.Consumer;
 import java.util.zip.GZIPInputStream;
 
 import static me.vlink102.melomod.util.StringUtils.paginate;
 
 public class ApiUtil {
+    public static final List<String> models = new ArrayList<String>() {{
+        this.add("gemma2-9b-it");
+        this.add("gemma-7b-it");
+        this.add("llama-3.1-70b-versatile");
+        this.add("llama-3.1-8b-instant");
+        this.add("llama3-70b-8192");
+        this.add("llama3-8b-8192");
+        this.add("llama3-groq-70b-8192-tool-use-preview");
+        this.add("llama3-groq-8b-8192-tool-use-preview");
+        this.add("mixtral-8x7b-32768");
+    }};
     private static final Gson gson = new Gson();
     private static final ExecutorService executorService = Executors.newFixedThreadPool(10);
     private static final String USER_AGENT = MeloMod.MODID + "/" + MeloMod.VERSION;
 
+    public static void sendLater(String message, ChatChannel chatChannel) {
+        String prefixCommand = "";
+        switch (chatChannel) {
+            case PARTY:
+                prefixCommand = "/pc";
+                break;
+            case ALL:
+                prefixCommand = "/ac";
+                break;
+            case COOP:
+                prefixCommand = "/cc";
+                break;
+            case GUILD:
+                prefixCommand = "/gc";
+                break;
+            case OFFICER:
+                prefixCommand = "/oc";
+                break;
+            case CUSTOM:
+                if (message.contains("<item>")) {
+                    String data = ItemSerializer.INSTANCE.serialize(Minecraft.getMinecraft().thePlayer.getHeldItem());
+                    CommunicationHandler.thread.sendPacket(new PacketPlayOutChat(message, MeloMod.playerUUID.toString(), MeloMod.playerName, null, data));
+                } else {
 
-    public interface Endpoint {
-        String getEndpoint();
+                    CommunicationHandler.thread.sendPacket(new PacketPlayOutChat(message, MeloMod.playerUUID.toString(), MeloMod.playerName, null, null));
+                }
+                return;
+        }
+        String finalCommand = prefixCommand + " " + message;
+        TickHandler.addToQueue(finalCommand);
     }
 
-    public static class Request {
-
-        private final List<NameValuePair> queryArguments = new ArrayList<>();
-        private String baseUrl = null;
-        private boolean shouldGunzip = false;
-        private String method;
-
-        public Request method(String method) {
-            this.method = method;
-            return this;
-        }
-
-        public Request url(String baseUrl) {
-            this.baseUrl = baseUrl;
-            return this;
-        }
-
-        public Request queryArgument(String key, String value) {
-            queryArguments.add(new BasicNameValuePair(key, value));
-            return this;
-        }
-
-        public Request queryArguments(Collection<NameValuePair> queryArguments) {
-            this.queryArguments.addAll(queryArguments);
-            return this;
-        }
-
-        public Request gunzip() {
-            shouldGunzip = true;
-            return this;
-        }
-
-        private CompletableFuture<URL> buildUrl() {
-            CompletableFuture<URL> fut = new CompletableFuture<>();
-            try {
-                fut.complete(new URIBuilder(baseUrl)
-                        .addParameters(queryArguments)
-                        .build()
-                        .toURL());
-            } catch (URISyntaxException |
-                     MalformedURLException |
-                     NullPointerException e) { // Using CompletableFuture as an exception monad, isn't that exiting?
-                fut.completeExceptionally(e);
-            }
-            return fut;
-        }
-
-        public CompletableFuture<String> requestString() {
-            return buildUrl().thenApplyAsync(url -> {
-                try {
-                    InputStream inputStream = null;
-                    URLConnection conn = null;
-                    try {
-                        conn = url.openConnection();
-                        if (conn instanceof HttpURLConnection) {
-                            ((HttpURLConnection) conn).setRequestMethod(method);
-                        }
-                        conn.setConnectTimeout(10000);
-                        conn.setReadTimeout(10000);
-                        conn.setRequestProperty("User-Agent", USER_AGENT);
-                        conn.setRequestProperty("API-Key", MeloConfiguration.apiKey);
-
-                        if (conn instanceof HttpsURLConnection) {
-                            int response = ((HttpsURLConnection) conn).getResponseCode();
-                            if (response != 200) {
-                                MeloMod.addMessage("FATAL: " + StatusCodes.getFromCode(response));
-                                ((HttpsURLConnection) conn).disconnect();
-                                return null;
-                            }
-                        }
-                        inputStream = conn.getInputStream();
-
-                        if (shouldGunzip) {
-                            inputStream = new GZIPInputStream(inputStream);
-                        }
-
-                        // While the assumption of UTF8 isn't always true; it *should* always be true.
-                        // Not in the sense that this will hold in most cases (although that as well),
-                        // but in the sense that any violation of this better have a good reason.
-                        return IOUtils.toString(inputStream, StandardCharsets.UTF_8);
-                    } finally {
-                        try {
-                            if (inputStream != null) {
-                                inputStream.close();
-                            }
-                        } finally {
-                            if (conn instanceof HttpURLConnection) {
-                                ((HttpURLConnection) conn).disconnect();
-                            }
-                        }
-                    }
-                } catch (IOException e) {
-                    throw new RuntimeException(e); // We can rethrow, since supplyAsync catches exceptions.
-                }
-            }, executorService);
-        }
-
-        public CompletableFuture<JsonObject> requestJson() {
-            return requestJson(JsonObject.class);
-        }
-
-        public <T> CompletableFuture<T> requestJson(Class<? extends T> clazz) {
-            return requestString().thenApply(str -> gson.fromJson(str, clazz));
-        }
-
-        public CompletableFuture<JsonElement> requestJsonAnon(JsonElement body) {
-            return requestJsonAnon(JsonElement.class, body);
-        }
-
-        public <T> CompletableFuture<T> requestJsonAnon(Class<? extends T> clazz, JsonElement body) {
-            return requestStringAnon(body).thenApply(str -> gson.fromJson(str, clazz));
-        }
-
-        public CompletableFuture<String> requestStringAnon(JsonElement body) {
-            return buildUrl().thenApplyAsync(url -> {
-                try {
-                    InputStream inputStream = null;
-                    URLConnection conn = null;
-                    try {
-                        conn = url.openConnection();
-                        if (conn instanceof HttpURLConnection) {
-                            ((HttpURLConnection) conn).setRequestMethod(method);
-                        }
-                        conn.setConnectTimeout(10000);
-                        conn.setReadTimeout(10000);
-                        conn.setRequestProperty("Content-Type", "application/json");
-
-                        conn.setDoOutput(true);
-                        String jsonInputString = gson.toJson(body);
-                        try (OutputStream os = conn.getOutputStream()) {
-                            byte[] input = jsonInputString.getBytes(StandardCharsets.UTF_8);
-                            os.write(input, 0, input.length);
-                        }
-
-                        if (conn instanceof HttpsURLConnection) {
-                            int response = ((HttpsURLConnection) conn).getResponseCode();
-                            if (response != 200) {
-                                StatusCodes code = StatusCodes.getStatusCode(response);
-                                MeloMod.addError("&cConnection failed: &6" + code.toString());
-                            }
-                        }
-                        inputStream = conn.getInputStream();
-
-                        if (shouldGunzip) {
-                            inputStream = new GZIPInputStream(inputStream);
-                        }
-
-                        // While the assumption of UTF8 isn't always true; it *should* always be true.
-                        // Not in the sense that this will hold in most cases (although that as well),
-                        // but in the sense that any violation of this better have a good reason.
-                        return IOUtils.toString(inputStream, StandardCharsets.UTF_8);
-                    } finally {
-                        try {
-                            if (inputStream != null) {
-                                inputStream.close();
-                            }
-                        } finally {
-                            if (conn instanceof HttpURLConnection) {
-                                ((HttpURLConnection) conn).disconnect();
-                            }
-                        }
-                    }
-                } catch (IOException e) {
-                    throw new RuntimeException(e); // We can rethrow, since supplyAsync catches exceptions.
-                }
-            }, executorService);
-        }
-
-        public CompletableFuture<String> requestAIStringAnon(JsonObject body) {
-            return buildUrl().thenApplyAsync(url -> {
-                try {
-                    InputStream inputStream = null;
-                    URLConnection conn = null;
-                    try {
-                        conn = url.openConnection();
-                        if (conn instanceof HttpURLConnection) {
-                            ((HttpURLConnection) conn).setRequestMethod(method);
-                        }
-                        conn.setConnectTimeout(10000);
-                        conn.setReadTimeout(10000);
-                        conn.setRequestProperty("User-Agent", USER_AGENT);
-                        conn.setRequestProperty("Content-Type", "application/json");
-                        conn.setRequestProperty("Authorization", "Bearer " + ChatConfig.groqApiKey);
-
-
-                        conn.setDoOutput(true);
-                        String jsonInputString = body.toString();
-                        try (OutputStream os = conn.getOutputStream()) {
-                            byte[] input = jsonInputString.getBytes(StandardCharsets.UTF_8);
-                            os.write(input, 0, input.length);
-                        }
-
-                        if (conn instanceof HttpsURLConnection) {
-                            int response = ((HttpsURLConnection) conn).getResponseCode();
-                            if (response != 200) {
-                                StatusCodes code = StatusCodes.getStatusCode(response);
-                                MeloMod.addError("&cConnection failed: &6" + code.toString());
-                            }
-                        }
-                        inputStream = conn.getInputStream();
-
-                        if (shouldGunzip) {
-                            inputStream = new GZIPInputStream(inputStream);
-                        }
-
-                        // While the assumption of UTF8 isn't always true; it *should* always be true.
-                        // Not in the sense that this will hold in most cases (although that as well),
-                        // but in the sense that any violation of this better have a good reason.
-                        return IOUtils.toString(inputStream, StandardCharsets.UTF_8);
-                    } finally {
-                        try {
-                            if (inputStream != null) {
-                                inputStream.close();
-                            }
-                        } finally {
-                            if (conn instanceof HttpURLConnection) {
-                                ((HttpURLConnection) conn).disconnect();
-                            }
-                        }
-                    }
-                } catch (IOException e) {
-                    throw new RuntimeException(e); // We can rethrow, since supplyAsync catches exceptions.
-                }
-            }, executorService);
-        }
-
-
-        public CompletableFuture<JsonObject> requestAIAnon(JsonObject body) {
-            return requestAIAnon(JsonObject.class, body);
-        }
-
-        public <T> CompletableFuture<T> requestAIAnon(Class<? extends T> clazz, JsonObject body) {
-            return requestAIStringAnon(body).thenApply(str -> gson.fromJson(str, clazz));
-        }
-
-
+    public static Gson getGson() {
+        return ApiUtil.gson;
     }
-
 
     public synchronized void requestAI(String url, JsonObject body, Consumer<? super JsonObject> action) {
         ApiUtil.Request request = new Request()
@@ -300,7 +107,7 @@ public class ApiUtil {
 
     protected Request newApiRequest(Endpoint apiPath) {
         return newAnonymousApiRequest(apiPath)
-                .queryArgument("key", MeloConfiguration.apiKey);
+                .queryArgument("key", MainConfiguration.apiKey);
     }
 
 
@@ -412,8 +219,8 @@ public class ApiUtil {
                         ApiUtil.HypixelEndpoint.STATUS,
                         object -> {
                             if (uuid.equals(MeloMod.playerUUID)) {
-                                SkyblockUtil.Location info = InternalLocraw.getLocation();
-                                sendLater("◇ Server: " + InternalLocraw.getServerID() + " ⚑ Island: " + WordUtils.capitalizeFully(info.toString().replaceAll("_", " ")) + " ◇", chatChannel);
+                                Location info = LocrawHandler.getLocation();
+                                sendLater("◇ Server: " + LocrawHandler.getServerID() + " ⚑ Island: " + WordUtils.capitalizeFully(info.toString().replaceAll("_", " ")) + " ◇", chatChannel);
                             } else {
                                 JsonObject session = SkyblockUtil.getAsJsonObject("session", object);
                                 if (session != null) {
@@ -428,7 +235,7 @@ public class ApiUtil {
                                             }
                                         }
 
-                                        sendLater("◇ «" + player + "» Server: " + (onCurrent ? InternalLocraw.getServerID() : "Unknown") + " ◇ Game: " + WordUtils.capitalizeFully(SkyblockUtil.getAsString("gameType", session).replaceAll("_", " ")) + " ⚑ Mode: " + WordUtils.capitalizeFully(SkyblockUtil.getAsString("mode", session).replaceAll("_", " ")) + " ◇", chatChannel);
+                                        sendLater("◇ «" + player + "» Server: " + (onCurrent ? LocrawHandler.getServerID() : "Unknown") + " ◇ Game: " + WordUtils.capitalizeFully(SkyblockUtil.getAsString("gameType", session).replaceAll("_", " ")) + " ⚑ Mode: " + WordUtils.capitalizeFully(SkyblockUtil.getAsString("mode", session).replaceAll("_", " ")) + " ◇", chatChannel);
                                     }
                                 }
 
@@ -454,7 +261,7 @@ public class ApiUtil {
                         ApiUtil.HypixelEndpoint.GUILD,
                         object -> {
                             if (object.has("guild") && object.get("guild").isJsonObject()) {
-                                SkyblockUtil.Guild guild = new SkyblockUtil.Guild(object.get("guild").getAsJsonObject());
+                                Guild guild = new Guild(object.get("guild").getAsJsonObject());
 
                                 if (uuid.equals(MeloMod.playerUUID)) {
                                     sendLater("✿ Guild: [" + guild.getTag() + "] " + guild.getName() + " (" + guild.getGuildID() + ") ✿", chatChannel);
@@ -473,19 +280,6 @@ public class ApiUtil {
 
     }
 
-
-    public static final List<String> models = new ArrayList<String>() {{
-        this.add("gemma2-9b-it");
-        this.add("gemma-7b-it");
-        this.add("llama-3.1-70b-versatile");
-        this.add("llama-3.1-8b-instant");
-        this.add("llama3-70b-8192");
-        this.add("llama3-8b-8192");
-        this.add("llama3-groq-70b-8192-tool-use-preview");
-        this.add("llama3-groq-8b-8192-tool-use-preview");
-        this.add("mixtral-8x7b-32768");
-    }};
-
     public synchronized void getAI(String prompt, ChatChannel chatChannel) {
         JsonObject object = new JsonObject();
         JsonArray array = new JsonArray();
@@ -494,8 +288,8 @@ public class ApiUtil {
         message.addProperty("content", prompt + "(WARN: Keep your response to LESS THAN 200 characters)");
         array.add(message);
         object.add("messages", array);
-        String model = models.get(ChatConfig.aiModel);
-        MeloMod.addDebug("&eUsing AI model: &7" + model + " &8(" + ChatConfig.aiModel + ")");
+        String model = models.get(ChatConfiguration.aiModel);
+        MeloMod.addDebug("&eUsing AI model: &7" + model + " &8(" + ChatConfiguration.aiModel + ")");
         object.addProperty("model", model);
         requestAI(
                 "https://api.groq.com/openai/v1/chat/completions",
@@ -509,47 +303,6 @@ public class ApiUtil {
                     }
                 }
         );
-    }
-
-    public enum ChatChannel {
-        ALL, // TODO
-        GUILD, // TODO
-        OFFICER, // TODO
-        PARTY,
-        CUSTOM,
-        COOP // TODO
-    }
-
-    public static void sendLater(String message, ChatChannel chatChannel) {
-        String prefixCommand = "";
-        switch (chatChannel) {
-            case PARTY:
-                prefixCommand = "/pc";
-                break;
-            case ALL:
-                prefixCommand = "/ac";
-                break;
-            case COOP:
-                prefixCommand = "/cc";
-                break;
-            case GUILD:
-                prefixCommand = "/gc";
-                break;
-            case OFFICER:
-                prefixCommand = "/oc";
-                break;
-            case CUSTOM:
-                if (message.contains("<item>")) {
-                    String data = ItemSerializer.INSTANCE.serialize(Minecraft.getMinecraft().thePlayer.getHeldItem());
-                    CommunicationHandler.thread.sendPacket(new PacketPlayOutChat(message, MeloMod.playerUUID.toString(), MeloMod.playerName, null, data));
-                } else {
-
-                    CommunicationHandler.thread.sendPacket(new PacketPlayOutChat(message, MeloMod.playerUUID.toString(), MeloMod.playerName, null, null));
-                }
-                return;
-        }
-        String finalCommand = prefixCommand + " " + message;
-        TickHandler.addToQueue(finalCommand);
     }
 
     public synchronized void lastLogin(String player, ChatChannel chatChannel) {
@@ -619,9 +372,7 @@ public class ApiUtil {
                         },
                         ApiUtil.HypixelEndpoint.FilledEndpointArgument.from("uuid", "" + uuid)
                 );
-            } catch (InterruptedException e) {
-                throw new RuntimeException(e);
-            } catch (ExecutionException e) {
+            } catch (InterruptedException | ExecutionException e) {
                 throw new RuntimeException(e);
             }
         }, executorService);
@@ -721,6 +472,19 @@ public class ApiUtil {
         });
     }
 
+    protected Request newAnonymousApiRequest(Endpoint endpoint) {
+        return new Request().url(endpoint.getEndpoint());
+    }
+
+    public enum ChatChannel {
+        ALL, // TODO
+        GUILD, // TODO
+        OFFICER, // TODO
+        PARTY,
+        CUSTOM,
+        COOP // TODO
+    }
+
     public enum SkyCryptEndpoint {
         PROFILE("profile/player_name"),
         TALISMANS("talismans/player_name"),
@@ -752,7 +516,6 @@ public class ApiUtil {
 
 
     }
-
 
     public enum HypixelEndpoint implements Endpoint {
         PLAYER("player", RequiredEndPoint.uuid()),
@@ -818,18 +581,6 @@ public class ApiUtil {
                 this.value = value;
             }
 
-            public String getTag() {
-                return argument.getArgumentTag();
-            }
-
-            public boolean isRequired() {
-                return argument.isRequired();
-            }
-
-            public String getValue() {
-                return value;
-            }
-
             public static FilledEndpointArgument from(String tag, String value) {
                 return new FilledEndpointArgument(new EndPointArgument(tag, true), value);
             }
@@ -840,6 +591,18 @@ public class ApiUtil {
 
             public static FilledEndpointArgument uuid(UUID uuid) {
                 return new FilledEndpointArgument(RequiredEndPoint.uuid(), uuid.toString());
+            }
+
+            public String getTag() {
+                return argument.getArgumentTag();
+            }
+
+            public boolean isRequired() {
+                return argument.isRequired();
+            }
+
+            public String getValue() {
+                return value;
             }
         }
 
@@ -877,9 +640,254 @@ public class ApiUtil {
 
     }
 
+
+    public interface Endpoint {
+        String getEndpoint();
+    }
+
+    public static class Request {
+
+        private final List<NameValuePair> queryArguments = new ArrayList<>();
+        private String baseUrl = null;
+        private boolean shouldGunzip = false;
+        private String method;
+
+        public Request method(String method) {
+            this.method = method;
+            return this;
+        }
+
+        public Request url(String baseUrl) {
+            this.baseUrl = baseUrl;
+            return this;
+        }
+
+        public Request queryArgument(String key, String value) {
+            queryArguments.add(new BasicNameValuePair(key, value));
+            return this;
+        }
+
+        public Request queryArguments(Collection<NameValuePair> queryArguments) {
+            this.queryArguments.addAll(queryArguments);
+            return this;
+        }
+
+        public Request gunzip() {
+            shouldGunzip = true;
+            return this;
+        }
+
+        private CompletableFuture<URL> buildUrl() {
+            CompletableFuture<URL> fut = new CompletableFuture<>();
+            try {
+                fut.complete(new URIBuilder(baseUrl)
+                        .addParameters(queryArguments)
+                        .build()
+                        .toURL());
+            } catch (URISyntaxException |
+                     MalformedURLException |
+                     NullPointerException e) { // Using CompletableFuture as an exception monad, isn't that exiting?
+                fut.completeExceptionally(e);
+            }
+            return fut;
+        }
+
+        public CompletableFuture<String> requestString() {
+            return buildUrl().thenApplyAsync(url -> {
+                try {
+                    InputStream inputStream = null;
+                    URLConnection conn = null;
+                    try {
+                        conn = url.openConnection();
+                        if (conn instanceof HttpURLConnection) {
+                            ((HttpURLConnection) conn).setRequestMethod(method);
+                        }
+                        conn.setConnectTimeout(10000);
+                        conn.setReadTimeout(10000);
+                        conn.setRequestProperty("User-Agent", USER_AGENT);
+                        conn.setRequestProperty("API-Key", MainConfiguration.apiKey);
+
+                        if (conn instanceof HttpsURLConnection) {
+                            int response = ((HttpsURLConnection) conn).getResponseCode();
+                            if (response != 200) {
+                                MeloMod.addMessage("FATAL: " + StatusCodes.getFromCode(response));
+                                ((HttpsURLConnection) conn).disconnect();
+                                return null;
+                            }
+                        }
+                        inputStream = conn.getInputStream();
+
+                        if (shouldGunzip) {
+                            inputStream = new GZIPInputStream(inputStream);
+                        }
+
+                        // While the assumption of UTF8 isn't always true; it *should* always be true.
+                        // Not in the sense that this will hold in most cases (although that as well),
+                        // but in the sense that any violation of this better have a good reason.
+                        return IOUtils.toString(inputStream, StandardCharsets.UTF_8);
+                    } finally {
+                        try {
+                            if (inputStream != null) {
+                                inputStream.close();
+                            }
+                        } finally {
+                            if (conn instanceof HttpURLConnection) {
+                                ((HttpURLConnection) conn).disconnect();
+                            }
+                        }
+                    }
+                } catch (IOException e) {
+                    throw new RuntimeException(e); // We can rethrow, since supplyAsync catches exceptions.
+                }
+            }, executorService);
+        }
+
+        public CompletableFuture<JsonObject> requestJson() {
+            return requestJson(JsonObject.class);
+        }
+
+        public <T> CompletableFuture<T> requestJson(Class<? extends T> clazz) {
+            return requestString().thenApply(str -> gson.fromJson(str, clazz));
+        }
+
+        public CompletableFuture<JsonElement> requestJsonAnon(JsonElement body) {
+            return requestJsonAnon(JsonElement.class, body);
+        }
+
+        public <T> CompletableFuture<T> requestJsonAnon(Class<? extends T> clazz, JsonElement body) {
+            return requestStringAnon(body).thenApply(str -> gson.fromJson(str, clazz));
+        }
+
+        public CompletableFuture<String> requestStringAnon(JsonElement body) {
+            return buildUrl().thenApplyAsync(url -> {
+                try {
+                    InputStream inputStream = null;
+                    URLConnection conn = null;
+                    try {
+                        conn = url.openConnection();
+                        if (conn instanceof HttpURLConnection) {
+                            ((HttpURLConnection) conn).setRequestMethod(method);
+                        }
+                        conn.setConnectTimeout(10000);
+                        conn.setReadTimeout(10000);
+                        conn.setRequestProperty("Content-Type", "application/json");
+
+                        conn.setDoOutput(true);
+                        String jsonInputString = gson.toJson(body);
+                        try (OutputStream os = conn.getOutputStream()) {
+                            byte[] input = jsonInputString.getBytes(StandardCharsets.UTF_8);
+                            os.write(input, 0, input.length);
+                        }
+
+                        if (conn instanceof HttpsURLConnection) {
+                            int response = ((HttpsURLConnection) conn).getResponseCode();
+                            if (response != 200) {
+                                StatusCodes code = StatusCodes.getStatusCode(response);
+                                assert code != null;
+                                MeloMod.addError("&cConnection failed: &6" + code);
+                            }
+                        }
+                        inputStream = conn.getInputStream();
+
+                        if (shouldGunzip) {
+                            inputStream = new GZIPInputStream(inputStream);
+                        }
+
+                        // While the assumption of UTF8 isn't always true; it *should* always be true.
+                        // Not in the sense that this will hold in most cases (although that as well),
+                        // but in the sense that any violation of this better have a good reason.
+                        return IOUtils.toString(inputStream, StandardCharsets.UTF_8);
+                    } finally {
+                        try {
+                            if (inputStream != null) {
+                                inputStream.close();
+                            }
+                        } finally {
+                            if (conn instanceof HttpURLConnection) {
+                                ((HttpURLConnection) conn).disconnect();
+                            }
+                        }
+                    }
+                } catch (IOException e) {
+                    throw new RuntimeException(e); // We can rethrow, since supplyAsync catches exceptions.
+                }
+            }, executorService);
+        }
+
+        public CompletableFuture<String> requestAIStringAnon(JsonObject body) {
+            return buildUrl().thenApplyAsync(url -> {
+                try {
+                    InputStream inputStream = null;
+                    URLConnection conn = null;
+                    try {
+                        conn = url.openConnection();
+                        if (conn instanceof HttpURLConnection) {
+                            ((HttpURLConnection) conn).setRequestMethod(method);
+                        }
+                        conn.setConnectTimeout(10000);
+                        conn.setReadTimeout(10000);
+                        conn.setRequestProperty("User-Agent", USER_AGENT);
+                        conn.setRequestProperty("Content-Type", "application/json");
+                        conn.setRequestProperty("Authorization", "Bearer " + MainConfiguration.groqApiKey);
+
+
+                        conn.setDoOutput(true);
+                        String jsonInputString = body.toString();
+                        try (OutputStream os = conn.getOutputStream()) {
+                            byte[] input = jsonInputString.getBytes(StandardCharsets.UTF_8);
+                            os.write(input, 0, input.length);
+                        }
+
+                        if (conn instanceof HttpsURLConnection) {
+                            int response = ((HttpsURLConnection) conn).getResponseCode();
+                            if (response != 200) {
+                                StatusCodes code = StatusCodes.getStatusCode(response);
+                                assert code != null;
+                                MeloMod.addError("&cConnection failed: &6" + code);
+                            }
+                        }
+                        inputStream = conn.getInputStream();
+
+                        if (shouldGunzip) {
+                            inputStream = new GZIPInputStream(inputStream);
+                        }
+
+                        // While the assumption of UTF8 isn't always true; it *should* always be true.
+                        // Not in the sense that this will hold in most cases (although that as well),
+                        // but in the sense that any violation of this better have a good reason.
+                        return IOUtils.toString(inputStream, StandardCharsets.UTF_8);
+                    } finally {
+                        try {
+                            if (inputStream != null) {
+                                inputStream.close();
+                            }
+                        } finally {
+                            if (conn instanceof HttpURLConnection) {
+                                ((HttpURLConnection) conn).disconnect();
+                            }
+                        }
+                    }
+                } catch (IOException e) {
+                    throw new RuntimeException(e); // We can rethrow, since supplyAsync catches exceptions.
+                }
+            }, executorService);
+        }
+
+
+        public CompletableFuture<JsonObject> requestAIAnon(JsonObject body) {
+            return requestAIAnon(JsonObject.class, body);
+        }
+
+        public <T> CompletableFuture<T> requestAIAnon(Class<? extends T> clazz, JsonObject body) {
+            return requestAIStringAnon(body).thenApply(str -> gson.fromJson(str, clazz));
+        }
+
+
+    }
+
     public static class SkyCryptEndpointClass implements Endpoint {
-        private final String endPoint;
         public static final String MAIN = "https://sky.shiiyu.moe/api/v2/";
+        private final String endPoint;
 
         public SkyCryptEndpointClass(SkyCryptEndpoint endpoint, String playerName, String profileName) {
             this.endPoint = MAIN + endpoint.getReplacedEndPoint(playerName, profileName);
@@ -889,10 +897,6 @@ public class ApiUtil {
         public String getEndpoint() {
             return endPoint;
         }
-    }
-
-    protected Request newAnonymousApiRequest(Endpoint endpoint) {
-        return new Request().url(endpoint.getEndpoint());
     }
 
 }

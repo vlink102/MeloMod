@@ -1,0 +1,93 @@
+{
+    "errors": {
+        "could_not_connect": "تعذر الاتصال بالخادم",
+        "client_received_invalid_data": "استلم العميل بيانات غير صالحة من الخادم! الرجاء الإبلاغ عن هذا.",
+        "unexpected": "عثر العميل على خطأ غير متوقع (تحقق من وحدة التحكم) الرجاء الإبلاغ عن هذا.",
+        "unknown": "ولم يقدم أي سبب لذلك.",
+        "potentially_severe": "خطأ محتمل حاد (يرجى الإبلاغ عن هذا)",
+        "incompatible_version": "نسخة غير متوافقة!",
+        "lost_connection": "فقدان الاتصال بالخادم"
+    },
+    "generic": {
+        "none": "لا",
+        "click": "Click",
+        "authors": "المؤلفون",
+        "version": "الإصدار",
+        "status": "الحالة",
+        "left_click_to_join": "انقر بالزر الأيسر للإنضمام!",
+        "report_error": "الرجاء الإبلاغ عن هذا الخطأ إلى ديسكورد.",
+        "report_warning": "يرجى إبلاغ ديسكورد بالتحذيرات الجادة.",
+        "click_to_reply": "انقر للرد!",
+        "page": "الصفحة",
+        "available_commands": "الأوامر المتوفرة",
+        "online_players": "اللاعبين المتصلين",
+        "single_player": "لاعب واحد",
+        "offline": "غير متصل",
+        "map": "الخريطة",
+        "does_contain_delimiter": "الرسالة تحتوي على محدد.",
+        "channels": {
+            "chat": "الفصل",
+            "direct_message": "DM",
+            "system_notification": "النظام",
+            "debug": "DEBUG",
+            "error": "خطأ",
+            "warning": "تحذير"
+        },
+        "debug": {
+            "debug": "Debug",
+            "click_to_disable": "انقر لتعطيل وضع التصحيح.",
+            "added_to_queue": "تم إضافة رسالة إلى قائمة الانتظار",
+            "joined_world": "تم الانضمام إلى العالم بنجاح",
+            "hypixel_detected": "تم اكتشاف مثيل الخادم كـ Hypixel",
+            "failed_sync": "فشل مزامنة محادثة قائمة الانتظار {int} . إعادة المحاولة...",
+            "disconnect": "تم قطع الاتصال بنجاح من الخادم.",
+            "message": "رسالة",
+            "messenger": "ماسنجر",
+            "target": "المستلم",
+            "data": "البيانات",
+            "chat_component": "مكون الدردشة",
+            "inserted": "مدرج",
+            "sent_packet": "تم إرسال الحزمة {1} بنجاح مع معرف الحزمة {2}"
+        },
+        "warning": {
+            "failed_to_execute": "فشل في تنفيذ الأمر",
+            "detected_oversized_component": "تم اكتشاف مكونات IChatComcompon: تحويل...",
+            "socket_closed": "المقطع مغلق",
+            "client_out_of_date": "العميل غير مؤرخ!",
+            "connection_terminated": "تم إنهاء الاتصال بالقوة من قبل الخادم. هذا ليس خطأ.",
+            "outdated_version": "الإصدار القديم",
+            "malformed_packet": "حزمة بيانات سيئة"
+        },
+        "commands": {
+            "enabled_debug": "تمكين وضع التصحيح",
+            "disabled_debug": "تعطيل وضع التصحيح"
+        },
+        "client": "العميل",
+        "server": "خادم",
+        "update_link": "تحديث الرابط",
+        "connection_lost": "تم فقدان الاتصال",
+        "reason": "سبب",
+        "sent_to_self": "لقد فقدت رسالتك في الرياح...",
+        "private_message": "رسالة خاصة",
+        "from": "من",
+        "to": "إلى",
+        "banned": "أوه! أنت محظور حالياً!",
+        "banned_2": "وهذا ينطبق فقط على الدردشة.",
+        "ban_info": {
+            "summary": "Summary",
+            "reason": "سبب",
+            "admin": "محظور من قبل",
+            "duration": "طول الحظر",
+            "issued": "صدر",
+            "expiry": "تنتهي",
+            "remaining": "الوقت المتبقي"
+        },
+        "system": {
+            "connected": "متصل",
+            "disconnected": "قطع",
+            "game_disconnect": "قطع الاتصال من اللعبة! (لا يزال المقطع متصلا)"
+        },
+        "up_to_date": "أنت على وشك التحديث!",
+        "hover": "Hover"
+    }
+}

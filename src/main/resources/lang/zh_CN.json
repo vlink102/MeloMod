@@ -1,0 +1,93 @@
+{
+    "errors": {
+        "could_not_connect": "无法连接到服务器",
+        "client_received_invalid_data": "客户端从服务器收到无效数据！请报告。",
+        "unexpected": "客户端发现意外错误 (检查控制台) 请报告。",
+        "unknown": "没有提供任何理由。请报告。",
+        "potentially_severe": "可能严重的错误 (请报告此错误)",
+        "incompatible_version": "版本不兼容！",
+        "lost_connection": "与服务器失去连接"
+    },
+    "generic": {
+        "none": "无",
+        "click": "Click",
+        "authors": "作者",
+        "version": "版本",
+        "status": "状态",
+        "left_click_to_join": "左键点击以加入！",
+        "report_error": "请将此错误报告到 Discord。",
+        "report_warning": "请向Discord报告严重警告。",
+        "click_to_reply": "点击以回复 ！",
+        "page": "页",
+        "available_commands": "可用命令",
+        "online_players": "在线玩家",
+        "single_player": "单人播放器",
+        "offline": "离线的",
+        "map": "地图",
+        "does_contain_delimiter": "消息确实包含分隔符。",
+        "channels": {
+            "chat": "聊天室",
+            "direct_message": "私信",
+            "system_notification": "系统",
+            "debug": "DEBUG",
+            "error": "错误",
+            "warning": "警告"
+        },
+        "debug": {
+            "debug": "Debug",
+            "click_to_disable": "点击禁用调试模式。",
+            "added_to_queue": "添加消息到队列",
+            "joined_world": "成功加入世界",
+            "hypixel_detected": "检测到服务器实例为 Hypixel",
+            "failed_sync": "无法同步 {int} 个排队聊天。正在重试...",
+            "disconnect": "成功断开与服务器的连接。",
+            "message": "留言",
+            "messenger": "送信者",
+            "target": "接收者",
+            "data": "数据",
+            "chat_component": "聊天组件",
+            "inserted": "插入",
+            "sent_packet": "成功发送数据包 {1} ，数据包 ID 为 {2}"
+        },
+        "warning": {
+            "failed_to_execute": "执行命令失败",
+            "detected_oversized_component": "检测到 IChatComponent 太大：转换...",
+            "socket_closed": "套接字已关闭",
+            "client_out_of_date": "客户端已经过时！",
+            "connection_terminated": "连接被服务器强制终止。这不是一个bug。",
+            "outdated_version": "过期版本",
+            "malformed_packet": "数据包格式错误"
+        },
+        "commands": {
+            "enabled_debug": "启用调试模式",
+            "disabled_debug": "禁用调试模式"
+        },
+        "client": "客户端：",
+        "server": "服务器",
+        "update_link": "更新链接",
+        "connection_lost": "连接丢失",
+        "reason": "原因",
+        "sent_to_self": "您的消息在风中丢失...",
+        "private_message": "私信",
+        "from": "来自",
+        "to": "收件人",
+        "banned": "啊！您目前已被禁止！",
+        "banned_2": "这只适用于聊天。",
+        "ban_info": {
+            "summary": "Summary",
+            "reason": "原因",
+            "admin": "被封禁的",
+            "duration": "禁止长度",
+            "issued": "已发布",
+            "expiry": "过期时间",
+            "remaining": "剩余时间"
+        },
+        "system": {
+            "connected": "已连接",
+            "disconnected": "断开连接",
+            "game_disconnect": "从游戏断开连接！(仍然连接)"
+        },
+        "up_to_date": "您已经是最新版本！",
+        "hover": "Hover"
+    }
+}

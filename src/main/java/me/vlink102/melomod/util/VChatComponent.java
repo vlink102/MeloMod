@@ -1,6 +1,7 @@
 package me.vlink102.melomod.util;
 
 import me.vlink102.melomod.MeloMod;
+import me.vlink102.melomod.util.translation.Feature;
 import net.minecraft.event.ClickEvent;
 import net.minecraft.event.HoverEvent;
 import net.minecraft.item.ItemStack;
@@ -44,7 +45,7 @@ public class VChatComponent {
     public static IChatComponent insert(IChatComponent parent, String delimiter, String... data) {
         String message = parent.getUnformattedText();
         if (message.contains(delimiter)) {
-            MeloMod.addDebug("Does contain delimiter");
+            MeloMod.addDebug("&8" + Feature.GENERIC_DOES_CONTAIN_DELIMITER + "&r");
             String[] split = message.split("((?<=" + delimiter + ")|(?=" + delimiter + "))", -1);
 
             VChatComponent componentBuilder = new VChatComponent(MeloMod.MessageScheme.RAW);
@@ -89,16 +90,7 @@ public class VChatComponent {
     }
 
     public VChatComponent add(String text, @Nullable HoverEvent hoverEvent, @Nullable ClickEvent clickEvent, StringUtils.VComponentSettings settings) {
-        ChatStyle style = new ChatStyle()
-                .setBold(false)
-                .setColor(null)
-                .setObfuscated(false)
-                .setItalic(false)
-                .setUnderlined(false)
-                .setStrikethrough(false)
-                .setChatHoverEvent(null)
-                .setChatClickEvent(null)
-                .setInsertion(null);
+        ChatStyle style = from(settings);
         if (hoverEvent != null) style.setChatHoverEvent(hoverEvent);
         if (clickEvent != null) style.setChatClickEvent(clickEvent);
         IChatComponent chatComponent = new ChatComponentText(cc(text));
@@ -147,7 +139,8 @@ public class VChatComponent {
     public ChatStyle from(StringUtils.VComponentSettings settings) {
         switch (settings) {
             case INHERIT_NONE:
-                return new ChatStyle().setBold(false)
+                return new ChatStyle()
+                        .setBold(false)
                         .setColor(null)
                         .setObfuscated(false)
                         .setItalic(false)
@@ -159,7 +152,8 @@ public class VChatComponent {
             case INHERIT_FORMAT:
                 return new ChatStyle()
                         .setChatHoverEvent(null)
-                        .setChatClickEvent(null);
+                        .setChatClickEvent(null)
+                        .setInsertion(null);
         }
         return new ChatStyle();
     }
@@ -202,7 +196,7 @@ public class VChatComponent {
             }
         }
         if (!overflow.components.isEmpty()) {
-            MeloMod.addWarn(cc("&eDetected IChatComponent too large: Converting..."));
+            MeloMod.addWarn(cc("&e" + Feature.GENERIC_WARNING_DETECTED_OVERSIZED_COMPONENT + "&r"));
 
             VChatComponent component = new VChatComponent(MeloMod.MessageScheme.RAW);
             component.addSpace();
