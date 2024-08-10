@@ -2,6 +2,7 @@ package me.vlink102.melomod.util.wrappers.hypixel.profile.member;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import lombok.Getter;
 import me.vlink102.melomod.util.game.SkyblockUtil;
 
 import java.util.HashMap;
@@ -10,6 +11,7 @@ import java.util.Map;
 public class Currencies {
     private final Double coinPurse;
     private final Double motesPurse;
+    @Getter
     private final HashMap<String, Integer> essence;
 
     public Currencies(JsonObject object) {
@@ -31,7 +33,4 @@ public class Currencies {
         return motesPurse;
     }
 
-    public HashMap<String, Integer> getEssence() {
-        return essence;
-    }
 }

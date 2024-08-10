@@ -3,10 +3,12 @@ package me.vlink102.melomod.util.http.packets;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import lombok.Getter;
 import me.vlink102.melomod.MeloMod;
 import me.vlink102.melomod.util.http.Packet;
 import me.vlink102.melomod.util.game.SkyblockUtil;
 
+@Getter
 public class ServerBoundVersionControlPacket extends Packet {
     private final String uuid;
     private final String version;
@@ -47,11 +49,4 @@ public class ServerBoundVersionControlPacket extends Packet {
         return null;
     }
 
-    public String getUuid() {
-        return uuid;
-    }
-
-    public String getVersion() {
-        return version;
-    }
 }

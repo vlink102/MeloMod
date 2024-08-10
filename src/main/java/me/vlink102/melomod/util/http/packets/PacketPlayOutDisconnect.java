@@ -3,9 +3,11 @@ package me.vlink102.melomod.util.http.packets;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import lombok.Getter;
 import me.vlink102.melomod.util.http.Packet;
 import me.vlink102.melomod.util.game.SkyblockUtil;
 
+@Getter
 public class PacketPlayOutDisconnect extends Packet {
     private final String uuid;
     private final String name;
@@ -22,14 +24,6 @@ public class PacketPlayOutDisconnect extends Packet {
         object.addProperty("name", name);
         object.addProperty("packet-id", bind().getPacketID());
         return object.toString();
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public String getUuid() {
-        return uuid;
     }
 
     @Override

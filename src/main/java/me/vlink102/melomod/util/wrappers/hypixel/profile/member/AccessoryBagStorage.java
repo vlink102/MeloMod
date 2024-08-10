@@ -3,6 +3,7 @@ package me.vlink102.melomod.util.wrappers.hypixel.profile.member;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import lombok.Getter;
 import me.vlink102.melomod.util.game.SkyblockUtil;
 
 import java.util.ArrayList;
@@ -11,8 +12,11 @@ import java.util.List;
 import java.util.Map;
 
 public class AccessoryBagStorage {
+    @Getter
     private final Tuning tuning;
+    @Getter
     private final String selectedPower;
+    @Getter
     private final List<String> unlockedPowers;
     private final Integer bagUpgradesPurchased;
     private final Integer highestMagicalPower;
@@ -37,18 +41,7 @@ public class AccessoryBagStorage {
         return highestMagicalPower;
     }
 
-    public List<String> getUnlockedPowers() {
-        return unlockedPowers;
-    }
-
-    public String getSelectedPower() {
-        return selectedPower;
-    }
-
-    public Tuning getTuning() {
-        return tuning;
-    }
-
+    @Getter
     public static class Tuning {
         private final HashMap<String, Integer> slot0;
 
@@ -61,9 +54,6 @@ public class AccessoryBagStorage {
             }
         }
 
-        public HashMap<String, Integer> getSlot0() {
-            return slot0;
-        }
     }
 
 }

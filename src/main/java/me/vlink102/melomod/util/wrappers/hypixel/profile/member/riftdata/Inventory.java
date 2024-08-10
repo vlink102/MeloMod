@@ -3,11 +3,13 @@ package me.vlink102.melomod.util.wrappers.hypixel.profile.member.riftdata;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import lombok.Getter;
 import me.vlink102.melomod.util.game.SkyblockUtil;
 
 import java.util.ArrayList;
 import java.util.List;
 
+@Getter
 public class Inventory {
     private final EnderChestContents enderChestContents;
     private final InventoryContents inventoryContents;
@@ -35,28 +37,9 @@ public class Inventory {
         this.equipmentContents = new EquipmentContents(SkyblockUtil.getAsJsonObject("equipment_contents", object));
     }
 
-    public EnderChestContents getEnderChestContents() {
-        return enderChestContents;
-    }
-
-    public EquipmentContents getEquipmentContents() {
-        return equipmentContents;
-    }
-
-    public InventoryArmor getInventoryArmor() {
-        return inventoryArmor;
-    }
-
-    public InventoryContents getInventoryContents() {
-        return inventoryContents;
-    }
-
-    public List<String> getEnderChestPageIcons() {
-        return enderChestPageIcons;
-    }
-
     public static class EnderChestContents {
         private final Integer type;
+        @Getter
         private final String data;
 
         public EnderChestContents(JsonObject object) {
@@ -68,22 +51,16 @@ public class Inventory {
             return type;
         }
 
-        public String getData() {
-            return data;
-        }
     }
 
     public static class InventoryContents {
         private final Integer type;
+        @Getter
         private final String data;
 
         public InventoryContents(JsonObject object) {
             this.type = SkyblockUtil.getAsInteger("type", object);
             this.data = SkyblockUtil.getAsString("data", object);// TODO
-        }
-
-        public String getData() {
-            return data;
         }
 
         public int getType() {
@@ -93,6 +70,7 @@ public class Inventory {
 
     public static class InventoryArmor {
         private final Integer type;
+        @Getter
         private final String data;
 
         public InventoryArmor(JsonObject object) {
@@ -104,13 +82,11 @@ public class Inventory {
             return type;
         }
 
-        public String getData() {
-            return data;
-        }
     }
 
     public static class EquipmentContents {
         private final Integer type;
+        @Getter
         private final String data;
 
         public EquipmentContents(JsonObject object) {
@@ -122,8 +98,5 @@ public class Inventory {
             return type;
         }
 
-        public String getData() {
-            return data;
-        }
     }
 }

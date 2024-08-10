@@ -3,10 +3,12 @@ package me.vlink102.melomod.util.http;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import lombok.Getter;
 import me.vlink102.melomod.util.game.SkyblockUtil;
 
 import java.util.concurrent.TimeUnit;
 
+@Getter
 public class BanPacket {
     private final String admin;
     private final String reason;
@@ -59,27 +61,4 @@ public class BanPacket {
         return null;
     }
 
-    public Long getDuration() {
-        return duration;
-    }
-
-    public String getSummary() {
-        return summary;
-    }
-
-    public String getReason() {
-        return reason;
-    }
-
-    public Long getExpiry() {
-        return expiry;
-    }
-
-    public Long getTimestamp() {
-        return timestamp;
-    }
-
-    public String getAdmin() {
-        return admin;
-    }
 }

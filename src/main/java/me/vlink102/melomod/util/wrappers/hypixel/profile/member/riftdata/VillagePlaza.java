@@ -3,6 +3,7 @@ package me.vlink102.melomod.util.wrappers.hypixel.profile.member.riftdata;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import lombok.Getter;
 import me.vlink102.melomod.util.game.SkyblockUtil;
 
 import java.util.ArrayList;
@@ -10,10 +11,15 @@ import java.util.List;
 
 public class VillagePlaza {
     private final Boolean gotScammed;
+    @Getter
     private final Murder murder;
+    @Getter
     private final BarryCenter barryCenter;
+    @Getter
     private final Cowboy cowboy;
+    @Getter
     private final Lonely lonely;
+    @Getter
     private final Seraphine seraphine;
 
     public VillagePlaza(JsonObject object) {
@@ -29,28 +35,9 @@ public class VillagePlaza {
         return gotScammed;
     }
 
-    public BarryCenter getBarryCenter() {
-        return barryCenter;
-    }
-
-    public Cowboy getCowboy() {
-        return cowboy;
-    }
-
-    public Lonely getLonely() {
-        return lonely;
-    }
-
-    public Murder getMurder() {
-        return murder;
-    }
-
-    public Seraphine getSeraphine() {
-        return seraphine;
-    }
-
     public static class Murder {
         private final Integer stepIndex;
+        @Getter
         private final List<String> roomClues;
 
         public Murder(JsonObject object) {
@@ -62,10 +49,6 @@ public class VillagePlaza {
             }
         }
 
-        public List<String> getRoomClues() {
-            return roomClues;
-        }
-
         public int getStepIndex() {
             return stepIndex;
         }
@@ -73,6 +56,7 @@ public class VillagePlaza {
 
     public static class BarryCenter {
         private final Boolean firstTalkToBarry;
+        @Getter
         private final List<String> convinced;
         private final Boolean receivedReward;
 
@@ -90,10 +74,6 @@ public class VillagePlaza {
             return firstTalkToBarry;
         }
 
-        public List<String> getConvinced() {
-            return convinced;
-        }
-
         public boolean isReceivedReward() {
             return receivedReward;
         }
@@ -102,6 +82,7 @@ public class VillagePlaza {
     public static class Cowboy {
         private final Integer stage;
         private final Integer hayEaten;
+        @Getter
         private final String rabbitName;
         private final Integer exportedCarrots;
 
@@ -124,9 +105,6 @@ public class VillagePlaza {
             return stage;
         }
 
-        public String getRabbitName() {
-            return rabbitName;
-        }
     }
 
     public static class Lonely {

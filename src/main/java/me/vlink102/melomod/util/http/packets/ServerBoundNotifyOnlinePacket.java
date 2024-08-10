@@ -3,9 +3,11 @@ package me.vlink102.melomod.util.http.packets;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import lombok.Getter;
 import me.vlink102.melomod.util.http.Packet;
 import me.vlink102.melomod.util.game.SkyblockUtil;
 
+@Getter
 public class ServerBoundNotifyOnlinePacket extends Packet {
     private final String uuid;
     private final String name;
@@ -41,11 +43,4 @@ public class ServerBoundNotifyOnlinePacket extends Packet {
         return null;
     }
 
-    public String getUuid() {
-        return uuid;
-    }
-
-    public String getName() {
-        return name;
-    }
 }

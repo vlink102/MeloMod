@@ -4,6 +4,7 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import lombok.Getter;
 import me.vlink102.melomod.util.http.packets.*;
 
 public class Packet implements PacketParser {
@@ -66,6 +67,7 @@ public class Packet implements PacketParser {
         return false;
     }
 
+    @Getter
     public enum PacketID {
         /**
          * PacketPlayOutChat.class
@@ -126,14 +128,6 @@ public class Packet implements PacketParser {
                 }
             }
             return ERROR_PACKET;
-        }
-
-        public PacketType getPacketType() {
-            return packetType;
-        }
-
-        public int getPacketID() {
-            return packetID;
         }
 
         public enum PacketType {

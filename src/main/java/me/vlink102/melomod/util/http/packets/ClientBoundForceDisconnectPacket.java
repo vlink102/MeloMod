@@ -3,13 +3,17 @@ package me.vlink102.melomod.util.http.packets;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import lombok.Getter;
 import me.vlink102.melomod.util.http.BanPacket;
 import me.vlink102.melomod.util.http.Packet;
 import me.vlink102.melomod.util.game.SkyblockUtil;
 
 public class ClientBoundForceDisconnectPacket extends Packet {
+    @Getter
     private final String closedID;
+    @Getter
     private final String reason;
+    @Getter
     private final String bannedBy;
     private final Boolean isBan;
     private final BanPacket banPacket;
@@ -28,18 +32,6 @@ public class ClientBoundForceDisconnectPacket extends Packet {
 
     public boolean isBan() {
         return isBan;
-    }
-
-    public String getBannedBy() {
-        return bannedBy;
-    }
-
-    public String getClosedID() {
-        return closedID;
-    }
-
-    public String getReason() {
-        return reason;
     }
 
     @Override

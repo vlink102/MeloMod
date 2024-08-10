@@ -13,6 +13,7 @@ plugins {
     id("org.polyfrost.defaults.repo")
     id("org.polyfrost.defaults.java")
     id("org.polyfrost.defaults.loom")
+    id("io.freefair.lombok") version "6.6.1"
     id("com.github.johnrengelman.shadow")
     id("net.kyori.blossom") version "1.3.2"
     id("signing")
@@ -90,6 +91,7 @@ repositories {
     maven("https://repo.polyfrost.org/releases")
     maven("https://repo.hypixel.net/repository/Hypixel/")
     maven("https://repo.loohpjames.com/repository")
+    maven("https://jitpack.io")
 
 }
 
@@ -112,7 +114,9 @@ dependencies {
     implementation("net.hypixel:mod-api:0.3.1")
     implementation("com.loohp:InteractiveChatDiscordSrvAddon:4.2.11.0")
     modRuntimeOnly("me.djtheredstoner:DevAuth-${if (platform.isFabric) "fabric" else if (platform.isLegacyForge) "forge-legacy" else "forge-latest"}:1.2.0")
+    implementation("com.github.ILikePlayingGames:DiscordIPC:-SNAPSHOT")
 
+    testImplementation("org.junit.jupiter:junit-jupiter:5.9.1")
     // If we are building for legacy forge, includes the launch wrapper with `shade` as we configured earlier, as well as mixin 0.7.11
     if (platform.isLegacyForge) {
         compileOnly("org.spongepowered:mixin:0.7.11-SNAPSHOT")

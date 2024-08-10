@@ -3,14 +3,18 @@ package me.vlink102.melomod.util.http.packets;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import lombok.Getter;
 import me.vlink102.melomod.util.game.SkyblockUtil;
 import me.vlink102.melomod.util.http.BanPacket;
 import me.vlink102.melomod.util.http.Packet;
 import me.vlink102.melomod.util.http.Version;
 
 public class ClientBoundVersionControlPacket extends Packet {
+    @Getter
     private final String correctVersion;
+    @Getter
     private final Version.Compatibility correct;
+    @Getter
     private final String updateLink;
     private final Boolean banned;
     private final BanPacket banPacketReason;
@@ -29,18 +33,6 @@ public class ClientBoundVersionControlPacket extends Packet {
 
     public Boolean isBanned() {
         return banned;
-    }
-
-    public Version.Compatibility getCorrect() {
-        return correct;
-    }
-
-    public String getCorrectVersion() {
-        return correctVersion;
-    }
-
-    public String getUpdateLink() {
-        return updateLink;
     }
 
     @Override

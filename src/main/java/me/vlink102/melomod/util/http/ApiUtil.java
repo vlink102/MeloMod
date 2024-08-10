@@ -5,6 +5,7 @@ import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import lombok.Getter;
 import me.vlink102.melomod.MeloMod;
 import me.vlink102.melomod.chatcooldownmanager.TickHandler;
 import me.vlink102.melomod.configuration.ChatConfiguration;
@@ -126,7 +127,7 @@ public class ApiUtil {
     }
 
     public synchronized void sayPlayerNetworth(String player, ChatChannel chatChannel) {
-        CompletableFuture.runAsync(() -> {
+        MeloMod.runAsync(() -> {
             try {
                 UUID uuid = fromName(player).get();
                 requestSkyCrypt(
@@ -153,14 +154,14 @@ public class ApiUtil {
             } catch (InterruptedException | ExecutionException e) {
                 throw new RuntimeException(e);
             }
-        }, executorService);
+        });
 
 
     }
 
     public synchronized void getPlayerLastLogin(String playerName, ChatChannel chatChannel) {
 
-        CompletableFuture.runAsync(() -> {
+        MeloMod.runAsync(() -> {
             try {
                 UUID uuid = fromName(playerName).get();
                 requestAPI(
@@ -179,13 +180,13 @@ public class ApiUtil {
             } catch (InterruptedException | ExecutionException e) {
                 throw new RuntimeException(e);
             }
-        }, executorService);
+        });
 
 
     }
 
     public synchronized void sayPlayerSecrets(String player, ChatChannel chatChannel) {
-        CompletableFuture.runAsync(() -> {
+        MeloMod.runAsync(() -> {
             try {
                 UUID uuid = fromName(player).get();
                 requestAPI(
@@ -206,13 +207,13 @@ public class ApiUtil {
             } catch (InterruptedException | ExecutionException e) {
                 throw new RuntimeException(e);
             }
-        }, executorService);
+        });
 
 
     }
 
     public synchronized void sayPlayerStatus(String player, ChatChannel chatChannel) {
-        CompletableFuture.runAsync(() -> {
+        MeloMod.runAsync(() -> {
             try {
                 UUID uuid = fromName(player).get();
                 requestAPI(
@@ -247,14 +248,14 @@ public class ApiUtil {
             } catch (InterruptedException | ExecutionException e) {
                 throw new RuntimeException(e);
             }
-        }, executorService);
+        });
 
 
     }
 
     public synchronized void sayGuildInformation(String player, ChatChannel chatChannel) {
 
-        CompletableFuture.runAsync(() -> {
+        MeloMod.runAsync(() -> {
             try {
                 UUID uuid = fromName(player).get();
                 requestAPI(
@@ -275,7 +276,7 @@ public class ApiUtil {
             } catch (InterruptedException | ExecutionException e) {
                 throw new RuntimeException(e);
             }
-        }, executorService);
+        });
 
 
     }
@@ -306,7 +307,7 @@ public class ApiUtil {
     }
 
     public synchronized void lastLogin(String player, ChatChannel chatChannel) {
-        CompletableFuture.runAsync(() -> {
+        MeloMod.runAsync(() -> {
             requestSkyCrypt(
                     ApiUtil.SkyCryptEndpoint.PROFILE,
                     player,
@@ -330,13 +331,13 @@ public class ApiUtil {
                         }
                     }
             );
-        }, executorService);
+        });
 
     }
 
     public synchronized void playerSocials(String player, String request, ChatChannel chatChannel) {
 
-        CompletableFuture.runAsync(() -> {
+        MeloMod.runAsync(() -> {
             try {
                 UUID uuid = fromName(player).get();
                 requestAPI(
@@ -375,7 +376,7 @@ public class ApiUtil {
             } catch (InterruptedException | ExecutionException e) {
                 throw new RuntimeException(e);
             }
-        }, executorService);
+        });
 
 
     }
@@ -385,7 +386,7 @@ public class ApiUtil {
      * <a href="https://api.crafty.gg/api/v2/players/swageater34">Crafty Endpoint (67/94)</a>
      */
     public synchronized void getPlayerPastNames(String player, int page, ChatChannel chatChannel) {
-        CompletableFuture.runAsync(() -> {
+        MeloMod.runAsync(() -> {
             try {
                 UUID uuid = fromName(player).get();
                 requestServer(
@@ -423,7 +424,7 @@ public class ApiUtil {
             } catch (InterruptedException | ExecutionException e) {
                 throw new RuntimeException(e);
             }
-        }, executorService);
+        });
 
 
     }
@@ -556,6 +557,7 @@ public class ApiUtil {
         public static final String MAIN = "https://api.hypixel.net/v2/";
         private final String endPoint;
 
+        @Getter
         private final List<EndPointArgument> endpointArguments;
 
         HypixelEndpoint(String endPoint, EndPointArgument... endpoints) {
@@ -568,12 +570,9 @@ public class ApiUtil {
             return MAIN + endPoint;
         }
 
-        public List<EndPointArgument> getEndpointArguments() {
-            return endpointArguments;
-        }
-
         public static class FilledEndpointArgument {
             private final EndPointArgument argument;
+            @Getter
             private final String value;
 
             public FilledEndpointArgument(EndPointArgument argument, String value) {
@@ -601,11 +600,9 @@ public class ApiUtil {
                 return argument.isRequired();
             }
 
-            public String getValue() {
-                return value;
-            }
         }
 
+        @Getter
         public static class EndPointArgument {
             private final String argumentTag;
             private final boolean required;
@@ -615,13 +612,6 @@ public class ApiUtil {
                 this.required = required;
             }
 
-            public String getArgumentTag() {
-                return argumentTag;
-            }
-
-            public boolean isRequired() {
-                return required;
-            }
         }
 
         public static class RequiredEndPoint extends EndPointArgument {

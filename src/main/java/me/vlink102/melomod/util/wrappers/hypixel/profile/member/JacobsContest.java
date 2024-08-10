@@ -3,6 +3,7 @@ package me.vlink102.melomod.util.wrappers.hypixel.profile.member;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import lombok.Getter;
 import me.vlink102.melomod.util.game.SkyblockUtil;
 
 import java.util.ArrayList;
@@ -11,12 +12,17 @@ import java.util.List;
 import java.util.Map;
 
 public class JacobsContest {
+    @Getter
     private final HashMap<String, Integer> medalsInv;
+    @Getter
     private final HashMap<String, Integer> perks;
+    @Getter
     private final List<JacobsContestData> jacobsContestDataList;
     private final Boolean talked;
+    @Getter
     private final HashMap<String, List<String>> uniqueBrackets;
     private final Boolean migration;
+    @Getter
     private final HashMap<String, Integer> personalBests;
 
     public JacobsContest(JsonObject object) {
@@ -57,26 +63,6 @@ public class JacobsContest {
         }
     }
 
-    public HashMap<String, Integer> getMedalsInv() {
-        return medalsInv;
-    }
-
-    public HashMap<String, Integer> getPerks() {
-        return perks;
-    }
-
-    public HashMap<String, Integer> getPersonalBests() {
-        return personalBests;
-    }
-
-    public HashMap<String, List<String>> getUniqueBrackets() {
-        return uniqueBrackets;
-    }
-
-    public List<JacobsContestData> getJacobsContestDataList() {
-        return jacobsContestDataList;
-    }
-
     public boolean isTalked() {
         return talked;
     }
@@ -87,8 +73,10 @@ public class JacobsContest {
 
     public static class JacobsContestData {
         private final Integer collected;
+        @Getter
         private final Boolean claimedRewards;
         private final Integer claimedPosition;
+        @Getter
         private final String claimedMedal;
         private final Integer claimedParticipants;
 
@@ -98,14 +86,6 @@ public class JacobsContest {
             this.claimedMedal = SkyblockUtil.getAsString("claimed_medal", object);
             this.claimedPosition = SkyblockUtil.getAsInteger("claimed_position", object);
             this.claimedRewards = SkyblockUtil.getAsBoolean("claimed_rewards", object);
-        }
-
-        public Boolean getClaimedRewards() {
-            return claimedRewards;
-        }
-
-        public String getClaimedMedal() {
-            return claimedMedal;
         }
 
         public int getClaimedParticipants() {

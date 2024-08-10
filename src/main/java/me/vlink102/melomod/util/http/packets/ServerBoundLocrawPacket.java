@@ -3,9 +3,11 @@ package me.vlink102.melomod.util.http.packets;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import lombok.Getter;
 import me.vlink102.melomod.util.http.Packet;
 import me.vlink102.melomod.util.game.SkyblockUtil;
 
+@Getter
 public class ServerBoundLocrawPacket extends Packet {
     private final String map;
     private final String gamemode;
@@ -28,30 +30,6 @@ public class ServerBoundLocrawPacket extends Packet {
         this.serverID = serverID;
         this.isHypixel = isHypixel;
         this.serverIP = serverIP;
-    }
-
-    public String getServerIP() {
-        return serverIP;
-    }
-
-    public ServerType getIsHypixel() {
-        return isHypixel;
-    }
-
-    public String getGamemode() {
-        return gamemode;
-    }
-
-    public String getGametype() {
-        return gametype;
-    }
-
-    public String getServerID() {
-        return serverID;
-    }
-
-    public String getMap() {
-        return map;
     }
 
     @Override

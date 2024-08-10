@@ -3,12 +3,14 @@ package me.vlink102.melomod.util.wrappers.hypixel.profile.member.riftdata;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import lombok.Getter;
 import me.vlink102.melomod.util.game.SkyblockUtil;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class WyldWoods {
+    @Getter
     private final List<String> talkedThreeBrothers;
     private final Boolean siriusStartedQA;
     private final Boolean siriusQAChainDone;
@@ -49,7 +51,4 @@ public class WyldWoods {
         return siriusStartedQA;
     }
 
-    public List<String> getTalkedThreeBrothers() {
-        return talkedThreeBrothers;
-    }
 }

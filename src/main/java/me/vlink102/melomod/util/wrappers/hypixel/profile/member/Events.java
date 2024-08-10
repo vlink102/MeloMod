@@ -3,6 +3,7 @@ package me.vlink102.melomod.util.wrappers.hypixel.profile.member;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import lombok.Getter;
 import me.vlink102.melomod.util.game.SkyblockUtil;
 
 import java.util.ArrayList;
@@ -10,6 +11,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+@Getter
 public class Events {
     private final Easter easter;
 
@@ -17,22 +19,24 @@ public class Events {
         this.easter = new Easter(SkyblockUtil.getAsJsonObject("easter", object));
     }
 
-    public Easter getEaster() {
-        return easter;
-    }
-
     public static class Easter {
         private final Long chocolate;
         private final Long chocolateSincePrestige;
         private final Long totalChocolate;
+        @Getter
         private final HashMap<String, Integer> employees;
         private final Long lastViewedChocolateFactory;
+        @Getter
         private final Easter.Rabbits rabbits;
+        @Getter
         private final Easter.Shop shop;
         private final Integer rabbitBarnCapacityLevel;
+        @Getter
         private final String rabbitSort;
         private final Integer chocolateLevel;
+        @Getter
         private final Easter.TimeTower timeTower;
+        @Getter
         private final String rabbitFilter;
         private final Integer chocolateMultiplierUpgrades;
         private final Integer clickUpgrades;
@@ -63,10 +67,6 @@ public class Events {
             this.rabbitRarityUpgrades = SkyblockUtil.getAsInteger("rabbit_rarity_upgrades", object);
             this.supremeChocolateBars = SkyblockUtil.getAsInteger("supreme_chocolate_bars", object);
             this.refinedDarkCacaoTruffles = SkyblockUtil.getAsInteger("refined_dark_cacao_truffles", object);
-        }
-
-        public HashMap<String, Integer> getEmployees() {
-            return employees;
         }
 
         public int getChocolateLevel() {
@@ -113,26 +113,6 @@ public class Events {
             return totalChocolate;
         }
 
-        public Easter.Rabbits getRabbits() {
-            return rabbits;
-        }
-
-        public Easter.Shop getShop() {
-            return shop;
-        }
-
-        public String getRabbitFilter() {
-            return rabbitFilter;
-        }
-
-        public String getRabbitSort() {
-            return rabbitSort;
-        }
-
-        public Easter.TimeTower getTimeTower() {
-            return timeTower;
-        }
-
         public static class TimeTower {
             private final Integer charges;
             private final Long lastChargeTime;
@@ -165,7 +145,9 @@ public class Events {
 
         public static class Shop {
             private final Integer year;
+            @Getter
             private final List<String> rabbitsShop;
+            @Getter
             private final List<String> rabbitsPurchased;
             private final Long chocolateSpent;
             private final Integer cocoaFortuneUpgrades;
@@ -194,19 +176,12 @@ public class Events {
                 return year;
             }
 
-            public List<String> getRabbitsPurchased() {
-                return rabbitsPurchased;
-            }
-
-            public List<String> getRabbitsShop() {
-                return rabbitsShop;
-            }
-
             public long getChocolateSpent() {
                 return chocolateSpent;
             }
         }
 
+        @Getter
         public static class Rabbits {
             private final HashMap<String, Long> collectedEggs;
             private final HashMap<String, List<String>> collectedLocations;
@@ -230,13 +205,6 @@ public class Events {
                 }
             }
 
-            public HashMap<String, List<String>> getCollectedLocations() {
-                return collectedLocations;
-            }
-
-            public HashMap<String, Long> getCollectedEggs() {
-                return collectedEggs;
-            }
         }
     }
 }

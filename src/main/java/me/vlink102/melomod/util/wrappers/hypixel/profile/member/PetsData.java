@@ -3,10 +3,12 @@ package me.vlink102.melomod.util.wrappers.hypixel.profile.member;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import lombok.Getter;
 import me.vlink102.melomod.util.game.SkyblockUtil;
 
 import java.util.*;
 
+@Getter
 public class PetsData {
     private final List<Pet> pets;
     private final PetCare petCare;
@@ -22,18 +24,7 @@ public class PetsData {
         }
     }
 
-    public AutoPet getAutoPet() {
-        return autoPet;
-    }
-
-    public List<Pet> getPets() {
-        return pets;
-    }
-
-    public PetCare getPetCare() {
-        return petCare;
-    }
-
+    @Getter
     public static class PetCare {
         private final Double coinsSpent;
         private final List<String> petTypesSacrificed;
@@ -47,17 +38,11 @@ public class PetsData {
             }
         }
 
-        public Double getCoinsSpent() {
-            return coinsSpent;
-        }
-
-        public List<String> getPetTypesSacrificed() {
-            return petTypesSacrificed;
-        }
     }
 
     public static class AutoPet {
         private final Integer rulesLimit;
+        @Getter
         private final List<AutoPet.AutoPetRule> autoPetRules;
         private final Boolean migrated;
         private final Boolean migrated2;
@@ -82,21 +67,23 @@ public class PetsData {
             return migrated2;
         }
 
-        public List<AutoPet.AutoPetRule> getAutoPetRules() {
-            return autoPetRules;
-        }
-
         public int getRulesLimit() {
             return rulesLimit;
         }
 
         public static class AutoPetRule {
+            @Getter
             private final UUID uuid;
+            @Getter
             private final String id;
+            @Getter
             private final String name;
+            @Getter
             private final UUID uniqueID;
+            @Getter
             private final List<AutoPet.AutoPetRule.AutoPetRuleException> autoPetRuleExceptions;
             private final Boolean disabled;
+            @Getter
             private final HashMap<String, String> data;
 
             public AutoPetRule(JsonObject object) {
@@ -123,30 +110,7 @@ public class PetsData {
                 return disabled;
             }
 
-            public HashMap<String, String> getData() {
-                return data;
-            }
-
-            public String getId() {
-                return id;
-            }
-
-            public UUID getUniqueID() {
-                return uniqueID;
-            }
-
-            public UUID getUuid() {
-                return uuid;
-            }
-
-            public List<AutoPet.AutoPetRule.AutoPetRuleException> getAutoPetRuleExceptions() {
-                return autoPetRuleExceptions;
-            }
-
-            public String getName() {
-                return name;
-            }
-
+            @Getter
             public static class AutoPetRuleException {
                 private final String id;
                 private final HashMap<String, String> data;
@@ -161,26 +125,26 @@ public class PetsData {
                     }
                 }
 
-                public HashMap<String, String> getData() {
-                    return data;
-                }
-
-                public String getId() {
-                    return id;
-                }
             }
         }
     }
 
     public static class Pet {
+        @Getter
         private final UUID uuid;
+        @Getter
         private final UUID uniqueId;
+        @Getter
         private final String type;
+        @Getter
         private final Double exp;
         private final Boolean active;
+        @Getter
         private final String tier;
+        @Getter
         private final String heldItem;
         private final Integer candyUsed;
+        @Getter
         private final String skin;
 
         public Pet(JsonObject object) {
@@ -195,36 +159,8 @@ public class PetsData {
             this.skin = SkyblockUtil.getAsString("skin", object);
         }
 
-        public UUID getUuid() {
-            return uuid;
-        }
-
-        public String getType() {
-            return type;
-        }
-
         public int getCandyUsed() {
             return candyUsed;
-        }
-
-        public Double getExp() {
-            return exp;
-        }
-
-        public String getHeldItem() {
-            return heldItem;
-        }
-
-        public String getSkin() {
-            return skin;
-        }
-
-        public String getTier() {
-            return tier;
-        }
-
-        public UUID getUniqueId() {
-            return uniqueId;
         }
 
         public boolean isActive() {

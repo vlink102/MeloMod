@@ -4,6 +4,7 @@ import cc.polyfrost.oneconfig.events.EventManager;
 import cc.polyfrost.oneconfig.events.event.LocrawEvent;
 import cc.polyfrost.oneconfig.libs.eventbus.Subscribe;
 import cc.polyfrost.oneconfig.utils.hypixel.HypixelUtils;
+import lombok.Getter;
 import me.vlink102.melomod.MeloMod;
 import me.vlink102.melomod.util.enums.skyblock.Location;
 import me.vlink102.melomod.util.http.ApiUtil;
@@ -15,7 +16,8 @@ import net.minecraft.util.BlockPos;
 public class LocrawHandler {
     private final MeloMod mod;
 
-    public class Coords {
+    @Getter
+    public static class Coords {
         private final float x;
         private final float y;
         private final float z;
@@ -25,15 +27,6 @@ public class LocrawHandler {
             this.z = z;
         }
 
-        public float getX() {
-            return x;
-        }
-        public float getY() {
-            return y;
-        }
-        public float getZ() {
-            return z;
-        }
     }
 
     public BlockPos getCoords() {
@@ -54,17 +47,19 @@ public class LocrawHandler {
         return gameMode;
     }
 
+    @Getter
     private static String serverID;
 
-    public static String getServerID() {
-        return serverID;
-    }
-
     public static class LocrawInfo {
+        @Getter
         private final String serverID;
+        @Getter
         private final String gamemode;
+        @Getter
         private final String gametype;
+        @Getter
         private final String map;
+        @Getter
         private final String serverIP;
         private final ServerBoundLocrawPacket.ServerType isHypixel;
 
@@ -81,25 +76,6 @@ public class LocrawHandler {
             return isHypixel;
         }
 
-        public String getServerIP() {
-            return serverIP;
-        }
-
-        public String getServerID() {
-            return serverID;
-        }
-
-        public String getGametype() {
-            return gametype;
-        }
-
-        public String getGamemode() {
-            return gamemode;
-        }
-
-        public String getMap() {
-            return map;
-        }
     }
 
     public static ServerBoundLocrawPacket.ServerType getType() {

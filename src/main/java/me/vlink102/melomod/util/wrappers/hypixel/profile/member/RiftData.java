@@ -3,12 +3,14 @@ package me.vlink102.melomod.util.wrappers.hypixel.profile.member;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import lombok.Getter;
 import me.vlink102.melomod.util.game.SkyblockUtil;
 import me.vlink102.melomod.util.wrappers.hypixel.profile.member.riftdata.*;
 
 import java.util.ArrayList;
 import java.util.List;
 
+@Getter
 public class RiftData {
     private final List<String> lifetimePurchasedBoundaries;
     private final VillagePlaza villagePlaza;
@@ -44,62 +46,6 @@ public class RiftData {
         this.access = new Access(SkyblockUtil.getAsJsonObject("access", object));
         this.dreadfarm = new Dreadfarm(SkyblockUtil.getAsJsonObject("dreadfarm", object));
         this.inventory = new Inventory(SkyblockUtil.getAsJsonObject("inventory", object));
-    }
-
-    public Access getAccess() {
-        return access;
-    }
-
-    public BlackLagoon getBlackLagoon() {
-        return blackLagoon;
-    }
-
-    public Castle getCastle() {
-        return castle;
-    }
-
-    public DeadCats getDeadCats() {
-        return deadCats;
-    }
-
-    public Dreadfarm getDreadfarm() {
-        return dreadfarm;
-    }
-
-    public Enigma getEnigma() {
-        return enigma;
-    }
-
-    public Gallery getGallery() {
-        return gallery;
-    }
-
-    public Inventory getInventory() {
-        return inventory;
-    }
-
-    public List<String> getLifetimePurchasedBoundaries() {
-        return lifetimePurchasedBoundaries;
-    }
-
-    public VillagePlaza getVillagePlaza() {
-        return villagePlaza;
-    }
-
-    public WestVillage getWestVillage() {
-        return westVillage;
-    }
-
-    public WitherCage getWitherCage() {
-        return witherCage;
-    }
-
-    public WizardTower getWizardTower() {
-        return wizardTower;
-    }
-
-    public WyldWoods getWyldWoods() {
-        return wyldWoods;
     }
 
 }

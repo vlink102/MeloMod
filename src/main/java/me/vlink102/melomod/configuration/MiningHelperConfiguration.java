@@ -137,7 +137,7 @@ public class MiningHelperConfiguration extends SubConfig {
                 lines.add(GRAY + "  X: " + DARK_AQUA + "???");
                 lines.add(GRAY + "  Y: " + DARK_AQUA + "???");
                 lines.add(GRAY + "  Z: " + DARK_AQUA + "???");
-                lines.add(GRAY + "  Drill: " + RED + Feature.GENERIC_NONE.toString());
+                lines.add(GRAY + "  Drill: " + RED + Feature.GENERIC_NONE);
             } else {
                 if (!enableHUD) return;
                 if (!HypixelUtils.INSTANCE.isHypixel() || Minecraft.getMinecraft().thePlayer == null) {
@@ -162,10 +162,10 @@ public class MiningHelperConfiguration extends SubConfig {
                     if (type == ItemType.DRILL || type == ItemType.GAUNTLET || type == ItemType.PICKAXE) {
                         lines.add(GRAY + "  Drill: " + RED + PlayerObjectUtil.getHeldItemName());
                     } else {
-                        lines.add(GRAY + "  Drill: " + RED + Feature.GENERIC_NONE.toString());
+                        lines.add(GRAY + "  Drill: " + RED + Feature.GENERIC_NONE);
                     }
                 } else {
-                    lines.add(GRAY + "  Drill: " + RED + Feature.GENERIC_NONE.toString());
+                    lines.add(GRAY + "  Drill: " + RED + Feature.GENERIC_NONE);
                 }
 
                 if (MiningHelperConfiguration.miningHighlightType == 2) {
@@ -178,7 +178,7 @@ public class MiningHelperConfiguration extends SubConfig {
                             lines.add(GRAY + "  Detected: " + DARK_PURPLE + "Gemstone");
                             break;
                         default:
-                            lines.add(GRAY + "  Detected: " + RED + Feature.GENERIC_NONE.toString());
+                            lines.add(GRAY + "  Detected: " + RED + Feature.GENERIC_NONE);
                             break;
                     }
                 } else if (MiningHelperConfiguration.miningHighlightType == 0) {

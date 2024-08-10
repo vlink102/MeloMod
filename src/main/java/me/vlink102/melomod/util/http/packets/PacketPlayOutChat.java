@@ -3,11 +3,13 @@ package me.vlink102.melomod.util.http.packets;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import lombok.Getter;
 import me.vlink102.melomod.util.http.Packet;
 import me.vlink102.melomod.util.game.SkyblockUtil;
 
 import static me.vlink102.melomod.util.StringUtils.cc;
 
+@Getter
 public class PacketPlayOutChat extends Packet {
     private final String contents;
     private final String uuid;
@@ -21,14 +23,6 @@ public class PacketPlayOutChat extends Packet {
         this.name = name;
         this.targetName = targetUUID;
         this.data = data == null ? null : cc(data);
-    }
-
-    public String getData() {
-        return data;
-    }
-
-    public String getTargetName() {
-        return targetName;
     }
 
     @Override
@@ -63,15 +57,4 @@ public class PacketPlayOutChat extends Packet {
         return null;
     }
 
-    public String getUuid() {
-        return uuid;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public String getContents() {
-        return contents;
-    }
 }

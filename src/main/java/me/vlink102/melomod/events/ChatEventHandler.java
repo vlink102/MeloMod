@@ -4,6 +4,7 @@ import cc.polyfrost.oneconfig.events.EventManager;
 import cc.polyfrost.oneconfig.events.event.ChatReceiveEvent;
 import cc.polyfrost.oneconfig.libs.eventbus.Subscribe;
 import com.google.gson.JsonObject;
+import lombok.Getter;
 import me.vlink102.melomod.MeloMod;
 import me.vlink102.melomod.chatcooldownmanager.ServerTracker;
 import me.vlink102.melomod.configuration.ChatConfiguration;
@@ -185,13 +186,11 @@ public class ChatEventHandler {
 
      */
     private final MeloMod mod;
-    private final RandomUtils random;
     public List<String> party = new ArrayList<>();
     private int memberCount = -1;
 
     public ChatEventHandler(MeloMod mod) {
         this.mod = mod;
-        this.random = new RandomUtils();
         EventManager.INSTANCE.register(this);
     }
 
@@ -749,6 +748,7 @@ public class ChatEventHandler {
      */
 
 
+    @Getter
     public enum SeaCreature {
         SQUID("pond_squid", "pond_squid_1"),
         AGARIMOO("agarimoo_35"),
@@ -815,9 +815,6 @@ public class ChatEventHandler {
             return NOTHING;
         }
 
-        public String[] getInternalID() {
-            return internalID;
-        }
     }
 
     public enum Commands {
@@ -847,7 +844,9 @@ public class ChatEventHandler {
         LASTONLINE("seen", ChatConfiguration::isLastOnlineInfo, optional("player", true)),
         AI("ai", ChatConfiguration::isAi, required("prompt", false));
 
+        @Getter
         private final String command;
+        @Getter
         private final List<CommandParameter> params;
         private final Supplier<Boolean> toggle;
 
@@ -867,14 +866,6 @@ public class ChatEventHandler {
 
         public boolean getToggle() {
             return toggle.get();
-        }
-
-        public List<CommandParameter> getParams() {
-            return params;
-        }
-
-        public String getCommand() {
-            return command;
         }
 
         public String getString() {
@@ -898,7 +889,9 @@ public class ChatEventHandler {
         }
 
         public static class CommandParameter {
+            @Getter
             private final String paramName;
+            @Getter
             private final boolean required;
             private final boolean isOther;
 
@@ -912,13 +905,6 @@ public class ChatEventHandler {
                 return isOther;
             }
 
-            public String getParamName() {
-                return paramName;
-            }
-
-            public boolean isRequired() {
-                return required;
-            }
         }
     }
 }

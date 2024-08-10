@@ -3,6 +3,7 @@ package me.vlink102.melomod.util.wrappers.hypixel.profile.member.riftdata;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import lombok.Getter;
 import me.vlink102.melomod.util.game.SkyblockUtil;
 
 import java.util.ArrayList;
@@ -10,6 +11,7 @@ import java.util.List;
 
 public class Enigma {
     private final Boolean boughtCloak;
+    @Getter
     private final List<String> foundSouls;
     private final Integer claimedBonusIndex;
 
@@ -25,10 +27,6 @@ public class Enigma {
 
     public boolean isBoughtCloak() {
         return boughtCloak;
-    }
-
-    public List<String> getFoundSouls() {
-        return foundSouls;
     }
 
     public int getClaimedBonusIndex() {

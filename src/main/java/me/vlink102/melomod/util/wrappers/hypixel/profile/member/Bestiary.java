@@ -2,6 +2,7 @@ package me.vlink102.melomod.util.wrappers.hypixel.profile.member;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import lombok.Getter;
 import me.vlink102.melomod.util.game.SkyblockUtil;
 
 import java.util.HashMap;
@@ -11,6 +12,7 @@ import java.util.Objects;
 public class Bestiary {
     private final Boolean migratedStats;
     private final Boolean migration;
+    @Getter
     private final HashMap<String, Integer> kills;
     // todo complete
 
@@ -26,10 +28,6 @@ public class Bestiary {
             }
             kills.put(string, killsObject.get(string).getAsInt());
         }
-    }
-
-    public HashMap<String, Integer> getKills() {
-        return kills;
     }
 
     public boolean isMigration() {

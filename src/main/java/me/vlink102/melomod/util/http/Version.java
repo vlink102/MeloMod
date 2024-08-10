@@ -1,5 +1,6 @@
 package me.vlink102.melomod.util.http;
 
+import lombok.Getter;
 import me.vlink102.melomod.MeloMod;
 
 public class Version {
@@ -14,6 +15,7 @@ public class Version {
     }
 
     // todo add outdated minor and outdated patch (green, yellow, orange, red)
+    @Getter
     public enum Compatibility {
         UP_TO_DATE(MeloMod.AbstractColor.GREEN, '✔', "&2Up to date"),
         OUTDATED(MeloMod.AbstractColor.YELLOW, '⚠', "&6Outdated"),
@@ -29,17 +31,6 @@ public class Version {
             this.pretty = pretty;
         }
 
-        public String getPretty() {
-            return pretty;
-        }
-
-        public MeloMod.AbstractColor getColor() {
-            return color;
-        }
-
-        public char getIcon() {
-            return icon;
-        }
     }
 
     public static Version parse(String versionString) {

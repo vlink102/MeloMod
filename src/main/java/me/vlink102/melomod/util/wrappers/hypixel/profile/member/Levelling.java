@@ -3,6 +3,7 @@ package me.vlink102.melomod.util.wrappers.hypixel.profile.member;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import lombok.Getter;
 import me.vlink102.melomod.util.game.SkyblockUtil;
 
 import java.util.ArrayList;
@@ -12,20 +13,28 @@ import java.util.Map;
 
 public class Levelling {
     private final Integer experience;
+    @Getter
     private final HashMap<String, Integer> completions;
+    @Getter
     private final List<String> completed;
     private final Boolean migratedCompletions;
+    @Getter
     private final List<String> completedTasks;
+    @Getter
     private final String highestPetScore;
     private final Integer miningFiestaOresMined;
     private final Integer fishingFestivalSharksKilled;
     private final Boolean migrated;
     private final Boolean migratedCompletions2;
+    @Getter
     private final List<String> lastViewedTasks;
     private final Boolean claimedTalisman;
+    @Getter
     private final String bopBonus;
     private final Boolean categoryExpanded;
+    @Getter
     private final List<String> emblemUnlocks;
+    @Getter
     private final String taskSort;
 
     public Levelling(JsonObject object) {
@@ -68,10 +77,6 @@ public class Levelling {
         this.taskSort = SkyblockUtil.getAsString("task_sort", object);
     }
 
-    public HashMap<String, Integer> getCompletions() {
-        return completions;
-    }
-
     public int getExperience() {
         return experience;
     }
@@ -82,34 +87,6 @@ public class Levelling {
 
     public int getMiningFiestaOresMined() {
         return miningFiestaOresMined;
-    }
-
-    public List<String> getCompleted() {
-        return completed;
-    }
-
-    public List<String> getCompletedTasks() {
-        return completedTasks;
-    }
-
-    public List<String> getEmblemUnlocks() {
-        return emblemUnlocks;
-    }
-
-    public List<String> getLastViewedTasks() {
-        return lastViewedTasks;
-    }
-
-    public String getBopBonus() {
-        return bopBonus;
-    }
-
-    public String getHighestPetScore() {
-        return highestPetScore;
-    }
-
-    public String getTaskSort() {
-        return taskSort;
     }
 
     public boolean isMigrated() {

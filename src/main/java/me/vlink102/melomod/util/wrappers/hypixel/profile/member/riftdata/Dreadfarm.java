@@ -3,6 +3,7 @@ package me.vlink102.melomod.util.wrappers.hypixel.profile.member.riftdata;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import lombok.Getter;
 import me.vlink102.melomod.util.game.SkyblockUtil;
 
 import java.util.ArrayList;
@@ -10,6 +11,7 @@ import java.util.List;
 
 public class Dreadfarm {
     private final Integer shaniaStage;
+    @Getter
     private final List<Long> caducousFeederUses;
 
     public Dreadfarm(JsonObject object) {
@@ -25,7 +27,4 @@ public class Dreadfarm {
         return shaniaStage;
     }
 
-    public List<Long> getCaducousFeederUses() {
-        return caducousFeederUses;
-    }
 }

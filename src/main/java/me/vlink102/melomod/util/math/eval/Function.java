@@ -1,9 +1,18 @@
 package me.vlink102.melomod.util.math.eval;
 
+import lombok.Getter;
+
 public class Function {
-    private String name;
-    private int minArgumentCount;
-    private int maxArgumentCount;
+    /**
+     * -- GETTER --
+     * Gets the function's name.
+     *
+     * @return the name of the function
+     */
+    @Getter
+    private final String name;
+    private final int minArgumentCount;
+    private final int maxArgumentCount;
 
     /** Constructor.
      * <br>This constructor builds a function with a fixed arguments count.
@@ -27,19 +36,12 @@ public class Function {
         if ((minArgumentCount<0) || (minArgumentCount>maxArgumentCount)) {
             throw new IllegalArgumentException("Invalid argument count");
         }
-        if (name==null || name.length()==0) {
+        if (name==null || name.isEmpty()) {
             throw new IllegalArgumentException("Invalid function name");
         }
         this.name = name;
         this.minArgumentCount = minArgumentCount;
         this.maxArgumentCount = maxArgumentCount;
-    }
-
-    /** Gets the function's name.
-     * @return the name of the function
-     */
-    public String getName() {
-        return this.name;
     }
 
     /** Gets the function's minimum argument count.

@@ -1,6 +1,7 @@
 package me.vlink102.melomod.util.http;
 
 import me.vlink102.melomod.MeloMod;
+import me.vlink102.melomod.events.SkyblockRunnable;
 import me.vlink102.melomod.util.http.packets.ServerBoundNotifyOnlinePacket;
 import me.vlink102.melomod.util.http.packets.ServerBoundVersionControlPacket;
 import me.vlink102.melomod.util.translation.Feature;
@@ -41,11 +42,13 @@ public class CommunicationHandler {
     }
 
     public void beginKeepAlive(UUID uuid, String name) {
-        ScheduledExecutorService executorService = new ScheduledThreadPoolExecutor(1);
-        executorService.scheduleAtFixedRate(() -> {
-            if (thread == null || reasons.contains(DataThread.closed)) {
-                establishConnection(uuid, name);
+        MeloMod.INSTANCE.getNewScheduler().runAsync(new SkyblockRunnable() {
+            @Override
+            public void run() {
+                if (thread == null || reasons.contains(DataThread.closed)) {
+                    establishConnection(uuid, name);
+                }
             }
-        }, 0, 5, TimeUnit.SECONDS);
+        }, 0, 5 * 20);
     }
 }

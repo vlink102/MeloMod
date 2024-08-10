@@ -1,10 +1,12 @@
 package me.vlink102.melomod.util.wrappers.hypixel.profile.member.playerdata;
 
 import com.google.gson.JsonObject;
+import lombok.Getter;
 import me.vlink102.melomod.util.game.SkyblockUtil;
 
 public class TempStatBuff {
     private final Integer stat;
+    @Getter
     private final String key;
     private final Integer amount;
     private final Long expireAt;
@@ -28,7 +30,4 @@ public class TempStatBuff {
         return expireAt;
     }
 
-    public String getKey() {
-        return key;
-    }
 }

@@ -3,11 +3,13 @@ package me.vlink102.melomod.util.http.packets;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import lombok.Getter;
 import me.vlink102.melomod.util.http.Packet;
 import me.vlink102.melomod.util.game.SkyblockUtil;
 
 public class ClientBoundNotifyOnlinePacket extends Packet {
     private final Boolean online;
+    @Getter
     private final String name;
 
     public ClientBoundNotifyOnlinePacket(final Boolean online, final String name) {
@@ -39,10 +41,6 @@ public class ClientBoundNotifyOnlinePacket extends Packet {
     @Override
     public PacketID bind() {
         return PacketID.NOTIFY_ONLINE;
-    }
-
-    public String getName() {
-        return name;
     }
 
     public Boolean isOnline() {

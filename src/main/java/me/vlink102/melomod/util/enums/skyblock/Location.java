@@ -1,5 +1,8 @@
 package me.vlink102.melomod.util.enums.skyblock;
 
+import lombok.Getter;
+
+@Getter
 public enum Location {
     PRIVATE_ISLAND("dynamic"),
     GARDEN("garden"),
@@ -34,7 +37,4 @@ public enum Location {
         return null;
     }
 
-    public String getInternal() {
-        return internal;
-    }
 }

@@ -3,6 +3,7 @@ package me.vlink102.melomod.util.wrappers.hypixel.profile.member.riftdata;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import lombok.Getter;
 import me.vlink102.melomod.util.game.SkyblockUtil;
 
 import java.util.ArrayList;
@@ -10,6 +11,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+@Getter
 public class WestVillage {
     private final MirrorVerse mirrorVerse;
     private final CrazyKloon crazyKloon;
@@ -23,25 +25,11 @@ public class WestVillage {
         this.glyphs = new Glyphs(SkyblockUtil.getAsJsonObject("glyphs", object));
     }
 
-    public CrazyKloon getCrazyKloon() {
-        return crazyKloon;
-    }
-
-    public Glyphs getGlyphs() {
-        return glyphs;
-    }
-
-    public KatHouse getKatHouse() {
-        return katHouse;
-    }
-
-    public MirrorVerse getMirrorVerse() {
-        return mirrorVerse;
-    }
-
     public static class MirrorVerse {
+        @Getter
         private final List<String> roomsVisited;
         private final Boolean upsideDownHard;
+        @Getter
         private final List<String> claimedChestItems;
         private final Boolean claimedReward;
 
@@ -60,14 +48,6 @@ public class WestVillage {
             }
         }
 
-        public List<String> getClaimedChestItems() {
-            return claimedChestItems;
-        }
-
-        public List<String> getRoomsVisited() {
-            return roomsVisited;
-        }
-
         public boolean isClaimedReward() {
             return claimedReward;
         }
@@ -78,8 +58,10 @@ public class WestVillage {
     }
 
     public static class CrazyKloon {
+        @Getter
         private final HashMap<String, String> selectedColors;
         private final Boolean talked;
+        @Getter
         private final List<String> hackedTerminals;
         private final Boolean questComplete;
 
@@ -97,14 +79,6 @@ public class WestVillage {
                 hackedTerminals.add(hackedTerminal.getAsString());
             }
             this.questComplete = SkyblockUtil.getAsBoolean("quest_complete", object);
-        }
-
-        public HashMap<String, String> getSelectedColors() {
-            return selectedColors;
-        }
-
-        public List<String> getHackedTerminals() {
-            return hackedTerminals;
         }
 
         public boolean isQuestComplete() {

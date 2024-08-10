@@ -1,16 +1,20 @@
 package me.vlink102.melomod.util.wrappers.hypixel.profile;
 
 import com.google.gson.JsonObject;
+import lombok.Getter;
 import me.vlink102.melomod.util.game.SkyblockUtil;
 
 import java.util.UUID;
 
 public class CommunityUpgrade {
+    @Getter
     private final String upgradeName;
     private final Integer tier;
     private final Long startedMS;
     private final Long claimedMS;
+    @Getter
     private final UUID startedBy;
+    @Getter
     private final UUID claimedBy;
     private final Boolean fastTracked;
 
@@ -45,18 +49,6 @@ public class CommunityUpgrade {
 
     public long getStartedMS() {
         return startedMS;
-    }
-
-    public String getUpgradeName() {
-        return upgradeName;
-    }
-
-    public UUID getClaimedBy() {
-        return claimedBy;
-    }
-
-    public UUID getStartedBy() {
-        return startedBy;
     }
 
     public boolean isFastTracked() {

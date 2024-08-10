@@ -1,7 +1,16 @@
 package me.vlink102.melomod.util.math.eval;
 
+import lombok.Getter;
+
+@Getter
 public class Constant {
-    private String name;
+    /**
+     * -- GETTER --
+     * Gets the mnemonic of the constant.
+     *
+     * @return the id
+     */
+    private final String name;
 
     /** Constructor
      * @param name The mnemonic of the constant.
@@ -11,10 +20,4 @@ public class Constant {
         this.name = name;
     }
 
-    /** Gets the mnemonic of the constant.
-     * @return the id
-     */
-    public String getName() {
-        return name;
-    }
 }

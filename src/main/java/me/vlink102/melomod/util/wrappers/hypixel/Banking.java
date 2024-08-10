@@ -3,6 +3,7 @@ package me.vlink102.melomod.util.wrappers.hypixel;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import lombok.Getter;
 import me.vlink102.melomod.util.game.SkyblockUtil;
 
 import java.util.ArrayList;
@@ -10,6 +11,7 @@ import java.util.List;
 
 public class Banking {
     private final Double balance;
+    @Getter
     private final List<Transaction> transactions;
 
     @Deprecated
@@ -33,13 +35,11 @@ public class Banking {
         return balance;
     }
 
-    public List<Transaction> getTransactions() {
-        return transactions;
-    }
-
     public static class Transaction {
         private final Long timestamp;
+        @Getter
         private final Transaction.Action action;
+        @Getter
         private final String initiatorName;
         private final Double amount;
 
@@ -62,16 +62,8 @@ public class Banking {
             return timestamp;
         }
 
-        public Transaction.Action getAction() {
-            return action;
-        }
-
         public double getAmount() {
             return amount;
-        }
-
-        public String getInitiatorName() {
-            return initiatorName;
         }
 
         public enum Action {

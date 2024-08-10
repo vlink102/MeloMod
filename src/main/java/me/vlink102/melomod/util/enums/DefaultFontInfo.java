@@ -1,5 +1,8 @@
 package me.vlink102.melomod.util.enums;
 
+import lombok.Getter;
+
+@Getter
 public enum DefaultFontInfo {
 
     A('A', 5),
@@ -112,14 +115,6 @@ public enum DefaultFontInfo {
             if (dFI.getCharacter() == c) return dFI;
         }
         return DefaultFontInfo.DEFAULT;
-    }
-
-    public char getCharacter() {
-        return this.character;
-    }
-
-    public int getLength() {
-        return this.length;
     }
 
     public int getBoldLength() {

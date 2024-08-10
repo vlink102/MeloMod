@@ -3,6 +3,7 @@ package me.vlink102.melomod.util.wrappers.hypixel.profile.member;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import lombok.Getter;
 import me.vlink102.melomod.util.game.SkyblockUtil;
 
 import java.util.ArrayList;
@@ -11,8 +12,10 @@ import java.util.List;
 import java.util.Map;
 
 public class GlacitePlayerData {
+    @Getter
     private final List<String> fossilsDonated;
     private final Double fossilDust;
+    @Getter
     private final HashMap<String, Integer> corpsesLooted;
     private final Integer mineshaftsEntered;
 
@@ -36,15 +39,8 @@ public class GlacitePlayerData {
         return fossilDust;
     }
 
-    public HashMap<String, Integer> getCorpsesLooted() {
-        return corpsesLooted;
-    }
-
     public int getMineshaftsEntered() {
         return mineshaftsEntered;
     }
 
-    public List<String> getFossilsDonated() {
-        return fossilsDonated;
-    }
 }

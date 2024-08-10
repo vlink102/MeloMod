@@ -3,6 +3,7 @@ package me.vlink102.melomod.util.wrappers.hypixel.profile.member.riftdata;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import lombok.Getter;
 import me.vlink102.melomod.util.enums.skyblock.ItemRarity;
 import me.vlink102.melomod.util.game.SkyblockUtil;
 
@@ -13,8 +14,10 @@ import java.util.UUID;
 public class DeadCats {
     private final Boolean talkedToJacquelle;
     private final Boolean pickedUpDetector;
+    @Getter
     private final List<String> foundCats;
     private final Boolean unlockedPet;
+    @Getter
     private final Montezuma montezuma;
 
     public DeadCats(JsonObject object) {
@@ -29,10 +32,6 @@ public class DeadCats {
         this.montezuma = new Montezuma(SkyblockUtil.getAsJsonObject("montezuma", object));
     }
 
-    public List<String> getFoundCats() {
-        return foundCats;
-    }
-
     public boolean isPickedUpDetector() {
         return pickedUpDetector;
     }
@@ -45,16 +44,16 @@ public class DeadCats {
         return unlockedPet;
     }
 
-    public Montezuma getMontezuma() {
-        return montezuma;
-    }
-
     public static class Montezuma {
         //private final UUID uuid; // ??
+        @Getter
         private final UUID uniqueID;
+        @Getter
         private final String type;
+        @Getter
         private final Double exp;
         private final Boolean active;
+        @Getter
         private final ItemRarity rarity;
         //private final ItemStack heldItem;
         private final Integer candyUsed;
@@ -70,26 +69,10 @@ public class DeadCats {
             this.rarity = ItemRarity.parseRarity(SkyblockUtil.getAsString("tier", object));
         }
 
-        public Double getExp() {
-            return exp;
-        }
-
-        public UUID getUniqueID() {
-            return uniqueID;
-        }
-
         public int getCandyUsed() {
             return candyUsed;
         }
 
-        public String getType() {
-            return type;
-        }
-
-
-        public ItemRarity getRarity() {
-            return rarity;
-        }
 
         public boolean isActive() {
             return active;

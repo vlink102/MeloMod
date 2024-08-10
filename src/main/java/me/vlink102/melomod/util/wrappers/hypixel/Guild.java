@@ -3,10 +3,12 @@ package me.vlink102.melomod.util.wrappers.hypixel;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import lombok.Getter;
 import me.vlink102.melomod.util.game.SkyblockUtil;
 
 import java.util.*;
 
+@Getter
 public class Guild {
     //private final String guildID;
     private final String name;
@@ -64,74 +66,11 @@ public class Guild {
 
     }
 
-    public String getTag() {
-        return tag;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public Long getCreated() {
-        return created;
-    }
-
-    public String getDescription() {
-        return description;
-    }
-
-    public Boolean getPubliclyListed() {
-        return publiclyListed;
-    }
-
-    public GuildAchievements getGuildAchievements() {
-        return guildAchievements;
-    }
-
-    public HashMap<String, Integer> getGuildExpByGameType() {
-        return guildExpByGameType;
-    }
-
-    public Integer getChatMute() {
-        return chatMute;
-    }
-
-    public Integer getCoins() {
-        return coins;
-    }
-
-    public Integer getCoinsEver() {
-        return coinsEver;
-    }
-
-    public List<GuildMember> getMembers() {
-        return members;
-    }
-
-    public List<GuildRank> getRanks() {
-        return ranks;
-    }
-
-    public List<String> getPreferredGames() {
-        return preferredGames;
-    }
-
-    public Long getExp() {
-        return exp;
-    }
-
     public String getGuildID() {
         return "???";// TODO
     }
 
-    public String getNameLower() {
-        return nameLower;
-    }
-
-    public String getTagColor() {
-        return tagColor;
-    }
-
+    @Getter
     public static class GuildAchievements {
         private final Integer onlinePlayers;
         private final Integer experienceKings;
@@ -143,24 +82,17 @@ public class Guild {
             this.winners = SkyblockUtil.getAsInteger("WINNERS", object);
         }
 
-        public Integer getExperienceKings() {
-            return experienceKings;
-        }
-
-        public Integer getOnlinePlayers() {
-            return onlinePlayers;
-        }
-
-        public Integer getWinners() {
-            return winners;
-        }
     }
 
     public static class GuildRank {
+        @Getter
         private final String name;
         private final Boolean isDefault;
+        @Getter
         private final String tag;
+        @Getter
         private final Long created;
+        @Getter
         private final Integer priority;
 
         public GuildRank(JsonObject object) {
@@ -171,27 +103,13 @@ public class Guild {
             this.priority = SkyblockUtil.getAsInteger("priority", object);
         }
 
-        public String getName() {
-            return name;
-        }
-
         public Boolean getDefault() {
             return isDefault;
         }
 
-        public String getTag() {
-            return tag;
-        }
-
-        public Long getCreated() {
-            return created;
-        }
-
-        public Integer getPriority() {
-            return priority;
-        }
     }
 
+    @Getter
     public static class GuildMember {
         private final UUID uuid;
         private final String rank;
@@ -206,33 +124,12 @@ public class Guild {
             this.questParticipation = SkyblockUtil.getAsInteger("questParticipation", object);
             this.expHistory = new HashMap<>();
             JsonObject expHistoryObject = SkyblockUtil.getAsJsonObject("expHistory", object);
-            for (String s : expHistory.keySet()) {
-                expHistory.put(s, SkyblockUtil.getAsInteger(s, expHistoryObject));
-            }
+            expHistory.replaceAll((s, v) -> SkyblockUtil.getAsInteger(s, expHistoryObject));
         }
 
         public UUID getUUID() {
             return uuid;
         }
 
-        public String getRank() {
-            return rank;
-        }
-
-        public Long getJoined() {
-            return joined;
-        }
-
-        public Integer getQuestParticipation() {
-            return questParticipation;
-        }
-
-        public UUID getUuid() {
-            return uuid;
-        }
-
-        public HashMap<String, Integer> getExpHistory() {
-            return expHistory;
-        }
     }
 }

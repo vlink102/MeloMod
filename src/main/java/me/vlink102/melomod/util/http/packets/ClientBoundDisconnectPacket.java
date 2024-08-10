@@ -3,14 +3,17 @@ package me.vlink102.melomod.util.http.packets;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import lombok.Getter;
 import me.vlink102.melomod.util.game.SkyblockUtil;
 import me.vlink102.melomod.util.http.Packet;
 
+@Getter
 public class ClientBoundDisconnectPacket extends Packet {
     private final String quitName;
     private final Exception rawData;
     private final ParsedException data;
 
+    @Getter
     public static class ParsedException {
         private final String message;
         private final String localized;
@@ -40,22 +43,7 @@ public class ClientBoundDisconnectPacket extends Packet {
             this.cause = new ParsedCause(SkyblockUtil.getAsJsonObject("cause", object));
         }
 
-        public String getMessage() {
-            return message;
-        }
-
-        public String getClazz() {
-            return clazz;
-        }
-
-        public String getLocalized() {
-            return localized;
-        }
-
-        public ParsedCause getCause() {
-            return cause;
-        }
-
+        @Getter
         public static class ParsedCause {
             private final String clazz;
             private final String message;
@@ -81,17 +69,6 @@ public class ClientBoundDisconnectPacket extends Packet {
                 return json;
             }
 
-            public String getClazz() {
-                return clazz;
-            }
-
-            public String getMessage() {
-                return message;
-            }
-
-            public String getLocalized() {
-                return localized;
-            }
         }
     }
 
@@ -126,15 +103,4 @@ public class ClientBoundDisconnectPacket extends Packet {
         return null;
     }
 
-    public ParsedException getData() {
-        return data;
-    }
-
-    public Exception getRawData() {
-        return rawData;
-    }
-
-    public String getQuitName() {
-        return quitName;
-    }
 }

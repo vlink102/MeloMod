@@ -1,5 +1,8 @@
 package me.vlink102.melomod.util.math.eval;
 
+import lombok.Getter;
+
+@Getter
 public class Operator {
     /** An Operator's <a href="http://en.wikipedia.org/wiki/Operator_associativity">associativity</a>.
      */
@@ -11,9 +14,35 @@ public class Operator {
         /** No associativity.*/
         NONE
     }
+    /**
+     * -- GETTER --
+     * Gets the operator's symbol.
+     *
+     * @return a String
+     */
     private final String symbol;
+    /**
+     * -- GETTER --
+     * Gets the operator's precedence.
+     *
+     * @return an integer
+     *
+     */
     private final int precedence;
+    /**
+     * -- GETTER --
+     * Gets the operator's operand count.
+     *
+     * @return an integer
+     */
     private final int operandCount;
+    /**
+     * -- GETTER --
+     * Gets this operator's associativity.
+     *
+     * @return true if the operator is left associative.
+     *
+     */
     private final Associativity associativity;
 
     /** Constructor.
@@ -46,36 +75,6 @@ public class Operator {
         this.operandCount = operandCount;
         this.associativity = associativity;
         this.precedence = precedence;
-    }
-
-    /** Gets the operator's symbol.
-     * @return a String
-     */
-    public String getSymbol() {
-        return this.symbol;
-    }
-
-    /** Gets the operator's operand count.
-     * @return an integer
-     */
-    public int getOperandCount() {
-        return this.operandCount;
-    }
-
-    /** Gets this operator's associativity.
-     * @return true if the operator is left associative.
-     * @see <a href="http://en.wikipedia.org/wiki/Operator_associativity">Operator's associativity in Wikipedia</a>
-     */
-    public Associativity getAssociativity() {
-        return this.associativity;
-    }
-
-    /** Gets the operator's precedence.
-     * @return an integer
-     * @see <a href="http://en.wikipedia.org/wiki/Order_of_operations">Operator's associativity in Wikipedia</a>
-     */
-    public int getPrecedence() {
-        return this.precedence;
     }
 
     /* (non-Javadoc)

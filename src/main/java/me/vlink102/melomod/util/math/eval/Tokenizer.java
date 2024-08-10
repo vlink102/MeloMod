@@ -1,5 +1,8 @@
 package me.vlink102.melomod.util.math.eval;
 
+import lombok.Getter;
+import lombok.Setter;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -17,6 +20,8 @@ import java.util.regex.Pattern;
 public class Tokenizer {
     private Pattern pattern;
     private String tokenDelimiters;
+    @Setter
+    @Getter
     private boolean trimTokens;
 
     /** Constructor.
@@ -36,21 +41,6 @@ public class Tokenizer {
         trimTokens = true;
     }
 
-    /** Tests whether this tokens trims the tokens returned by {@link #tokenize(String)} method.
-     * @return true if tokens are trimmed.
-     */
-    public boolean isTrimTokens() {
-        return trimTokens;
-    }
-
-    /** Sets the trimTokens attribute.
-     * @param trimTokens true to have the tokens returned by {@link #tokenize(String)} method trimmed.
-     * <br>Note that empty tokens are always omitted by this class.
-     */
-    public void setTrimTokens(boolean trimTokens) {
-        this.trimTokens = trimTokens;
-    }
-
     /** Tests whether a String list contains only 1 character length elements.
      * @param delimiters The list to test
      * @return true if it contains only one char length elements (or no elements)
@@ -65,17 +55,7 @@ public class Tokenizer {
     }
 
     private static Pattern delimitersToRegexp(List<String> delimiters) {
-        // First, create a regular expression that match the union of the delimiters
-        // Be aware that, in case of delimiters containing others (example && and &),
-        // the longer may be before the shorter (&& should be before &) or the regexpr
-        // parser will recognize && as two &.
-        //TODO Create a test to verify that operators that includes others are working
-        Collections.sort(delimiters, new Comparator<String>() {
-            @Override
-            public int compare(String o1, String o2) {
-                return o2.compareTo(o1);
-            }
-        });
+        delimiters.sort(Comparator.reverseOrder());
         // Build a string that will contain the regular expression
         StringBuilder result = new StringBuilder();
         result.append('(');
@@ -108,7 +88,7 @@ public class Tokenizer {
      */
     public Iterator<String> tokenize(String string) {
         if (pattern!=null) {
-            List<String> res = new ArrayList<String>();
+            List<String> res = new ArrayList<>();
             Matcher m = pattern.matcher(string);
             int pos = 0;
             while (m.find()) {
@@ -133,7 +113,7 @@ public class Tokenizer {
     }
 
     private class StringTokenizerIterator implements Iterator<String> {
-        private StringTokenizer tokens;
+        private final StringTokenizer tokens;
         /** Constructor.
          * @param tokens The Stringtokenizer on which is based this instance.
          */

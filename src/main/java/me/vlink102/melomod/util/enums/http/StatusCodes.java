@@ -1,8 +1,11 @@
 package me.vlink102.melomod.util.enums.http;
 
+import lombok.Getter;
+
 /**
  * HTTP Status Code constants.
  */
+@Getter
 public enum StatusCodes {
     ACCEPTED(202),
     BAD_GATEWAY(502),
@@ -65,7 +68,4 @@ public enum StatusCodes {
         return "Unknown";
     }
 
-    public int getStatusCode() {
-        return statusCode;
-    }
 }

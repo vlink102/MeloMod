@@ -3,6 +3,7 @@ package me.vlink102.melomod.util.wrappers.hypixel.profile.member;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import lombok.Getter;
 import me.vlink102.melomod.util.game.SkyblockUtil;
 import me.vlink102.melomod.util.wrappers.hypixel.profile.member.playerdata.TempStatBuff;
 
@@ -11,6 +12,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+@Getter
 public class PlayerData {
     private final List<String> visitedZones;
     private final Long lastDeath;
@@ -80,51 +82,4 @@ public class PlayerData {
     }
 
 
-    public HashMap<String, Double> getExperience() {
-        return experience;
-    }
-
-    public HashMap<String, Integer> getPerks() {
-        return perks;
-    }
-
-    public Integer getDeathCount() {
-        return deathCount;
-    }
-
-    public Integer getFishingTreasureCaught() {
-        return fishingTreasureCaught;
-    }
-
-    public Integer getReaperPeppersEaten() {
-        return reaperPeppersEaten;
-    }
-
-    public List<String> getAchievementSpawnedIslandTypes() {
-        return achievementSpawnedIslandTypes;
-    }
-
-    public List<String> getCraftedGenerators() {
-        return craftedGenerators;
-    }
-
-    public List<String> getUnlockedCollTiers() {
-        return unlockedCollTiers;
-    }
-
-    public List<String> getVisitedModes() {
-        return visitedModes;
-    }
-
-    public List<String> getVisitedZones() {
-        return visitedZones;
-    }
-
-    public List<TempStatBuff> getBuffs() {
-        return buffs;
-    }
-
-    public Long getLastDeath() {
-        return lastDeath;
-    }
 }

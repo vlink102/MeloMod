@@ -1,5 +1,8 @@
 package me.vlink102.melomod.util.math.eval;
 
+import lombok.Getter;
+
+@Getter
 public class BracketPair {
     /** The parentheses pair: ().*/
     public static final BracketPair PARENTHESES = new BracketPair('(', ')');
@@ -10,8 +13,20 @@ public class BracketPair {
     /** The angle brackets pair: &lt;&gt;.*/
     public static final BracketPair ANGLES = new BracketPair('<', '>');
 
-    private String open;
-    private String close;
+    /**
+     * -- GETTER --
+     * Gets the open bracket character.
+     *
+     * @return a char
+     */
+    private final String open;
+    /**
+     * -- GETTER --
+     * Gets the close bracket character.
+     *
+     * @return a char
+     */
+    private final String close;
 
     /** Constructor.
      * @param open The character used to open the brackets.
@@ -21,20 +36,6 @@ public class BracketPair {
         super();
         this.open = String.valueOf(open);
         this.close = String.valueOf(close);
-    }
-
-    /** Gets the open bracket character.
-     * @return a char
-     */
-    public String getOpen() {
-        return open;
-    }
-
-    /** Gets the close bracket character.
-     * @return a char
-     */
-    public String getClose() {
-        return close;
     }
 
     @Override

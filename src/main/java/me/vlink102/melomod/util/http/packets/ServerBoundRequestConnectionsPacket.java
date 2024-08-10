@@ -3,9 +3,11 @@ package me.vlink102.melomod.util.http.packets;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import lombok.Getter;
 import me.vlink102.melomod.util.http.Packet;
 import me.vlink102.melomod.util.game.SkyblockUtil;
 
+@Getter
 public class ServerBoundRequestConnectionsPacket extends Packet {
     private final int page;
 
@@ -37,7 +39,4 @@ public class ServerBoundRequestConnectionsPacket extends Packet {
         return null;
     }
 
-    public int getPage() {
-        return page;
-    }
 }

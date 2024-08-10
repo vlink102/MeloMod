@@ -4,6 +4,7 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import lombok.Getter;
 import me.vlink102.melomod.MeloMod;
 import me.vlink102.melomod.configuration.ChatConfiguration;
 import me.vlink102.melomod.configuration.MainConfiguration;
@@ -30,6 +31,7 @@ public class DataThread extends Thread {
     public static CloseReason closed = null;
     private final BufferedReader bufferedReader;
     private final PrintWriter printWriter;
+    @Getter
     private final Socket socket;
     public JsonArray onlinePlayers;
 
@@ -72,10 +74,6 @@ public class DataThread extends Thread {
             throw new RuntimeException(e);
         }
 
-    }
-
-    public Socket getSocket() {
-        return socket;
     }
 
     @Override

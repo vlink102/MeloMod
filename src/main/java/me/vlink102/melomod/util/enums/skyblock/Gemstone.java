@@ -1,6 +1,7 @@
 package me.vlink102.melomod.util.enums.skyblock;
 
 import com.google.common.collect.ImmutableMap;
+import lombok.Getter;
 import net.minecraft.block.properties.IProperty;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.Minecraft;
@@ -9,6 +10,7 @@ import net.minecraft.util.BlockPos;
 
 import java.util.Map;
 
+@Getter
 public enum Gemstone {
     AMBER(EnumDyeColor.ORANGE),
     TOPAZ(EnumDyeColor.YELLOW),
@@ -40,10 +42,6 @@ public enum Gemstone {
             }
         }
         return null;
-    }
-
-    public EnumDyeColor getBlockType() {
-        return blockType;
     }
 
 }

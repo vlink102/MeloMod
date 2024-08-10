@@ -33,18 +33,18 @@ public abstract class AbstractEvaluator<T> {
      */
     protected AbstractEvaluator(Parameters parameters) {
         //TODO if constants, operators, functions are duplicated => error
-        final List<String> tokenDelimitersBuilder = new ArrayList<String>();
-        this.functions = new HashMap<String, Function>();
-        this.operators = new HashMap<String, List<Operator>>();
-        this.constants = new HashMap<String, Constant>();
-        this.functionBrackets = new HashMap<String, BracketPair>();
+        final List<String> tokenDelimitersBuilder = new ArrayList<>();
+        this.functions = new HashMap<>();
+        this.operators = new HashMap<>();
+        this.constants = new HashMap<>();
+        this.functionBrackets = new HashMap<>();
         for (final BracketPair pair : parameters.getFunctionBrackets()) {
             functionBrackets.put(pair.getOpen(), pair);
             functionBrackets.put(pair.getClose(), pair);
             tokenDelimitersBuilder.add(pair.getOpen());
             tokenDelimitersBuilder.add(pair.getClose());
         }
-        this.expressionBrackets = new HashMap<String, BracketPair>();
+        this.expressionBrackets = new HashMap<>();
         for (final BracketPair pair : parameters.getExpressionBrackets()) {
             expressionBrackets.put(pair.getOpen(), pair);
             expressionBrackets.put(pair.getClose(), pair);
@@ -56,7 +56,7 @@ public abstract class AbstractEvaluator<T> {
                 tokenDelimitersBuilder.add(ope.getSymbol());
                 List<Operator> known = this.operators.get(ope.getSymbol());
                 if (known==null) {
-                    known = new ArrayList<Operator>();
+                    known = new ArrayList<>();
                     this.operators.put(ope.getSymbol(), known);
                 }
                 known.add(ope);
@@ -127,7 +127,7 @@ public abstract class AbstractEvaluator<T> {
             String literal = token.getLiteral();
             Constant ct = this.constants.get(literal);
             T value = ct==null?null:evaluate(ct, evaluationContext);
-            if (value==null && evaluationContext!=null && (evaluationContext instanceof AbstractVariableSet)) {
+            if (value == null && (evaluationContext instanceof AbstractVariableSet)) {
                 value = ((AbstractVariableSet<T>)evaluationContext).get(literal);
             }
             values.push(value!=null ? value : toValue(literal, evaluationContext));
@@ -187,7 +187,7 @@ public abstract class AbstractEvaluator<T> {
         if (values.size()<nb) {
             throw new IllegalArgumentException();
         }
-        LinkedList<T> result = new LinkedList<T>();
+        LinkedList<T> result = new LinkedList<>();
         for (int i = 0; i <nb ; i++) {
             result.addFirst(values.pop());
         }
@@ -222,9 +222,9 @@ public abstract class AbstractEvaluator<T> {
      * @see AbstractVariableSet
      */
     public T evaluate(String expression, Object evaluationContext) {
-        final Deque<T> values = new ArrayDeque<T>(); // values stack
-        final Deque<Token> stack = new ArrayDeque<Token>(); // operator stack
-        final Deque<Integer> previousValuesSize = functions.isEmpty()?null:new ArrayDeque<Integer>();
+        final Deque<T> values = new ArrayDeque<>(); // values stack
+        final Deque<Token> stack = new ArrayDeque<>(); // operator stack
+        final Deque<Integer> previousValuesSize = functions.isEmpty()?null: new ArrayDeque<>();
         final Iterator<String> tokens = tokenize(expression);
         Token previous = null;
         while (tokens.hasNext()) {
@@ -276,6 +276,7 @@ public abstract class AbstractEvaluator<T> {
                 if (!stack.isEmpty() && stack.peek().isFunction()) {
                     // If the token at the top of the stack is a function token, pop it
                     // onto the output queue.
+                    assert previousValuesSize != null;
                     int argCount = values.size()-previousValuesSize.pop();
                     doFunction(values, stack.pop().getFunction(), argCount, evaluationContext);
                 }
@@ -309,6 +310,7 @@ public abstract class AbstractEvaluator<T> {
                     Token openBracket = stack.pop();
                     Token scopeToken = stack.peek();
                     stack.push(openBracket);
+                    assert scopeToken != null;
                     if (!scopeToken.isFunction()) {
                         throw new IllegalArgumentException("Argument separator used outside of function scope");
                     }
@@ -316,6 +318,7 @@ public abstract class AbstractEvaluator<T> {
             } else if (token.isFunction()) {
                 // If the token is a function token, then push it onto the stack.
                 stack.push(token);
+                assert previousValuesSize != null;
                 previousValuesSize.push(values.size());
             } else if (token.isOperator()) {
                 // If the token is an operator, op1, then:
@@ -395,7 +398,7 @@ public abstract class AbstractEvaluator<T> {
      * @return a collection of operators.
      */
     public Collection<Operator> getOperators() {
-        ArrayList<Operator> result = new ArrayList<Operator>();
+        ArrayList<Operator> result = new ArrayList<>();
         Collection<List<Operator>> values = this.operators.values();
         for (List<Operator> list : values) {
             result.addAll(list);

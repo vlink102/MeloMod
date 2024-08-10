@@ -3,6 +3,7 @@ package me.vlink102.melomod.util.wrappers.hypixel.profile.member.riftdata;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import lombok.Getter;
 import me.vlink102.melomod.util.game.SkyblockUtil;
 
 import java.util.ArrayList;
@@ -10,7 +11,9 @@ import java.util.List;
 
 public class Gallery {
     private final Integer eliseStep;
+    @Getter
     private final List<SecuredTrophy> securedTrophies;
+    @Getter
     private final List<String> sentTrophyDialogues;
 
     public Gallery(JsonObject object) {
@@ -31,15 +34,8 @@ public class Gallery {
         return eliseStep;
     }
 
-    public List<SecuredTrophy> getSecuredTrophies() {
-        return securedTrophies;
-    }
-
-    public List<String> getSentTrophyDialogues() {
-        return sentTrophyDialogues;
-    }
-
     public static class SecuredTrophy {
+        @Getter
         private final String type;
         private final Long timestamp;
         private final Integer visits;
@@ -48,10 +44,6 @@ public class Gallery {
             this.type = SkyblockUtil.getAsString("type", object);
             this.timestamp = SkyblockUtil.getAsLong("timestamp", object);
             this.visits = SkyblockUtil.getAsInteger("visits", object);
-        }
-
-        public String getType() {
-            return type;
         }
 
         public int getVisits() {

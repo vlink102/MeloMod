@@ -1,5 +1,7 @@
 package me.vlink102.melomod.util.math;
 
+import lombok.Getter;
+import lombok.Setter;
 import net.minecraft.block.Block;
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.player.EntityPlayer;
@@ -13,8 +15,7 @@ public class MathUtils {
     public static double clamp(double t, double a, double b) {
         if (t <= a) return a;
         if (a < t && b > t) return t;
-        if (b <= t) return b;
-        return t;
+        return Math.min(b, t);
     }
 
     public static double[] getNearest(double xQ, double yQ, double zQ, double x0, double y0, double z0, double x1, double y1, double z1) {
@@ -78,7 +79,7 @@ public class MathUtils {
         return getMinimalDistance(boundingBox.minX, boundingBox.maxX, boundingBox.minY, boundingBox.maxY, boundingBox.minZ, boundingBox.maxZ, eyes.xCoord, eyes.yCoord, eyes.zCoord);
     }
 
-    public class MathEvaluator {
+    public static class MathEvaluator {
 
         public double calculate(String expression) {
             return eval(new Expression(expression));
@@ -88,21 +89,15 @@ public class MathUtils {
             return expression.parseFully(expression.getExpression());
         }
 
-        private class Expression {
+        private static class Expression {
+            @Setter
+            @Getter
             private String expression;
             private int pos = -1;
             private int character = -1;
 
             public Expression(String string) {
                 this.expression = string;
-            }
-
-            public String getExpression() {
-                return expression;
-            }
-
-            public void setExpression(String expression) {
-                this.expression = expression;
             }
 
             private void next(String string) {

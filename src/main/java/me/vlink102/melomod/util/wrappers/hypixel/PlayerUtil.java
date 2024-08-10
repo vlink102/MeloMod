@@ -1,6 +1,7 @@
 package me.vlink102.melomod.util.wrappers.hypixel;
 
 import com.google.gson.JsonObject;
+import lombok.Getter;
 import me.vlink102.melomod.util.game.SkyblockUtil;
 import me.vlink102.melomod.util.translation.Feature;
 
@@ -48,19 +49,33 @@ public class PlayerUtil {
     }
 
     public static class Player {
+        @Getter
         private final String id;
+        @Getter
         private final String uuid;
+        @Getter
         private final String displayName;
+        @Getter
         private final Long firstLogin;
+        @Getter
         private final Long lastLogin;
+        @Getter
         private final String playerName;
+        @Getter
         private final Long networkXp;
+        @Getter
         private final Long lastLogout;
+        @Getter
         private final String chatChannel;
+        @Getter
         private final String userLanguage;
+        @Getter
         private final String newPackageRank;
+        @Getter
         private final String rankPlusColor;
+        @Getter
         private final String monthlyRankColor;
+        @Getter
         private final String mostRecentGameType;
         private String twitter = null;
         private String youtube = null;
@@ -133,37 +148,9 @@ public class PlayerUtil {
             mostRecentGameType = SkyblockUtil.getAsString("mostRecentGameType", object);
         }
 
-        public String getId() {
-            return id;
-        }
-
-        public Long getFirstLogin() {
-            return firstLogin;
-        }
-
-        public Long getLastLogin() {
-            return lastLogin;
-        }
-
-        public Long getLastLogout() {
-            return lastLogout;
-        }
-
-        public Long getNetworkXp() {
-            return networkXp;
-        }
-
-        public String getChatChannel() {
-            return chatChannel;
-        }
-
         public String getDiscord() {
             if (discord == null) return Feature.GENERIC_NONE.toString();
             return discord;
-        }
-
-        public String getDisplayName() {
-            return displayName;
         }
 
         public String getForums() {
@@ -174,26 +161,6 @@ public class PlayerUtil {
         public String getInstagram() {
             if (instagram == null) return Feature.GENERIC_NONE.toString();
             return instagram;
-        }
-
-        public String getMonthlyRankColor() {
-            return monthlyRankColor;
-        }
-
-        public String getMostRecentGameType() {
-            return mostRecentGameType;
-        }
-
-        public String getNewPackageRank() {
-            return newPackageRank;
-        }
-
-        public String getPlayerName() {
-            return playerName;
-        }
-
-        public String getRankPlusColor() {
-            return rankPlusColor;
         }
 
         public String getTiktok() {
@@ -209,14 +176,6 @@ public class PlayerUtil {
         public String getTwitter() {
             if (twitter == null) return Feature.GENERIC_NONE.toString();
             return twitter;
-        }
-
-        public String getUserLanguage() {
-            return userLanguage;
-        }
-
-        public String getUuid() {
-            return uuid;
         }
 
         public String getYoutube() {

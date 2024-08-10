@@ -11,8 +11,8 @@ public class Token {
     }
     static final Token FUNCTION_ARG_SEPARATOR = new Token(Kind.FUNCTION_SEPARATOR, null);
 
-    private Kind kind;
-    private Object content;
+    private final Kind kind;
+    private final Object content;
 
     static Token buildLiteral(String literal) {
         return new Token(Kind.LITERAL, literal);

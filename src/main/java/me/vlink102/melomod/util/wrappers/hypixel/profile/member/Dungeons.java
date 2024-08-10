@@ -3,6 +3,7 @@ package me.vlink102.melomod.util.wrappers.hypixel.profile.member;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import lombok.Getter;
 import me.vlink102.melomod.util.game.SkyblockUtil;
 
 import java.util.ArrayList;
@@ -10,6 +11,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+@Getter
 public class Dungeons {
     private final Catacombs catacombs;
     private final Catacombs masterCatacombs;
@@ -45,33 +47,6 @@ public class Dungeons {
         this.secrets = SkyblockUtil.getAsInteger("secrets", object);
     }
 
-    public Integer getSecrets() {
-        return secrets;
-    }
-
-    public Catacombs getCatacombs() {
-        return catacombs;
-    }
-
-    public Catacombs getMasterCatacombs() {
-        return masterCatacombs;
-    }
-
-    public DailyRuns getDailyRuns() {
-        return dailyRuns;
-    }
-
-    public HashMap<String, Double> getPlayerClasses() {
-        return playerClasses;
-    }
-
-    public List<String> getDungeonsBlahBlah() {
-        return dungeonsBlahBlah;
-    }
-
-    public List<String> getUnlockedJournals() {
-        return unlockedJournals;
-    }
     // TODO line 8991
 
     public static class DailyRuns {
@@ -94,23 +69,41 @@ public class Dungeons {
     }
 
     public static class Catacombs {
+        @Getter
         private final HashMap<String, Float> mobsKilled;
+        @Getter
         private final HashMap<String, Float> fastestTimeS;
+        @Getter
         private final HashMap<String, Float> mostDamageTank;
+        @Getter
         private final HashMap<String, Float> fastestTime;
+        @Getter
         private final HashMap<String, Float> mostDamageMage;
+        @Getter
         private final HashMap<String, Float> tierCompletions;
+        @Getter
         private final HashMap<String, Float> mostDamageHealer;
+        @Getter
         private final HashMap<String, Float> mostDamageArcher;
+        @Getter
         private final HashMap<String, Float> watcherKills;
+        @Getter
         private final HashMap<String, Float> mostHealing;
+        @Getter
         private final HashMap<String, Float> bestScore;
+        @Getter
         private final HashMap<String, Float> mostDamageBerserk;
+        @Getter
         private final HashMap<String, Float> fastestTimeSPlus;
+        @Getter
         private final HashMap<String, Float> mostMobsKilled;
+        @Getter
         private final HashMap<String, Float> timesPlayed;
+        @Getter
         private final HashMap<String, Float> milestoneCompletions;
+        @Getter
         private final Double experience;
+        @Getter
         private final HashMap<String, List<Catacombs.BestRun>> bestRuns;
         private final Boolean master;
 
@@ -225,80 +218,8 @@ public class Dungeons {
             this.master = master;
         }
 
-        public Double getExperience() {
-            return experience;
-        }
-
-        public HashMap<String, Float> getMobsKilled() {
-            return mobsKilled;
-        }
-
-        public HashMap<String, Float> getFastestTimeS() {
-            return fastestTimeS;
-        }
-
-        public HashMap<String, Float> getMostDamageTank() {
-            return mostDamageTank;
-        }
-
-        public HashMap<String, Float> getFastestTime() {
-            return fastestTime;
-        }
-
-        public HashMap<String, Float> getMostDamageMage() {
-            return mostDamageMage;
-        }
-
-        public HashMap<String, Float> getTierCompletions() {
-            return tierCompletions;
-        }
-
-        public HashMap<String, Float> getMostDamageHealer() {
-            return mostDamageHealer;
-        }
-
-        public HashMap<String, Float> getMostDamageArcher() {
-            return mostDamageArcher;
-        }
-
-        public HashMap<String, Float> getWatcherKills() {
-            return watcherKills;
-        }
-
-        public HashMap<String, Float> getMostHealing() {
-            return mostHealing;
-        }
-
-        public HashMap<String, Float> getBestScore() {
-            return bestScore;
-        }
-
-        public HashMap<String, Float> getMostDamageBerserk() {
-            return mostDamageBerserk;
-        }
-
-        public HashMap<String, Float> getFastestTimeSPlus() {
-            return fastestTimeSPlus;
-        }
-
-        public HashMap<String, Float> getMostMobsKilled() {
-            return mostMobsKilled;
-        }
-
-        public HashMap<String, Float> getTimesPlayed() {
-            return timesPlayed;
-        }
-
-        public HashMap<String, Float> getMilestoneCompletions() {
-            return milestoneCompletions;
-        }
-
         public boolean isMaster() {
             return master;
-        }
-
-        public HashMap<String, List<Catacombs.BestRun>> getBestRuns() {
-            return bestRuns;
         }
 
         public static class BestRun {
@@ -307,7 +228,9 @@ public class Dungeons {
             private final Integer scoreSpeed;
             private final Integer scoreSkill;
             private final Integer scoreBonus;
+            @Getter
             private final String dungeonClass;
+            @Getter
             private final List<String> teammates;
             private final Integer elapsedTime;
             private final Double damageDealt;
@@ -382,17 +305,10 @@ public class Dungeons {
                 return secretsFound;
             }
 
-            public List<String> getTeammates() {
-                return teammates;
-            }
-
             public long getTimeStamp() {
                 return timeStamp;
             }
 
-            public String getDungeonClass() {
-                return dungeonClass;
-            }
         }
     }
 
