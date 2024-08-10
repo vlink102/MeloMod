@@ -1,7 +1,7 @@
 If correctly downloaded, upon startup you should receive the following message:\
 ![image](https://github.com/user-attachments/assets/dee3c939-ad9f-4513-a583-ac29b2554ce8)
 
-Available in 30 languages! See https://crowdin.com/project/ to contribute
+Available in 30 languages! See https://crowdin.com/project/melomod to contribute
 
 # Features
 - Party Commands
