@@ -62,7 +62,7 @@ public class MainConfiguration extends Config {
                     "Vietnamese (vi_VN)"
             }
     )
-    public int language = 0;
+    public static int language = 0;
 
     @Button(
             name = "Refresh languages",

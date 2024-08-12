@@ -19,12 +19,8 @@ import me.vlink102.melomod.command.server.SocketMessage;
 import me.vlink102.melomod.command.server.SocketOnline;
 import me.vlink102.melomod.command.server.SocketPrivateMessage;
 import me.vlink102.melomod.configuration.MainConfiguration;
-import me.vlink102.melomod.events.ChatEventHandler;
-import me.vlink102.melomod.events.ConnectionHandler;
-import me.vlink102.melomod.events.LocrawHandler;
-import me.vlink102.melomod.events.NewScheduler;
-import me.vlink102.melomod.util.StringUtils;
-import me.vlink102.melomod.util.VChatComponent;
+import me.vlink102.melomod.events.*;
+import me.vlink102.melomod.util.*;
 import me.vlink102.melomod.util.game.PlayerObjectUtil;
 import me.vlink102.melomod.util.game.SkyblockUtil;
 import me.vlink102.melomod.util.http.ApiUtil;
@@ -47,7 +43,11 @@ import net.minecraftforge.fml.common.event.FMLInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 import org.apache.commons.lang3.mutable.MutableObject;
 
+import java.awt.*;
+import java.io.File;
+import java.io.IOException;
 import java.util.*;
+import java.util.List;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
@@ -63,6 +63,9 @@ import static me.vlink102.melomod.util.StringUtils.cc;
 @Mod(modid = MeloMod.MODID, name = MeloMod.NAME, version = MeloMod.VERSION)
 public class MeloMod {
 
+    @Getter
+    private File configurationFile;
+
     // Sets the variables from `gradle.properties`. See the `blossom` config in `build.gradle.kts`.
     public static final String MODID = "@ID@";
     public static final String NAME = "@NAME@";
@@ -70,10 +73,7 @@ public class MeloMod {
     private static final ThreadPoolExecutor THREAD_EXECUTOR = new ThreadPoolExecutor(0, 1, 60L, TimeUnit.SECONDS,
             new LinkedBlockingQueue<>(), new ThreadFactoryBuilder().setNameFormat(MeloMod.MODID + " - #%d").build());
 
-    public NewScheduler getNewScheduler() {
-        return newScheduler;
-    }
-
+    @Getter
     private NewScheduler newScheduler;
     public static boolean isObfuscated;
     public static Version VERSION_NEW;
@@ -261,9 +261,28 @@ public class MeloMod {
         this.skyblockProfile = skyblockProfile;
     }
 
+    public static File createNewRandomUUID(String extension) {
+        return new File(MeloMod.INSTANCE.getConfigurationFile(), UUID.randomUUID() + "." + extension);
+    }
+
+    public static Font custom;
+    public static FontMetrics metrics;
+
     @Mod.EventHandler
     public void preInit(FMLPreInitializationEvent e) {
         isObfuscated = isObfuscated();
+        configurationFile = new File(e.getModConfigurationDirectory(), MeloMod.MODID + "/");
+        GraphicsEnvironment ge =
+                GraphicsEnvironment.getLocalGraphicsEnvironment();
+
+        try {
+            custom = Font.createFont(Font.TRUETYPE_FONT, new File("src/main/resources/Minecraft-Seven_v2.ttf")).deriveFont(Font.PLAIN, 16f);
+            ge.registerFont(custom);
+        } catch (FontFormatException ex) {
+            throw new RuntimeException(ex);
+        } catch (IOException ex) {
+            throw new RuntimeException(ex);
+        }
     }
 
     // Register the config and commands.
@@ -298,7 +317,8 @@ public class MeloMod {
         MinecraftForge.EVENT_BUS.register(render);
         MinecraftForge.EVENT_BUS.register(newScheduler);
 
-        new ConnectionHandler();
+        MinecraftForge.EVENT_BUS.register(new ConnectionHandler());
+        MinecraftForge.EVENT_BUS.register(new PlayerDisconnect());
 
         handler = new CommunicationHandler(this);
         handler.beginKeepAlive(playerUUID, playerName);

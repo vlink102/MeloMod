@@ -47,13 +47,13 @@ public class CommunicationHandler {
     }
 
     public void beginKeepAlive(UUID uuid, String name) {
-        mod.getNewScheduler().runAsync(new SkyblockRunnable() {
+        mod.getNewScheduler().scheduleDelayedTask(new SkyblockRunnable() {
             @Override
             public void run() {
                 if (thread == null || reasons.contains(DataThread.closed)) {
                     establishConnection(uuid, name);
                 }
             }
-        }, 0, 5 * 20);
+        }, 5 * 20);
     }
 }

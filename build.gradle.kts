@@ -103,6 +103,7 @@ val devenvMod: Configuration by configurations.creating {
 dependencies {
     minecraft("com.mojang:minecraft:1.8.9")
     mappings("de.oceanlabs.mcp:mcp_stable:22-1.8.9")
+
     //implementation("org.asynchttpclient:async-http-client:3.0.0.Beta3")
     //implementation("net.hypixel:HypixelAPI:3.0.0")
     //compileOnly("net.hypixel:hypixel-api-transport-reactor:4.1")
@@ -113,6 +114,8 @@ dependencies {
     implementation("net.hypixel:mod-api:0.3.1")
     modRuntimeOnly("me.djtheredstoner:DevAuth-${if (platform.isFabric) "fabric" else if (platform.isLegacyForge) "forge-legacy" else "forge-latest"}:1.2.0")
     implementation("com.github.ILikePlayingGames:DiscordIPC:-SNAPSHOT")
+    shade("it.unimi.dsi:fastutil:8.5.14")
+
 
     // If we are building for legacy forge, includes the launch wrapper with `shade` as we configured earlier, as well as mixin 0.7.11
     if (platform.isLegacyForge) {

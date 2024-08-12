@@ -97,6 +97,7 @@ public class LocrawHandler {
 
     @Subscribe
     private void onServerTransfer(LocrawEvent event) {
+        if (event.info == null) return;
         cc.polyfrost.oneconfig.utils.hypixel.LocrawInfo info = event.info;
         gameMode = Location.parseFromLocraw(info.getGameMode());
         serverID = info.getServerId();

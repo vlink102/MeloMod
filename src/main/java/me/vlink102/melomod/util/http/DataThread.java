@@ -162,18 +162,22 @@ public class DataThread extends Thread {
                                 String targetName = packetPlayOutChat.getTargetName();
                                 String dataAddon = packetPlayOutChat.getData() == null ? null : packetPlayOutChat.getData();
 
-                                MeloMod.addDebug("&7" + Feature.GENERIC_DEBUG_MESSAGE + ": " + message);
-                                MeloMod.addDebug("&7" + "UUID: " + uuid);
-                                MeloMod.addDebug("&7" + Feature.GENERIC_DEBUG_MESSENGER + ": " + messenger);
-                                MeloMod.addDebug("&7" + Feature.GENERIC_DEBUG_TARGET + ": " + targetName);
-                                VChatComponent dataComponent = new VChatComponent(MeloMod.MessageScheme.DEBUG);
-                                dataComponent.add("&7" + Feature.GENERIC_DEBUG_DATA + ": ");
-                                String dataAddonParsed = ItemSerializer.INSTANCE.deserializeFromBase64(dataAddon);
-                                dataComponent.add("&8(" + Feature.GENERIC_HOVER + ")&r", MeloMod.gson.toJson(dataAddonParsed), (ClickEvent) null, StringUtils.VComponentSettings.INHERIT_NONE);
-                                MeloMod.addMessage(dataComponent);
                                 if (message == null) {
                                     break;
                                 }
+
+                                MeloMod.addDebug("&7" + Feature.GENERIC_DEBUG_MESSAGE + ": " + message);
+                                MeloMod.addDebug("&7" + "UUID: " + uuid);
+                                MeloMod.addDebug("&7" + Feature.GENERIC_DEBUG_MESSENGER + ": " + (messenger == null ? Feature.GENERIC_NONE : messenger));
+                                MeloMod.addDebug("&7" + Feature.GENERIC_DEBUG_TARGET + ": " + (targetName == null ? Feature.GENERIC_NONE : targetName));
+                                if (dataAddon != null) {
+                                    VChatComponent dataComponent = new VChatComponent(MeloMod.MessageScheme.DEBUG);
+                                    dataComponent.add("&7" + Feature.GENERIC_DEBUG_DATA + ": ");
+                                    String dataAddonParsed = ItemSerializer.INSTANCE.deserializeFromBase64(dataAddon);
+                                    dataComponent.add("&8(" + Feature.GENERIC_HOVER + ")&r", MeloMod.gson.toJson(dataAddonParsed), (ClickEvent) null, StringUtils.VComponentSettings.INHERIT_NONE);
+                                    MeloMod.addMessage(dataComponent);
+                                }
+
 
                                 VChatComponent chatComponent = new VChatComponent(MeloMod.MessageScheme.RAW);
                                 MeloMod.addDebug(Feature.GENERIC_DEBUG_CHAT_COMPONENT + ": " + chatComponent);

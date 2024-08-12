@@ -23,7 +23,7 @@ public class ServerTracker {
             isHypixel = false;
             return;
         }
-        if (s[0].endsWith(".hypixel.net"))
+        if (s[0].endsWith(".hypixel.net") || s[0].equalsIgnoreCase("ilovecatgirls.xyz"))
         {
             isHypixel = true;
         }

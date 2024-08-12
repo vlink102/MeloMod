@@ -37,6 +37,10 @@ public class VChatComponent {
         }
     }
 
+    public static VChatComponent empty() {
+        return new VChatComponent(MeloMod.MessageScheme.RAW);
+    }
+
     public static VChatComponent raw(String text) {
         return new VChatComponent(MeloMod.MessageScheme.RAW).add(text);
     }

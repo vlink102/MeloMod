@@ -1,43 +1,48 @@
 package me.vlink102.melomod.util.translation;
 
+import lombok.Getter;
+
+@Getter
 public enum Language {
-    ENGLISH("en_US", 0),
-    AFRIKAANS("af_ZA", 1),
-    ARABIC("ar_SA", 2),
-    CATALAN("ca_ES", 3),
-    CHINESE_SIMPLIFIED("zh_CN", 4),
-    CHINESE_TRADITIONAL("zh_TW", 5),
-    CZECH("cs_CZ", 6),
-    DANISH("da_DK", 7),
-    DUTCH("nl_NL", 8),
-    FINNISH("fi_FI", 9),
-    FRENCH("fr_FR", 10),
-    GERMAN("de_DE", 11),
-    GREEK("el_GR", 12),
-    HEBREW("he_IL", 13),
-    HUNGARIAN("hu_HU", 14),
-    ITALIAN("it_IT", 15),
-    JAPANESE("ja_JP", 16),
-    KOREAN("ko_KR", 17),
-    NORWEGIAN("no_NO", 18),
-    POLISH("pl_PL", 19),
-    PORTUGUESE("pt_PT", 20),
-    PORTUGUESE_BRAZIL("pt_BR", 21),
-    ROMANIAN("ro_RO", 22),
-    RUSSIAN("ru_RU", 23),
-    SERBIAN_CYRILLIC("sr_SP", 24),
-    SPANISH("es_ES", 25),
-    SWEDISH("sv_SE", 26),
-    TURKISH("tr_TR", 27),
-    UKRAINIAN("uk_UA", 28),
-    VIETNAMESE("vi_VN", 29);
+    ENGLISH("en_US", 0, false),
+    AFRIKAANS("af_ZA", 1, false),
+    ARABIC("ar_SA", 2, true),
+    CATALAN("ca_ES", 3, false),
+    CHINESE_SIMPLIFIED("zh_CN", 4, false),
+    CHINESE_TRADITIONAL("zh_TW", 5, false),
+    CZECH("cs_CZ", 6, false),
+    DANISH("da_DK", 7, false),
+    DUTCH("nl_NL", 8, false),
+    FINNISH("fi_FI", 9, false),
+    FRENCH("fr_FR", 10, false),
+    GERMAN("de_DE", 11, false),
+    GREEK("el_GR", 12, false),
+    HEBREW("he_IL", 13, false),
+    HUNGARIAN("hu_HU", 14, false),
+    ITALIAN("it_IT", 15, false),
+    JAPANESE("ja_JP", 16, false),
+    KOREAN("ko_KR", 17, false),
+    NORWEGIAN("no_NO", 18, false),
+    POLISH("pl_PL", 19, false),
+    PORTUGUESE("pt_PT", 20, false),
+    PORTUGUESE_BRAZIL("pt_BR", 21, false),
+    ROMANIAN("ro_RO", 22, false),
+    RUSSIAN("ru_RU", 23, false),
+    SERBIAN_CYRILLIC("sr_SP", 24, false),
+    SPANISH("es_ES", 25, false),
+    SWEDISH("sv_SE", 26, false),
+    TURKISH("tr_TR", 27, false),
+    UKRAINIAN("uk_UA", 28, false),
+    VIETNAMESE("vi_VN", 29, false);
 
     private final String path;
     private final int id;
+    private final boolean bidirectionalReorder;
 
-    Language(String path, int id) {
+    Language(String path, int id, boolean bidirectionalReorder) {
         this.path = path;
         this.id = id;
+        this.bidirectionalReorder = bidirectionalReorder;
     }
 
     public static Language getById(int id) {
@@ -66,11 +71,4 @@ public enum Language {
         return null;
     }
 
-    public String getPath() {
-        return this.path;
-    }
-
-    public int getId() {
-        return this.id;
-    }
 }
