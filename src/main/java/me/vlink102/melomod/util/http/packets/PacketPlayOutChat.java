@@ -16,13 +16,15 @@ public class PacketPlayOutChat extends Packet {
     private final String name;
     private final String targetName;
     private final String data;
+    private final String image;
 
-    public PacketPlayOutChat(final String contents, final String uuid, final String name, final String targetUUID, final String data) {
+    public PacketPlayOutChat(final String contents, final String uuid, final String name, final String targetUUID, final String data, final String image) {
         this.contents = contents;
         this.uuid = uuid;
         this.name = name;
         this.targetName = targetUUID;
         this.data = data == null ? null : cc(data);
+        this.image = image;
     }
 
     @Override
@@ -33,6 +35,7 @@ public class PacketPlayOutChat extends Packet {
         o.addProperty("chat-name", name);
         o.addProperty("target", targetName);
         o.addProperty("data", data);
+        o.addProperty("image", image);
         o.addProperty("packet-id", bind().getPacketID());
         return o.toString();
     }
@@ -52,7 +55,8 @@ public class PacketPlayOutChat extends Packet {
             String name = SkyblockUtil.getAsString("chat-name",o);
             String targetName = SkyblockUtil.getAsString("target",o);
             String data = SkyblockUtil.getAsString("data",o);
-            return new PacketPlayOutChat(contents, uuid, name, targetName, data);
+            String image = SkyblockUtil.getAsString("image",o);
+            return new PacketPlayOutChat(contents, uuid, name, targetName, data, image );
         }
         return null;
     }

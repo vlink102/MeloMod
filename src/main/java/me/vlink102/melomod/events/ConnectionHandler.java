@@ -44,9 +44,11 @@ public class ConnectionHandler {
                 @Override
                 public void run() {
                     if (!HypixelUtils.INSTANCE.isHypixel()) {
-                        ServerBoundLocrawPacket packet = new ServerBoundLocrawPacket(null, null, null, null, LocrawHandler.getType(), LocrawHandler.serverIP());
-                        CommunicationHandler.thread.sendPacket(packet);
-                        ServerTracker.isHypixel = false;
+                        if (CommunicationHandler.thread != null) {
+                            ServerBoundLocrawPacket packet = new ServerBoundLocrawPacket(null, null, null, null, LocrawHandler.getType(), LocrawHandler.serverIP());
+                            CommunicationHandler.thread.sendPacket(packet);
+                            ServerTracker.isHypixel = false;
+                        }
                     } else {
                         ServerTracker.isHypixel = true;
                         MeloMod.addDebug("&e" + Feature.GENERIC_DEBUG_HYPIXEL_DETECTED + "&r");

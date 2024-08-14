@@ -1,14 +1,20 @@
 package me.vlink102.melomod.command.client;
 
+import cc.polyfrost.oneconfig.images.OneImage;
 import cc.polyfrost.oneconfig.utils.commands.annotations.SubCommand;
+import com.google.gson.JsonObject;
 import me.vlink102.melomod.MeloMod;
 import cc.polyfrost.oneconfig.utils.commands.annotations.Command;
 import cc.polyfrost.oneconfig.utils.commands.annotations.Main;
 import me.vlink102.melomod.configuration.MainConfiguration;
+import me.vlink102.melomod.util.ImageUtils;
 import me.vlink102.melomod.util.http.ApiUtil;
 import me.vlink102.melomod.util.http.CommunicationHandler;
 import me.vlink102.melomod.util.http.packets.ServerBoundRequestConnectionsPacket;
 import me.vlink102.melomod.util.translation.Feature;
+import net.minecraft.client.Minecraft;
+
+import java.awt.image.BufferedImage;
 
 /**
  * An example command implementing the Command api of OneConfig.
@@ -33,6 +39,21 @@ public class MainCommand {
                 object -> mod.skyblockUtil.updateInformation(object),
                 ApiUtil.HypixelEndpoint.FilledEndpointArgument.uuid()
         );
+    }
+
+    @SubCommand(description = "Copies an image of your item")
+    private void copyitem() {
+        BufferedImage image = ImageUtils.frameBuffer(Minecraft.getMinecraft().thePlayer.getHeldItem());
+        OneImage oneImage = new OneImage(image);
+        oneImage.copyToClipboard();
+    }
+
+    @SubCommand(description = "Copies the item to an imgur link")
+    private void copylink() {
+        BufferedImage image = ImageUtils.frameBuffer(Minecraft.getMinecraft().thePlayer.getHeldItem());
+        OneImage oneImage = new OneImage(image);
+        oneImage.uploadToImgur(true);
+        MeloMod.addMessage("&6Successfully uploaded to imgur!");
     }
 
     @SubCommand(

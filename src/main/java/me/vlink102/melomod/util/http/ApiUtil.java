@@ -11,6 +11,8 @@ import me.vlink102.melomod.chatcooldownmanager.TickHandler;
 import me.vlink102.melomod.configuration.ChatConfiguration;
 import me.vlink102.melomod.configuration.MainConfiguration;
 import me.vlink102.melomod.events.LocrawHandler;
+import me.vlink102.melomod.util.BitMapFont;
+import me.vlink102.melomod.util.ImageUtils;
 import me.vlink102.melomod.util.ItemSerializer;
 import me.vlink102.melomod.util.enums.http.StatusCodes;
 import me.vlink102.melomod.util.enums.skyblock.Location;
@@ -27,10 +29,11 @@ import org.apache.http.NameValuePair;
 import org.apache.http.client.utils.URIBuilder;
 import org.apache.http.message.BasicNameValuePair;
 
+import javax.imageio.ImageIO;
 import javax.net.ssl.HttpsURLConnection;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
+import java.awt.image.BufferedImage;
+import java.awt.image.RenderedImage;
+import java.io.*;
 import java.net.*;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
@@ -79,16 +82,38 @@ public class ApiUtil {
                 break;
             case CUSTOM:
                 if (message.contains("<item>")) {
+                    //String data = ItemSerializer.INSTANCE.serialize(Minecraft.getMinecraft().thePlayer.getHeldItem());
+                    String image = ApiUtil.imgToBase64String(BitMapFont.getTooltipBackground(Minecraft.getMinecraft().thePlayer.getHeldItem()), "png");
                     String data = ItemSerializer.INSTANCE.serialize(Minecraft.getMinecraft().thePlayer.getHeldItem());
-                    CommunicationHandler.thread.sendPacket(new PacketPlayOutChat(message, MeloMod.playerUUID.toString(), MeloMod.playerName, null, data));
+
+                    MeloMod.addDebug(data);
+                    CommunicationHandler.thread.sendPacket(new PacketPlayOutChat(message, MeloMod.playerUUID.toString(), MeloMod.playerName, null, data, image));
                 } else {
 
-                    CommunicationHandler.thread.sendPacket(new PacketPlayOutChat(message, MeloMod.playerUUID.toString(), MeloMod.playerName, null, null));
+                    CommunicationHandler.thread.sendPacket(new PacketPlayOutChat(message, MeloMod.playerUUID.toString(), MeloMod.playerName, null, null, null));
                 }
                 return;
         }
         String finalCommand = prefixCommand + " " + message;
         TickHandler.addToQueue(finalCommand);
+    }
+
+    public static String imgToBase64String(final RenderedImage img, final String formatName) {
+        final ByteArrayOutputStream os = new ByteArrayOutputStream();
+        try (final OutputStream b64os = Base64.getEncoder().wrap(os)) {
+            ImageIO.write(img, formatName, b64os);
+        } catch (final IOException ioe) {
+            throw new UncheckedIOException(ioe);
+        }
+        return os.toString();
+    }
+
+    public static BufferedImage base64StringToImg(final String base64String) {
+        try {
+            return ImageIO.read(new ByteArrayInputStream(Base64.getDecoder().decode(base64String)));
+        } catch (final IOException ioe) {
+            throw new UncheckedIOException(ioe);
+        }
     }
 
     public static Gson getGson() {

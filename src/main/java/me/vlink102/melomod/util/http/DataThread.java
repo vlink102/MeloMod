@@ -154,15 +154,13 @@ public class DataThread extends Thread {
                                 MeloMod.addRaw((paginated.get(page - 1)));
                                 break;
                             case CHAT_MESSAGE:
-                                System.out.println("on god");
                                 PacketPlayOutChat packetPlayOutChat = (PacketPlayOutChat) Packet.parseFrom(object.toString());
                                 String message = packetPlayOutChat.getContents();
                                 String uuid = packetPlayOutChat.getUuid();
                                 String messenger = packetPlayOutChat.getName();
                                 String targetName = packetPlayOutChat.getTargetName();
                                 String dataAddon = packetPlayOutChat.getData() == null ? null : packetPlayOutChat.getData();
-
-                                if (message == null) {
+                                if (message == null || uuid == null) {
                                     break;
                                 }
 
@@ -265,13 +263,15 @@ public class DataThread extends Thread {
     }
 
     public void sendPacket(Object packet) {
-        if (MainConfiguration.debugMessages) {
-            String simpleName = packet.getClass().getCanonicalName() == null ? packet.getClass().toString() : packet.getClass().getCanonicalName();
-            int packetID = Packet.from(packet.toString()).getPacketID();
-            MeloMod.addDebug("&e" + Feature.GENERIC_DEBUG_SENT_PACKET.toString().replaceAll("\\{1}", "&7" + simpleName + "&e").replaceAll("\\{2}", "&7" + packetID + "&e."));
+        if (closed == null) {
+            if (MainConfiguration.debugMessages) {
+                String simpleName = packet.getClass().getCanonicalName() == null ? packet.getClass().toString() : packet.getClass().getCanonicalName();
+                int packetID = Packet.from(packet.toString()).getPacketID();
+                MeloMod.addDebug("&e" + Feature.GENERIC_DEBUG_SENT_PACKET.toString().replaceAll("\\{1}", "&7" + simpleName + "&e").replaceAll("\\{2}", "&7" + packetID + "&e."));
+            }
+            printWriter.println(packet.toString());
+            printWriter.flush();
         }
-        printWriter.println(packet.toString());
-        printWriter.flush();
     }
 
     public enum CloseReason {

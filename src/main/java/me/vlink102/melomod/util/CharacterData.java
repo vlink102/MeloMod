@@ -20,24 +20,33 @@
 
 package me.vlink102.melomod.util;
 
-import cc.polyfrost.oneconfig.libs.checker.units.qual.C;
-import cc.polyfrost.oneconfig.utils.color.ColorUtils;
 import it.unimi.dsi.fastutil.chars.CharObjectImmutablePair;
 import it.unimi.dsi.fastutil.chars.CharObjectPair;
 import lombok.Getter;
 import net.minecraft.util.ChatStyle;
-import net.minecraft.util.EnumChatFormatting;
 import net.minecraft.util.IChatComponent;
-import scala.Char;
+import org.apache.commons.lang3.RandomUtils;
+import org.apache.logging.log4j.core.helpers.Strings;
 
 import java.awt.*;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
 import java.util.function.UnaryOperator;
-import java.util.stream.Collectors;
+
+import static me.vlink102.melomod.util.StringUtils.cleanColour;
 
 @Getter
 public class CharacterData {
+
+    public static Color getRandom() {
+        return fromHex(randomCollection(COLORS.values().toArray(new String[0])));
+    }
+
+    public static <T> T randomCollection(T[] collection) {
+        return collection[RandomUtils.nextInt(0, collection.length)];
+    }
 
     public static Color fromHex(String hex) {
         return new Color(Integer.parseInt(hex.substring(0, 2), 16), Integer.parseInt(hex.substring(2, 4), 16), Integer.parseInt(hex.substring(4, 6), 16));
@@ -46,6 +55,8 @@ public class CharacterData {
     public static Color convert(char color) {
         return fromHex(COLORS.get(color));
     }
+
+
 
     public static final HashMap<Character, String> COLORS = new HashMap<Character, String>() {{
         this.put('0', "000000");
@@ -66,19 +77,16 @@ public class CharacterData {
         this.put('f', "FFFFFF");
     }};
 
-    private static List<CharObjectPair<CharacterData>> decompose(IChatComponent component) {
-        if (component == null) return new ArrayList<>();
-        String rawText = component.getUnformattedText();
+    private static java.util.List<CharObjectPair<CharacterData>> decompose(String rawText) {
         boolean isBold = false, isItalic = false, isStrikethrough = false, isUnderline = false;
         Color color = convert('f');
 
-        List<CharObjectPair<CharacterData>> data = new ArrayList<>();
+        java.util.List<CharObjectPair<CharacterData>> data = new ArrayList<>();
 
         char[] rawChars = rawText.toCharArray();
         for (int i = 0; i < rawChars.length; i++) {
             char character = rawChars[i];
             if (character == '§') {
-                i++;
                 char modifier = rawChars[i + 1];
                 switch (modifier) {
                     case 'l':
@@ -103,6 +111,61 @@ public class CharacterData {
                 if (String.valueOf(modifier).matches("[0-9a-f]")) {
                     color = convert(modifier);
                 }
+                i++;
+            } else {
+                data.add(new CharObjectImmutablePair<>(character, new CharacterData(color, buildFromValues(isBold, isItalic, isStrikethrough, isUnderline))));
+            }
+        }
+        //printData(data);
+        return data;
+    }
+
+
+    public static void printData(List<CharObjectPair<CharacterData>> data) {
+        System.out.println("---------------------------------------");
+        for (CharObjectPair<CharacterData> datum : data) {
+            System.out.println("Pair (" + datum.leftChar() + ": " + datum.right() + ")");
+        }
+        System.out.println("---------------------------------------");
+    }
+
+    private static List<CharObjectPair<CharacterData>> decompose(IChatComponent component) {
+        if (component == null) return new ArrayList<>();
+        String rawText = component.getUnformattedText();
+        boolean isBold = false, isItalic = false, isStrikethrough = false, isUnderline = false;
+        Color color = convert('f');
+
+        List<CharObjectPair<CharacterData>> data = new ArrayList<>();
+
+        char[] rawChars = rawText.toCharArray();
+        for (int i = 0; i < rawChars.length; i++) {
+            char character = rawChars[i];
+            if (character == '§') {
+                char modifier = rawChars[i + 1];
+                switch (modifier) {
+                    case 'l':
+                        isBold = true;
+                        break;
+                    case 'o':
+                        isItalic = true;
+                        break;
+                    case 'm':
+                        isStrikethrough = true;
+                        break;
+                    case 'n':
+                        isUnderline = true;
+                        break;
+                    case 'r':
+                        isBold = false;
+                        isItalic = false;
+                        isStrikethrough = false;
+                        isUnderline = false;
+                        break;
+                }
+                if (String.valueOf(modifier).matches("[0-9a-f]")) {
+                    color = convert(modifier);
+                }
+                i++;
             } else {
                 data.add(new CharObjectImmutablePair<>(character, new CharacterData(color, buildFromValues(isBold, isItalic, isStrikethrough, isUnderline))));
             }
@@ -110,28 +173,54 @@ public class CharacterData {
         return data;
     }
 
+    public static List<BitMapFont.TextDecoration> buildFromValues(boolean isBold, boolean isItalic, boolean isStrikethrough, boolean isUnderline) {
+        List<BitMapFont.TextDecoration> decorations = new ArrayList<>();
+        if (isBold) decorations.add(BitMapFont.TextDecoration.BOLD);
+        if (isItalic) decorations.add(BitMapFont.TextDecoration.ITALIC);
+        if (isUnderline) decorations.add(BitMapFont.TextDecoration.UNDERLINED);
+        if (isStrikethrough) decorations.add(BitMapFont.TextDecoration.STRIKETHROUGH);
+        return decorations;
+    }
+/*
     public static ChatStyle buildFromValues(boolean isBold, boolean isItalic, boolean isStrikethrough, boolean isUnderline) {
         return new ChatStyle()
                 .setBold(isBold)
                 .setItalic(isItalic)
                 .setStrikethrough(isStrikethrough)
                 .setUnderlined(isUnderline);
+    }*/
+
+    public static List<BitMapFont.TextDecoration> deserialize(ChatStyle style) {
+        List<BitMapFont.TextDecoration> decorations = new ArrayList<>();
+        if (style.getBold()) decorations.add(BitMapFont.TextDecoration.BOLD);
+        if (style.getItalic()) decorations.add(BitMapFont.TextDecoration.ITALIC);
+        if (style.getUnderlined()) decorations.add(BitMapFont.TextDecoration.UNDERLINED);
+        if (style.getStrikethrough()) decorations.add(BitMapFont.TextDecoration.STRIKETHROUGH);
+        return decorations;
     }
 
+    public static ValuePairs<String, List<CharObjectPair<CharacterData>>> fromComponent(String raw, UnaryOperator<String> shaper) {
+
+        String content = raw;
+        String stripped = cleanColour(content);
+        String resultStr = shaper.apply(stripped);
+
+        return new ValuePairs<>(resultStr, decompose(raw));
+    }
 
     public static ValuePairs<String, List<CharObjectPair<CharacterData>>> fromComponent(IChatComponent component, UnaryOperator<String> shaper) {
         component = ComponentFlattening.flatten(component);
         String content = component.getUnformattedText();
-        String stripped = StringUtils.cleanColour(content);
+        String stripped = cleanColour(content);
         String resultStr = shaper.apply(stripped);
 
         return new ValuePairs<>(resultStr, decompose(component));
     }
 
     private final Color color;
-    private final ChatStyle decorations;
+    private final List<BitMapFont.TextDecoration> decorations;
 
-    public CharacterData(Color color, ChatStyle decorations) {
+    public CharacterData(Color color, List<BitMapFont.TextDecoration> decorations) {
         this.color = color;
         this.decorations = decorations;
     }

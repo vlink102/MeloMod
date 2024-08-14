@@ -7,11 +7,8 @@ import net.minecraft.util.IChatComponent;
 
 import java.awt.*;
 import java.awt.image.BufferedImage;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Objects;
-import java.util.function.Supplier;
 
 public class ImageGeneration {
 
@@ -34,6 +31,7 @@ public class ImageGeneration {
         } else {
             MeloMod.addDebug("ImageGeneration creating tooltip image of " + (prints.get(0).getToolTipComponent(ToolTipComponent.ToolTipType.TEXT)));
         }
+        System.out.println("Prints: " + prints);
 
         int requiredHeight = prints.stream().mapToInt(each -> {
             ToolTipComponent.ToolTipType<?> type = each.getType();
@@ -46,6 +44,8 @@ public class ImageGeneration {
             }
         }).sum() + 415;
 
+        System.out.println("Required Height: " + requiredHeight);
+
         BufferedImage image = new BufferedImage(2240, requiredHeight, BufferedImage.TYPE_INT_ARGB);
         Graphics2D g = image.createGraphics();
 
@@ -53,15 +53,24 @@ public class ImageGeneration {
         int maxX = 0;
         int currentY = 208;
         for (ToolTipComponent<?> print : prints) {
+            System.out.println("Printing Component: " + print);
             ToolTipComponent.ToolTipType<?> type = print.getType();
-            if (Objects.equals(type, ToolTipComponent.ToolTipType.TEXT)) {
-                ImageUtils.ComponentPrintResult printResult = ImageUtils.printComponent(image, print.getToolTipComponent(ToolTipComponent.ToolTipType.TEXT), Language.getById(MainConfiguration.language), true, topX + 8, currentY, 16);
+            if (type == ToolTipComponent.ToolTipType.TEXT) {
+                System.out.println("Component is text: " + type.getTypeClass());
+                ImageUtils.ComponentPrintResult printResult = ImageUtils.printComponent(image,
+                        print.getToolTipComponent(ToolTipComponent.ToolTipType.TEXT),
+                        Language.getById(MainConfiguration.language),
+                        true,
+                        topX + 8,
+                        currentY,
+                        16);
+                System.out.println("Print Result: " + printResult);
                 int textWidth = printResult.getTextWidth();
                 if (textWidth > maxX) {
                     maxX = textWidth;
                 }
                 currentY += 20;
-            } else if (type.equals(ToolTipComponent.ToolTipType.IMAGE)) {
+            } else if (type == ToolTipComponent.ToolTipType.IMAGE) {
                 currentY += 5;
                 BufferedImage componentImage = print.getToolTipComponent(ToolTipComponent.ToolTipType.IMAGE);
                 g.drawImage(componentImage, topX + 8, currentY, null);
@@ -115,6 +124,7 @@ public class ImageGeneration {
             }
         }
         firstY = Math.max(0, firstY - 8);
+        System.out.println("Drawing Background...");
         BufferedImage background = new BufferedImage(maxX + 4, currentY - 196, BufferedImage.TYPE_INT_ARGB);
 
         Graphics2D g2 = background.createGraphics();
@@ -138,7 +148,6 @@ public class ImageGeneration {
         g3.drawImage(background, offsetX, 201 - firstY, null);
         g3.drawImage(image, -firstX, -firstY, null);
         g3.dispose();
-
         return output;
     }
 

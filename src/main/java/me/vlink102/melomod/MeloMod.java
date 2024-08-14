@@ -5,9 +5,9 @@ import cc.polyfrost.oneconfig.events.event.InitializationEvent;
 import cc.polyfrost.oneconfig.utils.commands.CommandManager;
 import cc.polyfrost.oneconfig.utils.hypixel.LocrawUtil;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.google.gson.JsonObject;
+import com.google.gson.*;
+import com.google.gson.stream.JsonReader;
+import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap;
 import lombok.Getter;
 import lombok.Setter;
 import me.vlink102.melomod.chatcooldownmanager.ServerTracker;
@@ -20,7 +20,9 @@ import me.vlink102.melomod.command.server.SocketOnline;
 import me.vlink102.melomod.command.server.SocketPrivateMessage;
 import me.vlink102.melomod.configuration.MainConfiguration;
 import me.vlink102.melomod.events.*;
-import me.vlink102.melomod.util.*;
+import me.vlink102.melomod.util.BitMapFont;
+import me.vlink102.melomod.util.StringUtils;
+import me.vlink102.melomod.util.VChatComponent;
 import me.vlink102.melomod.util.game.PlayerObjectUtil;
 import me.vlink102.melomod.util.game.SkyblockUtil;
 import me.vlink102.melomod.util.http.ApiUtil;
@@ -43,16 +45,21 @@ import net.minecraftforge.fml.common.event.FMLInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 import org.apache.commons.lang3.mutable.MutableObject;
 
+import javax.imageio.ImageIO;
 import java.awt.*;
+import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
-import java.util.*;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.util.List;
+import java.util.*;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 import static me.vlink102.melomod.util.StringUtils.cc;
+import static me.vlink102.melomod.util.StringUtils.cleanAndParseInt;
 
 /**
  * The entrypoint of the Mod that initializes it.
@@ -62,19 +69,15 @@ import static me.vlink102.melomod.util.StringUtils.cc;
  */
 @Mod(modid = MeloMod.MODID, name = MeloMod.NAME, version = MeloMod.VERSION)
 public class MeloMod {
-
-    @Getter
-    private File configurationFile;
+    public static final String endpoint = "@ENDPOINT@";
 
     // Sets the variables from `gradle.properties`. See the `blossom` config in `build.gradle.kts`.
     public static final String MODID = "@ID@";
     public static final String NAME = "@NAME@";
     public static final String VERSION = "@VER@";
+    public static final List<BitMapFont> FONTS = new ArrayList<>();
     private static final ThreadPoolExecutor THREAD_EXECUTOR = new ThreadPoolExecutor(0, 1, 60L, TimeUnit.SECONDS,
             new LinkedBlockingQueue<>(), new ThreadFactoryBuilder().setNameFormat(MeloMod.MODID + " - #%d").build());
-
-    @Getter
-    private NewScheduler newScheduler;
     public static boolean isObfuscated;
     public static Version VERSION_NEW;
     public static Version.Compatibility compatibility = Version.Compatibility.INCOMPATIBLE; //updated on runtime and version packet
@@ -89,11 +92,24 @@ public class MeloMod {
     public static UUID playerUUID;
     public static String playerName;
     public static List<VChatComponent> queue = new ArrayList<>();
+
+    public static Font custom;
+    public static Font unifont;
+
+    public static JsonObject defaultPack;
+    public static JsonObject spacePack;
+    public static BufferedImage ascii;
+    public static BufferedImage accented;
+    public static BufferedImage nonlatin_european;
+    @Getter
+    private static File configurationFile;
     private final MutableObject<Language> language = new MutableObject<>(Language.ENGLISH);
     @Getter
     public SkyblockUtil skyblockUtil;
     public ApiUtil apiUtil;
     public CommunicationHandler handler;
+    @Getter
+    private NewScheduler newScheduler;
     @Getter
     @Setter
     private JsonObject languageConfig = new JsonObject();
@@ -245,6 +261,40 @@ public class MeloMod {
         }
     }
 
+    public static File createNewRandomUUID(String extension) {
+        return new File(getConfigurationFile(), UUID.randomUUID() + "." + extension);
+    }
+
+    public static int getOrDefault(JsonObject parent, String key, int defaultValue) {
+        return !parent.has(key) ? defaultValue : parent.get(key).getAsInt();
+    }
+
+    public static List<JsonElement> toArray(JsonArray array) {
+        List<JsonElement> list = new ArrayList<>();
+        for (int i = 0; i < array.size(); i++) {
+            list.add(array.get(i));
+        }
+        return list;
+    }
+
+    public static BitMapFont getFontProvider(String character) {
+        for (BitMapFont font : FONTS) {
+            if (font.getFont().canDisplay(character.codePointAt(0)) && font.isUnifont()) {
+                return font;
+            }
+            if (font.canDisplayCharacter(character)) {
+                return font;
+            }
+        }
+
+        for (BitMapFont font : FONTS) {
+            if (font.isUnifont()) {
+                return font;
+            }
+        }
+        throw new IllegalArgumentException();
+    }
+
     public Language getLanguage() {
         return language.getValue();
     }
@@ -261,33 +311,99 @@ public class MeloMod {
         this.skyblockProfile = skyblockProfile;
     }
 
-    public static File createNewRandomUUID(String extension) {
-        return new File(MeloMod.INSTANCE.getConfigurationFile(), UUID.randomUUID() + "." + extension);
+    private InputStream getStream(String file) {
+        InputStream is = this.getClass().getClassLoader().getResourceAsStream(file);
+        System.out.println(is == null);
+        return is;
     }
 
-    public static Font custom;
-    public static FontMetrics metrics;
-
-    @Mod.EventHandler
-    public void preInit(FMLPreInitializationEvent e) {
-        isObfuscated = isObfuscated();
-        configurationFile = new File(e.getModConfigurationDirectory(), MeloMod.MODID + "/");
-        GraphicsEnvironment ge =
-                GraphicsEnvironment.getLocalGraphicsEnvironment();
-
+    private Font getFontFromStream(InputStream is) {
         try {
-            custom = Font.createFont(Font.TRUETYPE_FONT, new File("src/main/resources/Minecraft-Seven_v2.ttf")).deriveFont(Font.PLAIN, 16f);
-            ge.registerFont(custom);
-        } catch (FontFormatException ex) {
-            throw new RuntimeException(ex);
-        } catch (IOException ex) {
-            throw new RuntimeException(ex);
+            return Font.createFont(Font.TRUETYPE_FONT, is);
+        } catch (FontFormatException e) {
+            throw new RuntimeException(e);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
     }
+
+    public BufferedImage getBufferedResource(String string) {
+        try {
+            return ImageIO.read(this.getClass().getClassLoader().getResourceAsStream(string));
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @Mod.EventHandler
+    public void preInit(FMLPreInitializationEvent event) {
+        isObfuscated = isObfuscated();
+        configurationFile = new File(event.getModConfigurationDirectory(), MeloMod.MODID + "/");
+
+    }
+
+    public void reloadFonts() {
+        JsonArray providers = defaultPack.getAsJsonArray("providers");
+        for (JsonElement provider : providers) {
+            if (provider instanceof JsonObject) {
+                JsonObject providerJson = (JsonObject) provider;
+
+                int height = getOrDefault(providerJson, "height", 8);
+                int ascent = providerJson.get("ascent").getAsInt();
+                List<String> chars = new ArrayList<>();
+
+                JsonArray charArray = providerJson.getAsJsonArray("chars");
+                for (JsonElement element : charArray) {
+                    chars.add(element.getAsString());
+                }
+                String filePath = providerJson.get("file").getAsString().replaceAll("minecraft:font/", "");
+                File file = new File(filePath);
+                FONTS.add(new BitMapFont(height, ascent, chars, file, getBufferedResource(filePath), custom.deriveFont(Font.PLAIN, 64)));
+            }
+        }
+    }
+
+    public static void reloadSpace() {
+        JsonArray providers = spacePack.getAsJsonArray("providers");
+        for (JsonElement provider : providers) {
+            if (provider instanceof JsonObject) {
+                JsonObject providerJson = (JsonObject) provider;
+                JsonObject advances = providerJson.getAsJsonObject("advances");
+                Int2IntOpenHashMap map = new Int2IntOpenHashMap();
+                for (Map.Entry<String, JsonElement> stringJsonElementEntry : advances.entrySet()) {
+                    String character = stringJsonElementEntry.getKey();
+                    int advance = stringJsonElementEntry.getValue().getAsInt();
+
+                    map.put(character.codePointAt(0), advance);
+                }
+
+                FONTS.add(new BitMapFont(custom.deriveFont(Font.PLAIN, 64), map));
+            }
+        }
+    }
+
+
 
     // Register the config and commands.
     @Mod.EventHandler
     public void onInit(FMLInitializationEvent event) {
+        GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
+        custom = getFontFromStream(getStream("default.ttf"));
+        unifont = getFontFromStream(getStream("unifont.ttf"));
+        ge.registerFont(custom);
+        ge.registerFont(unifont);
+
+        defaultPack = new JsonParser().parse(new JsonReader(new InputStreamReader(getStream("default.json")))).getAsJsonObject();
+        spacePack = new JsonParser().parse(new JsonReader(new InputStreamReader(getStream("space.json")))).getAsJsonObject();
+        accented = getBufferedResource("accented.png");
+        ascii = getBufferedResource("ascii.png");
+        nonlatin_european = getBufferedResource("nonlatin_european.png");
+
+        reloadSpace();
+        reloadFonts();
+        reloadUniFont();
+
+        FONTS.forEach(BitMapFont::manageFont);
         new MeloMod();
         newScheduler = new NewScheduler();
         playerUUID = Minecraft.getMinecraft().getSession().getProfile().getId();
@@ -301,7 +417,7 @@ public class MeloMod {
         MinecraftForge.EVENT_BUS.register(new ServerTracker());
         skyblockUtil = new SkyblockUtil(this);
         apiUtil = new ApiUtil();
-        DataUtils.loadLocalizedStrings(Objects.requireNonNull(Language.getById(config.language)));
+        DataUtils.loadLocalizedStrings(Objects.requireNonNull(Language.getById(MainConfiguration.language)));
         CommandManager.INSTANCE.registerCommand(new MainCommand(this));
         CommandManager.INSTANCE.registerCommand(new SocketMessage(this));
         CommandManager.INSTANCE.registerCommand(new SocketOnline());
@@ -321,7 +437,12 @@ public class MeloMod {
         MinecraftForge.EVENT_BUS.register(new PlayerDisconnect());
 
         handler = new CommunicationHandler(this);
-        handler.beginKeepAlive(playerUUID, playerName);
+        handler.beginKeepAlive(playerUUID, playerName, endpoint);
+    }
+
+    public static void reloadUniFont() {
+        FONTS.add(new BitMapFont(custom.deriveFont(Font.PLAIN, 64)));
+        FONTS.add(new BitMapFont(unifont.deriveFont(Font.PLAIN, 64)));
     }
 
     public enum AbstractColor {
@@ -352,6 +473,7 @@ public class MeloMod {
         @Getter
         private final String ansi;
         private final char color;
+
         AbstractColor(char color, String ansi) {
             this.color = color;
             this.ansi = ansi;

@@ -24,12 +24,14 @@ val mod_name: String by project
 val mod_version: String by project
 val mod_id: String by project
 val mod_archives_name: String by project
+val mod_endpoint: String by project
 
 // Replaces the variables in `ExampleMod.java` to the ones specified in `gradle.properties`.
 blossom {
     replaceToken("@VER@", mod_version)
     replaceToken("@NAME@", mod_name)
     replaceToken("@ID@", mod_id)
+    replaceToken("@ENDPOINT@", mod_endpoint)
 }
 
 // Sets the mod version to the one specified in `gradle.properties`. Make sure to change this following semver!

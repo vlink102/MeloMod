@@ -49,7 +49,7 @@ public class VChatComponent {
         return new VChatComponent(scheme).add(text);
     }
 
-    public static IChatComponent insert(IChatComponent parent, String delimiter, String... data) {
+    public static IChatComponent insert(IChatComponent parent, String delimiter, String data) {
         String message = parent.getUnformattedText();
         if (message.contains(delimiter)) {
             MeloMod.addDebug("&8" + Feature.GENERIC_DOES_CONTAIN_DELIMITER + "&r");
@@ -59,7 +59,7 @@ public class VChatComponent {
 
             for (String s : split) {
                 if (s.equalsIgnoreCase(delimiter)) {
-                    componentBuilder.addItem(data[0]);
+                    componentBuilder.addItem(data);
                 } else {
                     componentBuilder.add(s);
                 }

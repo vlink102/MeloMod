@@ -1,38 +1,30 @@
 package me.vlink102.melomod.command.client;
 
 import cc.polyfrost.oneconfig.images.OneImage;
-import cc.polyfrost.oneconfig.renderer.NanoVGHelper;
-import cc.polyfrost.oneconfig.renderer.RenderManager;
-import cc.polyfrost.oneconfig.renderer.TextRenderer;
-import cc.polyfrost.oneconfig.renderer.asset.AssetHelper;
-import cc.polyfrost.oneconfig.renderer.asset.Icon;
 import cc.polyfrost.oneconfig.utils.commands.annotations.Command;
+import cc.polyfrost.oneconfig.utils.commands.annotations.Greedy;
 import cc.polyfrost.oneconfig.utils.commands.annotations.Main;
 import cc.polyfrost.oneconfig.utils.commands.annotations.SubCommand;
 import me.vlink102.melomod.MeloMod;
-import me.vlink102.melomod.util.ImageGeneration;
-import me.vlink102.melomod.util.ImageUtils;
-import me.vlink102.melomod.util.MinecraftFont;
-import me.vlink102.melomod.util.VChatComponent;
+import me.vlink102.melomod.util.*;
+import me.vlink102.melomod.util.http.ApiUtil;
 import me.vlink102.melomod.util.http.DataThread;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.shader.Framebuffer;
+import net.minecraft.item.ItemStack;
 import net.minecraft.util.ChatComponentText;
-import net.minecraftforge.client.MinecraftForgeClient;
-import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.fml.client.FMLClientHandler;
-import net.minecraftforge.fml.client.FMLFolderResourcePack;
-import net.minecraftforge.fml.common.FMLCommonHandler;
-import net.minecraftforge.fml.common.FMLContainerHolder;
-import net.minecraftforge.fml.common.FMLModContainer;
-import net.minecraftforge.fml.common.event.FMLInitializationEvent;
-import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
-import sun.awt.image.ToolkitImage;
+import net.minecraft.util.EnumChatFormatting;
+import org.apache.commons.lang3.RandomStringUtils;
+import org.apache.commons.lang3.RandomUtils;
 
-import javax.imageio.ImageIO;
 import java.awt.*;
+import java.awt.datatransfer.Clipboard;
+import java.awt.datatransfer.StringSelection;
 import java.awt.image.BufferedImage;
-import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Random;
 
 @Command(
         value = "melotest",
@@ -57,20 +49,40 @@ public class InternalTesting {
     }
 
     @SubCommand
+    public void copydata() {
+        BufferedImage image = ImageUtils.frameBuffer(Minecraft.getMinecraft().thePlayer.getHeldItem());
+        String data = ApiUtil.imgToBase64String(image, "png");
+        StringSelection selection = new StringSelection(data);
+        Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
+        clipboard.setContents(selection, selection);
+    }
+
+    @SubCommand
+    public void helpme() {
+        System.out.println("=======================================================");
+        System.out.println("Beginning render process");
+        ImageUtils.helpMe(Minecraft.getMinecraft().thePlayer.getHeldItem());
+        System.out.println("=======================================================");
+    }
+
+    @SubCommand
     public void render() {
         System.out.println("=======================================================");
         System.out.println("Beginning render process");
         BufferedImage bufferedImage = ImageGeneration.getToolTipImage(
                 new ChatComponentText(
                         "Testing renderer..."
-                ),
+                ).appendSibling(new ChatComponentText(
+                        "Another line..."
+                )),
                 true
         );
-        System.out.println("Generated: " + bufferedImage);
+        System.out.println("Generated: " + bufferedImage + " (" + bufferedImage.getWidth() + "*" + bufferedImage.getHeight() + ")");
 
+        //Minecraft.getMinecraft().fontRendererObj.drawString()
         try {
-            byte[] data = ImageUtils.toArray(bufferedImage);
-            Image image = Toolkit.getDefaultToolkit().createImage(data);
+            //byte[] data = ImageUtils.toArray(bufferedImage);
+            //Image image = Toolkit.getDefaultToolkit().createImage(data);
             OneImage oneImage = new OneImage(bufferedImage);
             oneImage.save(MeloMod.createNewRandomUUID("png").getAbsolutePath());
             oneImage.copyToClipboard();
@@ -78,6 +90,69 @@ public class InternalTesting {
             throw new RuntimeException(e);
         }
         System.out.println("=======================================================");
+    }
+
+    @SubCommand
+    public void erm() {
+        System.out.println("=======================================================");
+        System.out.println("Beginning render process");
+
+        ItemStack stack = Minecraft.getMinecraft().thePlayer.getHeldItem();
+        BitMapFont.writeFileToDownloads(BitMapFont.getTooltipBackground(stack));
+
+        System.out.println("=======================================================");
+    }
+
+    @SubCommand
+    public void whatthehell(@Greedy String text) {
+        System.out.println("=======================================================");
+        System.out.println("Beginning render process");
+
+        ItemStack stack = Minecraft.getMinecraft().thePlayer.getHeldItem();
+        BitMapFont.writeFileToDownloads(ImageUtils.frameBuffer(stack));
+
+        System.out.println("=======================================================");
+    }
+
+    @SubCommand
+    public void renderchar() {
+        System.out.println("=======================================================");
+        System.out.println("Beginning render process");
+        String randomChar = RandomStringUtils.randomAlphabetic(1);
+        System.out.println("Using random character: " + randomChar);
+        BitMapFont fontProvider = MeloMod.getFontProvider(randomChar.substring(0, 1));
+        int width = fontProvider.getCharacterWidth(randomChar);
+        int height = fontProvider.getHeight();
+        BufferedImage bufferedImage = fontProvider.printCharacter(new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB),
+                randomChar.substring(0, 1),
+                0,
+                0,
+                8,
+                0,
+                CharacterData.getRandom(),
+                getRandomDecorations()).getImage();
+        System.out.println("Generated: " + bufferedImage + " (" + bufferedImage.getWidth() + "*" + bufferedImage.getHeight() + ")");
+
+        try {
+            //byte[] data = ImageUtils.toArray(bufferedImage);
+            //Image image = Toolkit.getDefaultToolkit().createImage(data);
+            OneImage oneImage = new OneImage(bufferedImage);
+            oneImage.save(MeloMod.createNewRandomUUID("png").getAbsolutePath());
+            oneImage.copyToClipboard();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        System.out.println("=======================================================");
+    }
+
+    public List<BitMapFont.TextDecoration> getRandomDecorations() {
+        Random random = new Random();
+        List<BitMapFont.TextDecoration> decorations = new ArrayList<>();
+        for (int i = 0; i < 4; i++) {
+            BitMapFont.TextDecoration decor = BitMapFont.TextDecoration.values()[i];
+            if (random.nextBoolean()) decorations.add(decor);
+        }
+        return decorations;
     }
 
     @SubCommand

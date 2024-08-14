@@ -26,7 +26,6 @@ import com.ibm.icu.text.BidiRun;
 import it.unimi.dsi.fastutil.chars.CharObjectPair;
 import net.minecraft.util.IChatComponent;
 
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.ListIterator;
@@ -40,6 +39,36 @@ public class I18nUtils {
             e.printStackTrace();
         }
         return str;
+    }
+
+    public static List<CharObjectPair<CharacterData>> bidirectionalReorder(String raw, boolean rightToLeft) {
+        ValuePairs<String, List<CharObjectPair<CharacterData>>> pair = CharacterData.fromComponent(raw, I18nUtils::shaping);
+        List<CharObjectPair<CharacterData>> data = pair.getSecond();
+        Bidi bidi = new Bidi(pair.getFirst(), rightToLeft ? 127 : 126);
+        bidi.setReorderingMode(0);
+        List<CharObjectPair<CharacterData>> result = new ArrayList<>(data.size());
+        int totalRuns = bidi.countRuns();
+        for (int i = 0; i < totalRuns; i++) {
+            BidiRun bidiRun = bidi.getVisualRun(i);
+            int start = bidiRun.getStart();
+            int limit = bidiRun.getLimit();
+            List<CharObjectPair<CharacterData>> subResult = new ArrayList<>(bidiRun.getLength());
+            for (int u = start; u < limit; u++) {
+                if (u < 0 || u >= data.size()) {
+                    continue;
+                }
+                subResult.add(data.get(u));
+            }
+            if (bidiRun.isOddRun()) {
+                ListIterator<CharObjectPair<CharacterData>> itr = subResult.listIterator(subResult.size());
+                while (itr.hasPrevious()) {
+                    result.add(itr.previous());
+                }
+            } else {
+                result.addAll(subResult);
+            }
+        }
+        return result;
     }
 
     public static List<CharObjectPair<CharacterData>> bidirectionalReorder(IChatComponent component, boolean rightToLeft) {
