@@ -31,9 +31,11 @@ public class SocketMessage {
     @Main
     public void handle(@Greedy String message) {
         if (message.contains("<item>")) {
-            String image = ApiUtil.imgToBase64String(BitMapFont.getTooltipBackground(Minecraft.getMinecraft().thePlayer.getHeldItem()), "png");
-            String data = ItemSerializer.INSTANCE.serialize(Minecraft.getMinecraft().thePlayer.getHeldItem());
-            CommunicationHandler.thread.sendPacket(new PacketPlayOutChat(message, MeloMod.playerUUID.toString(), MeloMod.playerName, null, data, image));
+            MeloMod.runAsync(() -> {
+                String image = ApiUtil.imgToBase64String(BitMapFont.getTooltipBackground(Minecraft.getMinecraft().thePlayer.getHeldItem()), "png");
+                String data = ItemSerializer.INSTANCE.serialize(Minecraft.getMinecraft().thePlayer.getHeldItem());
+                CommunicationHandler.thread.sendPacket(new PacketPlayOutChat(message, MeloMod.playerUUID.toString(), MeloMod.playerName, null, data, image));
+            });
         } else {
             CommunicationHandler.thread.sendPacket(new PacketPlayOutChat(message, MeloMod.playerUUID.toString(), MeloMod.playerName, null, null, null));
         }

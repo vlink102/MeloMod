@@ -27,10 +27,13 @@ public class SocketPrivateMessage {
     @Main
     public void handle(String target, @Greedy String message) {
         if (message.contains("<item>")) {
+            MeloMod.runAsync(() -> {
+
             String image = ApiUtil.imgToBase64String(BitMapFont.getTooltipBackground(Minecraft.getMinecraft().thePlayer.getHeldItem()), "png");
             String data = ItemSerializer.INSTANCE.serialize(Minecraft.getMinecraft().thePlayer.getHeldItem());
 
             CommunicationHandler.thread.sendPacket(new PacketPlayOutChat(message, MeloMod.playerUUID.toString(), MeloMod.playerName, target, data, image));
+                    });
         } else {
             CommunicationHandler.thread.sendPacket(new PacketPlayOutChat(message, MeloMod.playerUUID.toString(), MeloMod.playerName, target, null, null));
         }

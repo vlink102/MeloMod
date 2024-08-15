@@ -82,12 +82,15 @@ public class ApiUtil {
                 break;
             case CUSTOM:
                 if (message.contains("<item>")) {
+                    MeloMod.runAsync(() -> {
+
                     //String data = ItemSerializer.INSTANCE.serialize(Minecraft.getMinecraft().thePlayer.getHeldItem());
                     String image = ApiUtil.imgToBase64String(BitMapFont.getTooltipBackground(Minecraft.getMinecraft().thePlayer.getHeldItem()), "png");
                     String data = ItemSerializer.INSTANCE.serialize(Minecraft.getMinecraft().thePlayer.getHeldItem());
 
                     MeloMod.addDebug(data);
                     CommunicationHandler.thread.sendPacket(new PacketPlayOutChat(message, MeloMod.playerUUID.toString(), MeloMod.playerName, null, data, image));
+                            });
                 } else {
 
                     CommunicationHandler.thread.sendPacket(new PacketPlayOutChat(message, MeloMod.playerUUID.toString(), MeloMod.playerName, null, null, null));

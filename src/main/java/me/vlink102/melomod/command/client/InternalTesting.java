@@ -98,7 +98,7 @@ public class InternalTesting {
         System.out.println("Beginning render process");
 
         ItemStack stack = Minecraft.getMinecraft().thePlayer.getHeldItem();
-        BitMapFont.writeFileToDownloads(BitMapFont.getTooltipBackground(stack));
+        MeloMod.runAsync(() -> BitMapFont.writeFileToDownloads(BitMapFont.getTooltipBackground(stack)));
 
         System.out.println("=======================================================");
     }
