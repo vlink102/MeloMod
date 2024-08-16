@@ -4,184 +4,150 @@ import cc.polyfrost.oneconfig.config.annotations.Dropdown;
 import cc.polyfrost.oneconfig.config.annotations.Switch;
 import cc.polyfrost.oneconfig.config.annotations.Text;
 import cc.polyfrost.oneconfig.config.elements.SubConfig;
+import lombok.Getter;
 import me.vlink102.melomod.MeloMod;
 
 public class ChatConfiguration extends SubConfig {
+    @Getter
     @Switch(
+            subcategory = "Commands",
             name = "Enable gay command"
     )
     public static boolean gay = true;
 
-    public static boolean isGay() {
-        return gay;
-    }
-
+    @Getter
     @Switch(
+            subcategory = "Commands",
             name = "Enable racist command"
     )
     public static boolean racist = true;
 
-    public static boolean isRacist() {
-        return racist;
-    }
-
     @Switch(
-            name = "Enable other mode"
+            name = "Enable other player mode",
+            description = "If other mode is enabled, the (player) parameter on most commands will be available."
     )
     public static boolean runOthers = true;
 
+    @Getter
     @Switch(
+            subcategory = "Commands",
             name = "Enable dice roll"
     )
     public static boolean diceRoll = true;
 
-    public static boolean isDiceRoll() {
-        return diceRoll;
-    }
-
     @Switch(
-            name = "Enable multiple dice rolls"
+            name = "Enable multiple dice rolls",
+            description = "If this is enabled, the (count) parameter will be available."
     )
     public static boolean multiDiceRoll = true;
 
 
+    @Getter
     @Switch(
+            subcategory = "Commands",
             name = "Enable pray command"
     )
     public static boolean pray = true;
 
-    public static boolean isPray() {
-        return pray;
-    }
-
+    @Getter
     @Switch(
+            subcategory = "Commands",
             name = "Enable chess engine"
     )
     public static boolean chessEngine = true;
 
-    public static boolean isChessEngine() {
-        return chessEngine;
-    }
-
+    @Getter
     @Switch(
+            subcategory = "Commands",
             name = "Enable math evaluation"
     )
     public static boolean mathEvaluation = true;
 
-    public static boolean isMathEvaluation() {
-        return mathEvaluation;
-    }
-
+    @Getter
     @Switch(
+            subcategory = "Commands",
             name = "Enable guild command"
     )
     public static boolean guild = true;
 
-    public static boolean isGuild() {
-        return guild;
-    }
-
+    @Getter
     @Switch(
+            subcategory = "Commands",
             name = "Enable locate command"
     )
     public static boolean locate = true;
 
-    public static boolean isLocate() {
-        return locate;
-    }
-
+    @Getter
     @Switch(
+            subcategory = "Commands",
             name = "Enable coinflip command"
     )
     public static boolean coinFlip = true;
 
-    public static boolean isCoinFlip() {
-        return coinFlip;
-    }
-
+    @Getter
     @Switch(
+            subcategory = "Commands",
             name = "Enable stalk command"
     )
     public static boolean stalk = true;
 
-    public static boolean isStalk() {
-        return stalk;
-    }
-
+    @Getter
     @Switch(
+            subcategory = "Commands",
             name = "Enable social media commands"
     )
     public static boolean socialMedia = true;
 
-    public static boolean isSocialMedia() {
-        return socialMedia;
-    }
-
+    @Getter
     @Switch(
+            subcategory = "Commands",
             name = "Enable secret command"
     )
     public static boolean secret = true;
 
-    public static boolean isSecret() {
-        return secret;
-    }
-
+    @Getter
     @Switch(
+            subcategory = "Incomplete",
             name = "Enable whole party secret command"
     )
-    public static boolean wholePartySecret = true;
-    public static boolean isWholePartySecret() {
-        return wholePartySecret;
-    }
+    public static boolean wholePartySecret = false;
 
+    @Getter
     @Switch(
+            subcategory = "Commands",
             name = "N-Word pass"
     )
     public static boolean nWordPass = true;
-    public static boolean isnWordPass() {
-        return nWordPass;
-    }
 
+    @Getter
     @Switch(
+            subcategory = "Commands",
             name = "Enable femboy command"
     )
     public static boolean femboy = true;
 
-    public static boolean isFemboy() {
-        return femboy;
-    }
-
+    @Getter
     @Switch(
+            subcategory = "Commands",
             name = "Enable networth command"
     )
     public static boolean networth = true;
 
-    public static boolean isNetworth() {
-        return networth;
-    }
-
+    @Getter
     @Switch(
+            subcategory = "Commands",
             name = "Enable username history"
     )
     public static boolean userNameHistory = true;
 
-    public static boolean isUserNameHistory() {
-        return userNameHistory;
-    }
-
+    @Getter
     @Switch(
+            subcategory = "Commands",
             name = "Enable last online info"
     )
     public static boolean lastOnlineInfo = true;
 
-    public static boolean isLastOnlineInfo() {
-        return lastOnlineInfo;
-    }
 
-    @Switch(
-            name = "Enable fishing chat"
-    )
-    public static boolean fishingChat = true;
 
     @Switch(
             name = "Enable Chat Caching",
@@ -189,20 +155,18 @@ public class ChatConfiguration extends SubConfig {
     )
     public static boolean chatCaching = true;
 
+    @Getter
     @Switch(
             name = "Enable AI"
     )
     public static boolean ai = true;
-
-    public static boolean isAi() {
-        return ai;
-    }
 
     @Text(
             name = "Prefix"
     )
     public static String chatPrefix = "?";
 
+    @Getter
     @Dropdown(
             name = "AI Model",
             options = {
@@ -219,10 +183,6 @@ public class ChatConfiguration extends SubConfig {
     )
     public static int aiModel = 3;
 
-
-    public static int getAiModel() {
-        return aiModel;
-    }
 
     @Switch(
             name = "Enable ALL chat"

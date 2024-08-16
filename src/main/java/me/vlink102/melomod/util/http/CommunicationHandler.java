@@ -46,7 +46,11 @@ public class CommunicationHandler {
 
             } catch (Exception e) {
                 MeloMod.addError("&c" + Feature.ERROR_COULD_NOT_CONNECT_TO_SERVER + " &7(" + e.getMessage() + ": " + e.getCause() + ")", e);
+                if (thread != null) {
+                    thread.closeSocket(DataThread.CloseReason.ERROR, e);
 
+                    thread = null;
+                }
             }
         });
     }

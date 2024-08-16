@@ -1,5 +1,6 @@
 package me.vlink102.melomod.util;
 
+import lombok.Setter;
 import me.vlink102.melomod.MeloMod;
 import me.vlink102.melomod.util.translation.Feature;
 import net.minecraft.event.ClickEvent;
@@ -18,6 +19,8 @@ import static me.vlink102.melomod.util.StringUtils.cc;
 public class VChatComponent {
     private final List<IChatComponent> components;
     private boolean isDebug = false;
+    @Setter
+    private boolean ignoreLength = false;
 
     public boolean isDebug() {
         return isDebug;
@@ -195,12 +198,15 @@ public class VChatComponent {
                 continue;
             }
             int length = first.getFormattedText().length() + components.get(i).getFormattedText().length();
-            if (length >= 256) {
+            if (length >= 256 && !ignoreLength) {
                 overflowing = true;
                 overflow.add(components.get(i).getUnformattedText());
             } else {
                 first.appendSibling(components.get(i));
             }
+        }
+        if (!overflow.components.isEmpty() && ignoreLength) {
+            throw new RuntimeException("Overflow found with length ignored");
         }
         if (!overflow.components.isEmpty()) {
             MeloMod.addWarn(cc("&e" + Feature.GENERIC_WARNING_DETECTED_OVERSIZED_COMPONENT + "&r"));

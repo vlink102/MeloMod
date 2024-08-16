@@ -70,7 +70,7 @@ public class CharacterData {
         this.put('8', "555555");
         this.put('9', "5555FF");
         this.put('a', "55FF55");
-        this.put('b', "FF5555");
+        this.put('b', "55FFFF");
         this.put('c', "FF5555");
         this.put('d', "FF55FF");
         this.put('e', "FFFF55");

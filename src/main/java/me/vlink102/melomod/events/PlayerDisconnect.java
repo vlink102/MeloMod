@@ -17,7 +17,9 @@ public class PlayerDisconnect {
         ConnectionHandler.online = false;
         ServerTracker.isHypixel = false;
         MeloMod.addDebug("&e" + Feature.GENERIC_DEBUG_DISCONNECT + "&r");
-        PacketPlayOutDisconnect disconnect = new PacketPlayOutDisconnect(MeloMod.playerUUID.toString(), MeloMod.playerName);
-        CommunicationHandler.thread.sendPacket(disconnect);
+        if (CommunicationHandler.thread != null) {
+            PacketPlayOutDisconnect disconnect = new PacketPlayOutDisconnect(MeloMod.playerUUID.toString(), MeloMod.playerName);
+            CommunicationHandler.thread.sendPacket(disconnect);
+        }
     }
 }

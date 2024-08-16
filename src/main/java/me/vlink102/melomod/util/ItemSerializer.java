@@ -16,7 +16,11 @@ public class ItemSerializer {
 
     public String serialize(ItemStack stack) {
         Base64.Encoder encoder = Base64.getEncoder();
-        return encoder.encodeToString(stack.serializeNBT().toString().getBytes(StandardCharsets.UTF_8));
+        return encoder.encodeToString(serializeToNBT(stack).getBytes(StandardCharsets.UTF_8));
+    }
+
+    public String serializeToNBT(ItemStack stack) {
+        return stack.serializeNBT().toString();
     }
 
     public String deserializeFromBase64(String stack) {

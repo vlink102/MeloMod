@@ -11,8 +11,10 @@ import me.vlink102.melomod.util.ImageUtils;
 import me.vlink102.melomod.util.http.ApiUtil;
 import me.vlink102.melomod.util.http.CommunicationHandler;
 import me.vlink102.melomod.util.http.packets.ServerBoundRequestConnectionsPacket;
+import me.vlink102.melomod.util.http.packets.database.ServerBoundPlaytimeRequestPacket;
 import me.vlink102.melomod.util.translation.Feature;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiScreenBook;
 
 import java.awt.image.BufferedImage;
 
@@ -32,6 +34,14 @@ public class MainCommand {
         this.mod = mod;
     }
 
+    @SubCommand(
+            description = "Shows the user's mod playtime"
+    )
+    private void playtime(String name) {
+        if (!MainConfiguration.enablePlaytimeCommand) return;
+        CommunicationHandler.thread.sendPacket(new ServerBoundPlaytimeRequestPacket(name, MeloMod.playerUUID.toString()));
+    }
+
     @SubCommand(description = "Reload the mod and refresh Hypixel API")
     private void reload() {
         mod.apiUtil.requestAPI(
@@ -39,6 +49,14 @@ public class MainCommand {
                 object -> mod.skyblockUtil.updateInformation(object),
                 ApiUtil.HypixelEndpoint.FilledEndpointArgument.uuid()
         );
+    }
+
+    @SubCommand
+    private void closebookinternal() {
+        // on book click
+        if (Minecraft.getMinecraft().currentScreen instanceof GuiScreenBook) {
+            Minecraft.getMinecraft().thePlayer.closeScreen();
+        }
     }
 
     @SubCommand(description = "Copies an image of your item")

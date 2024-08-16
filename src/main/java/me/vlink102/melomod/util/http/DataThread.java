@@ -15,6 +15,7 @@ import me.vlink102.melomod.util.StringUtils;
 import me.vlink102.melomod.util.VChatComponent;
 import me.vlink102.melomod.util.game.neu.Utils;
 import me.vlink102.melomod.util.http.packets.*;
+import me.vlink102.melomod.util.http.packets.database.ClientBoundPlaytimePacket;
 import me.vlink102.melomod.util.translation.Feature;
 import net.minecraft.event.ClickEvent;
 import net.minecraft.util.IChatComponent;
@@ -90,6 +91,12 @@ public class DataThread extends Thread {
                         JsonObject object = element.getAsJsonObject();
                         Packet.PacketID id = Packet.from(object.toString());
                         switch (id) {
+                            case PLAYTIME:
+                                ClientBoundPlaytimePacket playtimePacket = (ClientBoundPlaytimePacket) Packet.parseFrom(object.toString());
+                                Long playtime = playtimePacket.getPlaytime();
+                                String name = playtimePacket.getTargetName();
+
+                                MeloMod.addMessage(name + "'s " + Feature.GENERIC_PLAYTIME + ": " + Utils.prettyTime(playtime));
                             case SERVER_CLOSED_CONNECTION:
                                 ClientBoundForceDisconnectPacket clientBoundForceDisconnectPacket = (ClientBoundForceDisconnectPacket) Packet.parseFrom(object.toString());
                                 String title = clientBoundForceDisconnectPacket.getClosedID();

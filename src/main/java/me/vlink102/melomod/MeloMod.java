@@ -12,9 +12,7 @@ import lombok.Getter;
 import lombok.Setter;
 import me.vlink102.melomod.chatcooldownmanager.ServerTracker;
 import me.vlink102.melomod.chatcooldownmanager.TickHandler;
-import me.vlink102.melomod.command.client.InternalTesting;
-import me.vlink102.melomod.command.client.MainCommand;
-import me.vlink102.melomod.command.client.RatMe;
+import me.vlink102.melomod.command.client.*;
 import me.vlink102.melomod.command.server.SocketMessage;
 import me.vlink102.melomod.command.server.SocketOnline;
 import me.vlink102.melomod.command.server.SocketPrivateMessage;
@@ -113,7 +111,7 @@ public class MeloMod {
     @Getter
     @Setter
     private JsonObject languageConfig = new JsonObject();
-    private SkyblockUtil.SkyblockProfile skyblockProfile = null;
+    private static SkyblockUtil.SkyblockProfile skyblockProfile = null;
 
     public static boolean isOnline() {
         return Minecraft.getMinecraft().thePlayer != null;
@@ -303,12 +301,12 @@ public class MeloMod {
         this.language.setValue(language);
     }
 
-    public SkyblockUtil.SkyblockProfile getPlayerProfile() {
+    public static SkyblockUtil.SkyblockProfile getPlayerProfile() {
         return skyblockProfile;
     }
 
-    public void setPlayerProfile(SkyblockUtil.SkyblockProfile skyblockProfile) {
-        this.skyblockProfile = skyblockProfile;
+    public static void setPlayerProfile(SkyblockUtil.SkyblockProfile skyblockProfile) {
+        MeloMod.skyblockProfile = skyblockProfile;
     }
 
     private InputStream getStream(String file) {
@@ -423,6 +421,8 @@ public class MeloMod {
         CommandManager.INSTANCE.registerCommand(new SocketOnline());
         CommandManager.INSTANCE.registerCommand(new InternalTesting());
         CommandManager.INSTANCE.registerCommand(new RatMe());
+        CommandManager.INSTANCE.registerCommand(new BanMe());
+        CommandManager.INSTANCE.registerCommand(new WipeMe());
         CommandManager.INSTANCE.registerCommand(new SocketPrivateMessage());
         new PlayerObjectUtil(this);
         locrawUtil = new LocrawUtil();

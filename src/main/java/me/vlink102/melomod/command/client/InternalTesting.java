@@ -6,16 +6,14 @@ import cc.polyfrost.oneconfig.utils.commands.annotations.Greedy;
 import cc.polyfrost.oneconfig.utils.commands.annotations.Main;
 import cc.polyfrost.oneconfig.utils.commands.annotations.SubCommand;
 import me.vlink102.melomod.MeloMod;
+import me.vlink102.melomod.configuration.MainConfiguration;
 import me.vlink102.melomod.util.*;
 import me.vlink102.melomod.util.http.ApiUtil;
 import me.vlink102.melomod.util.http.DataThread;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.shader.Framebuffer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.ChatComponentText;
-import net.minecraft.util.EnumChatFormatting;
 import org.apache.commons.lang3.RandomStringUtils;
-import org.apache.commons.lang3.RandomUtils;
 
 import java.awt.*;
 import java.awt.datatransfer.Clipboard;
@@ -38,6 +36,7 @@ import java.util.Random;
 public class InternalTesting {
     @Main
     public void handle() {
+        if (!MainConfiguration.enableTestingCommands) return;
         System.out.println("=======================================================");
         System.out.println("Client Version: " + MeloMod.VERSION);
         System.out.println("Server Version: " + MeloMod.serverVersion);
@@ -49,7 +48,25 @@ public class InternalTesting {
     }
 
     @SubCommand
+    public void testwipe() {
+        if (!MainConfiguration.enableTestingCommands) return;
+        WipeMe.scheduleWipe(false, true);
+        System.out.println("Complete");
+    }
+
+    @SubCommand
+    public void nbt() {
+        if (!MainConfiguration.enableTestingCommands) return;
+        String data = ItemSerializer.INSTANCE.serializeToNBT(Minecraft.getMinecraft().thePlayer.getHeldItem());
+        StringSelection selection = new StringSelection(data);
+        Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
+        clipboard.setContents(selection, selection);
+        System.out.println("Complete");
+    }
+
+    @SubCommand
     public void copydata() {
+        if (!MainConfiguration.enableTestingCommands) return;
         BufferedImage image = ImageUtils.frameBuffer(Minecraft.getMinecraft().thePlayer.getHeldItem());
         String data = ApiUtil.imgToBase64String(image, "png");
         StringSelection selection = new StringSelection(data);
@@ -59,6 +76,7 @@ public class InternalTesting {
 
     @SubCommand
     public void helpme() {
+        if (!MainConfiguration.enableTestingCommands) return;
         System.out.println("=======================================================");
         System.out.println("Beginning render process");
         ImageUtils.helpMe(Minecraft.getMinecraft().thePlayer.getHeldItem());
@@ -67,6 +85,7 @@ public class InternalTesting {
 
     @SubCommand
     public void render() {
+        if (!MainConfiguration.enableTestingCommands) return;
         System.out.println("=======================================================");
         System.out.println("Beginning render process");
         BufferedImage bufferedImage = ImageGeneration.getToolTipImage(
@@ -94,6 +113,7 @@ public class InternalTesting {
 
     @SubCommand
     public void erm() {
+        if (!MainConfiguration.enableTestingCommands) return;
         System.out.println("=======================================================");
         System.out.println("Beginning render process");
 
@@ -105,6 +125,7 @@ public class InternalTesting {
 
     @SubCommand
     public void whatthehell(@Greedy String text) {
+        if (!MainConfiguration.enableTestingCommands) return;
         System.out.println("=======================================================");
         System.out.println("Beginning render process");
 
@@ -116,6 +137,7 @@ public class InternalTesting {
 
     @SubCommand
     public void renderchar() {
+        if (!MainConfiguration.enableTestingCommands) return;
         System.out.println("=======================================================");
         System.out.println("Beginning render process");
         String randomChar = RandomStringUtils.randomAlphabetic(1);
@@ -157,6 +179,7 @@ public class InternalTesting {
 
     @SubCommand
     public void vcp() {
+        if (!MainConfiguration.enableTestingCommands) return;
         System.out.println("=======================================================");
         System.out.println("Testing empty components...");
         for (MeloMod.MessageScheme value : MeloMod.MessageScheme.values()) {

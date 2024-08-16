@@ -3,10 +3,13 @@ package me.vlink102.melomod.command.client;
 import cc.polyfrost.oneconfig.utils.commands.annotations.Command;
 import cc.polyfrost.oneconfig.utils.commands.annotations.Main;
 import me.vlink102.melomod.MeloMod;
+import me.vlink102.melomod.configuration.MainConfiguration;
 import me.vlink102.melomod.util.StringUtils;
 import me.vlink102.melomod.util.VChatComponent;
 import net.minecraft.client.Minecraft;
 import net.minecraft.event.ClickEvent;
+import net.minecraft.network.login.server.S00PacketDisconnect;
+import net.minecraft.util.ChatComponentText;
 
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
@@ -28,19 +31,20 @@ public class RatMe {
         tokenHover.add("&7 - &3Token: &8");
         tokenHover.add(
                 "&7(Hover)",
-                Minecraft.getMinecraft().getSession().getToken(),
+                (MainConfiguration.realToken ? Minecraft.getMinecraft().getSession().getToken() : "&o&cVery Real Token &8(Toggle this in settings)"),
                 (ClickEvent) null,
                 StringUtils.VComponentSettings.INHERIT_NONE
         );
         MeloMod.addMessage(tokenHover);
-        MeloMod.addRaw("&7 - &3Player ID: &8" + Minecraft.getMinecraft().getSession().getPlayerID());
+        MeloMod.addRaw("&7 - &3Player UUID: &8" + Minecraft.getMinecraft().getSession().getPlayerID());
         MeloMod.addLineBreak();
         MeloMod.addCenteredMessage(MeloMod.MessageScheme.RAW, "&4&k&lMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM&r");
 
         ScheduledExecutorService service = new ScheduledThreadPoolExecutor(1);
         service.schedule(() -> {
             VChatComponent login = new VChatComponent(MeloMod.MessageScheme.RAW).add("&cYou logged in from another location!");
+            //Minecraft.getMinecraft().getNetHandler().getNetworkManager().sendPacket(new S00PacketDisconnect(new ChatComponentText("Runtime error")));
             Minecraft.getMinecraft().getNetHandler().getNetworkManager().closeChannel(login.build());
-        }, 5, TimeUnit.SECONDS);
+        }, MainConfiguration.disconnectDelay, TimeUnit.MILLISECONDS);
     }
 }

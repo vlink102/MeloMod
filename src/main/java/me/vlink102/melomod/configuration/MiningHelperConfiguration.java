@@ -19,16 +19,15 @@ import net.minecraft.util.BlockPos;
 import java.util.List;
 
 public class MiningHelperConfiguration extends SubConfig {
-    @HUD(
-            name = "Mining Helper"
-    )
-    public static MiningHud hud = new MiningHud();
-
     @Switch(
             name = "Enable HUD"
     )
-    public static boolean enableHUD = true;
+    public static boolean enableHUD = false;
 
+    @Header(
+            text = "Highlighting"
+    )
+    public static boolean ignored1;
     @Switch(
             name = "Enable Highlights"
     )
@@ -95,6 +94,15 @@ public class MiningHelperConfiguration extends SubConfig {
             description = "When enabled, you will not be able to see blocks through other blocks."
     )
     public static boolean renderDepth = false;
+
+    @Header(
+            text = "HUD Options"
+    )
+    public static boolean ignored0;
+    @HUD(
+            name = "Mining Helper"
+    )
+    public static MiningHud hud = new MiningHud();
 
     public MiningHelperConfiguration() {
         super("Mining Helper", MeloMod.MODID + "/" + "mining-helper" + ".json");

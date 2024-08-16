@@ -62,6 +62,11 @@ public class ApiUtil {
     private static final ExecutorService executorService = Executors.newFixedThreadPool(10);
     private static final String USER_AGENT = MeloMod.MODID + "/" + MeloMod.VERSION;
 
+    public static void sendCommandLater(String command) {
+        if (!command.startsWith("/")) command = "/" + command;
+        TickHandler.addToQueue(command);
+    }
+
     public static void sendLater(String message, ChatChannel chatChannel) {
         String prefixCommand = "";
         switch (chatChannel) {

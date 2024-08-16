@@ -104,10 +104,13 @@ public class LocrawHandler {
 
         System.out.println(event.info);
 
-        ServerBoundLocrawPacket packet = new ServerBoundLocrawPacket(info.getMapName(), info.getGameMode(), info.getRawGameType(), info.getServerId(), getType(), serverIP());
 
-        System.out.println(packet);
-        CommunicationHandler.thread.sendPacket(packet);
+
+        if (CommunicationHandler.thread != null) {
+            ServerBoundLocrawPacket packet = new ServerBoundLocrawPacket(info.getMapName(), info.getGameMode(), info.getRawGameType(), info.getServerId(), getType(), serverIP());
+            System.out.println(packet);
+            CommunicationHandler.thread.sendPacket(packet);
+        }
 
         if (mod.getPlayerProfile() == null) {
             mod.apiUtil.requestAPI(

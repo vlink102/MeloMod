@@ -9,6 +9,7 @@
         "lost_connection": "Lost connection to server"
     },
     "generic": {
+        "playtime": "playtime",
         "none": "None",
         "click": "Click",
         "authors": "Authors",

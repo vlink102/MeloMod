@@ -1,5 +1,8 @@
 package me.vlink102.melomod.util.translation;
 
+import lombok.Getter;
+
+@Getter
 public enum Feature {
     ERROR_COULD_NOT_CONNECT_TO_SERVER("errors.could_not_connect"),
     ERROR_CLIENT_RECEIVED_INVALID_DATA("errors.client_received_invalid_data"),
@@ -8,6 +11,7 @@ public enum Feature {
     ERROR_POTENTIALLY_SEVERE("errors.potentially_severe"),
     ERROR_INCOMPATIBLE_VERSION("errors.incompatible_version"),
     ERROR_LOST_CONNECTION("errors.lost_connection"),
+    GENERIC_PLAYTIME("generic.playtime"),
     GENERIC_NONE("generic.none"),
     GENERIC_CLICK("generic.click"),
     GENERIC_HOVER("generic.hover"),
@@ -96,7 +100,4 @@ public enum Feature {
         return null;
     }
 
-    public String getPath() {
-        return this.path;
-    }
 }

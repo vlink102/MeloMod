@@ -1706,24 +1706,24 @@ public class Utils {
         long hours = (millis / 1000 / 60 / 60) % 24;
         long days = (millis / 1000 / 60 / 60 / 24);
 
-        String endsIn = "";
+        StringJoiner endsIn = new StringJoiner(" ");
         if (millis < 0) {
-            endsIn += "Ended!";
+            endsIn.add("Ended!");
         } else if (minutes == 0 && hours == 0 && days == 0) {
-            endsIn += seconds + "s";
+            endsIn.add(seconds + "s");
         } else if (hours == 0 && days == 0) {
-            endsIn += minutes + "m" + seconds + "s";
+            endsIn.add(minutes + "m " + seconds + "s");
         } else if (days == 0) {
             if (hours <= 6) {
-                endsIn += hours + "h" + minutes + "m" + seconds + "s";
+                endsIn.add(hours + "h " + minutes + "m " + seconds + "s");
             } else {
-                endsIn += hours + "h";
+                endsIn.add(hours + "h");
             }
         } else {
-            endsIn += days + "d" + hours + "h";
+            endsIn.add(days + "d " + hours + "h");
         }
 
-        return endsIn;
+        return endsIn.toString();
     }
 
     public static String another(long millis) {

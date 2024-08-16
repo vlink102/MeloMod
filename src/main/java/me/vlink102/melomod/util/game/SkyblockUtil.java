@@ -152,9 +152,9 @@ public class SkyblockUtil {
         for (JsonElement profile : profiles) {
             JsonObject profileObject = profile.getAsJsonObject();
             if (profileObject.get("selected").getAsBoolean()) {
-                meloMod.setPlayerProfile(new SkyblockProfile(profileObject));
+                MeloMod.setPlayerProfile(new SkyblockProfile(profileObject));
 
-                HashMap<String, Integer> kills = meloMod.getPlayerProfile().getMembers().get(MeloMod.playerUUID.toString().replaceAll("-", "")).getBestiary().getKills();
+                HashMap<String, Integer> kills = MeloMod.getPlayerProfile().getMembers().get(MeloMod.playerUUID.toString().replaceAll("-", "")).getBestiary().getKills();
                 for (Map.Entry<String, Integer> entry : kills.entrySet()) {
                     String string = entry.getKey();
                     ChatEventHandler.seaCreatureSession.put(ChatEventHandler.SeaCreature.convertBestiaryMob(string), entry.getValue());

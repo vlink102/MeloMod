@@ -8,6 +8,7 @@ import lombok.Getter;
 import me.vlink102.melomod.MeloMod;
 import me.vlink102.melomod.chatcooldownmanager.ServerTracker;
 import me.vlink102.melomod.configuration.ChatConfiguration;
+import me.vlink102.melomod.configuration.MainConfiguration;
 import me.vlink102.melomod.util.StringUtils;
 import me.vlink102.melomod.util.game.neu.Utils;
 import me.vlink102.melomod.util.http.ApiUtil;
@@ -241,11 +242,11 @@ public class ChatEventHandler {
     public void updateLastCaught(SeaCreature caught, boolean doubleHook, ApiUtil.ChatChannel chatChannel) {
         seaCreatureSession.put(caught, seaCreatureSession.getOrDefault(caught, 0) + (doubleHook ? 2 : 1));
         if (!lastCaught.containsKey(caught) && !lastCaughtTimeStamp.containsKey(caught)) {
-            if (ChatConfiguration.fishingChat) {
+            if (MainConfiguration.fishingChat) {
                 sendLater((doubleHook ? "‹⚓› ‼ DOUBLE HOOK ‼ " : "‹☂› ") + "☆ Caught a " + WordUtils.capitalizeFully(caught.toString().replaceAll("_", " ")) + "! ◆ First Catch in Session! ☆", chatChannel);
             }
         } else {
-            if (ChatConfiguration.fishingChat) {
+            if (MainConfiguration.fishingChat) {
                 sendLater((doubleHook ? "‹⚓› ‼ DOUBLE HOOK ‼ " : "‹☂› ") + "☆ Caught a " + WordUtils.capitalizeFully(caught.toString().replaceAll("_", " ")) + "! ◆ Total: " + seaCreatureSession.get(caught) + " ◆ Since Last: " + lastCaught.get(caught) + " ◆ Last Caught: " + prettyTime(System.currentTimeMillis() - lastCaughtTimeStamp.get(caught)) + " ago. ☆", chatChannel);
             }
         }
@@ -837,7 +838,7 @@ public class ChatEventHandler {
         INSTAGRAM("instagram", ChatConfiguration::isSocialMedia, optional("player", true)),
         HELP("help", () -> true, optional("page", false)),
         SECRET("secrets", ChatConfiguration::isSecret, optional("player", true)),
-        NPASS("npass", ChatConfiguration::isnWordPass, optional("player", true)),
+        NPASS("npass", ChatConfiguration::isNWordPass, optional("player", true)),
         FEMBOY("femboy", ChatConfiguration::isFemboy, optional("player", true)),
         NETWORTH("networth", ChatConfiguration::isNetworth, optional("player", true)),
         HISTORY("history", ChatConfiguration::isUserNameHistory, optional("player", true), optional("page", false)),

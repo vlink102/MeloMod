@@ -6,6 +6,8 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import lombok.Getter;
 import me.vlink102.melomod.util.http.packets.*;
+import me.vlink102.melomod.util.http.packets.database.ClientBoundPlaytimePacket;
+import me.vlink102.melomod.util.http.packets.database.ServerBoundPlaytimeRequestPacket;
 
 public class Packet implements PacketParser {
     public static PacketID from(String json) {
@@ -44,6 +46,10 @@ public class Packet implements PacketParser {
                 return new ServerBoundLocrawPacket(null, null, null, null, null, null).parse(json);
             case BAN_PACKET:
                 return new ClientBoundBanStatus(null, null).parse(json);
+            case PLAYTIME:
+                return new ClientBoundPlaytimePacket(null, null, null).parse(json);
+            case REQUEST_PLAYTIME:
+                return new ServerBoundPlaytimeRequestPacket(null, null).parse(json);
             default:
                 return null;
         }
@@ -111,6 +117,8 @@ public class Packet implements PacketParser {
         DISCONNECT(0b1001, PacketType.RELAYED),
         LOCRAW_PACKET(0b1010, PacketType.CLIENT_SERVER),
         BAN_PACKET(0b1011, PacketType.SERVER_CLIENT),
+        REQUEST_PLAYTIME(12, PacketType.CLIENT_SERVER),
+        PLAYTIME(13, PacketType.SERVER_CLIENT),
         ERROR_PACKET(0xffffffff, null);
 
         private final int packetID;

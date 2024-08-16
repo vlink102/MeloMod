@@ -1,30 +1,24 @@
 package me.vlink102.melomod.events;
 
-import cc.polyfrost.oneconfig.events.EventManager;
-import cc.polyfrost.oneconfig.events.event.WorldLoadEvent;
-import cc.polyfrost.oneconfig.libs.eventbus.Subscribe;
 import cc.polyfrost.oneconfig.utils.hypixel.HypixelUtils;
 import me.vlink102.melomod.MeloMod;
 import me.vlink102.melomod.chatcooldownmanager.ServerTracker;
+import me.vlink102.melomod.command.client.BanMe;
+import me.vlink102.melomod.command.client.WipeMe;
+import me.vlink102.melomod.configuration.MainConfiguration;
 import me.vlink102.melomod.util.VChatComponent;
 import me.vlink102.melomod.util.http.CommunicationHandler;
-import me.vlink102.melomod.util.http.packets.PacketPlayOutDisconnect;
 import me.vlink102.melomod.util.http.packets.ServerBoundLocrawPacket;
 import me.vlink102.melomod.util.translation.Feature;
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.Entity;
-import net.minecraftforge.common.MinecraftForge;
+import net.minecraft.util.IChatComponent;
 import net.minecraftforge.event.entity.EntityJoinWorldEvent;
-import net.minecraftforge.event.world.WorldEvent;
-import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.fml.common.eventhandler.EventPriority;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
-import net.minecraftforge.fml.common.gameevent.PlayerEvent;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ScheduledThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
 
 public class ConnectionHandler {
 
@@ -34,10 +28,11 @@ public class ConnectionHandler {
 
     public static boolean online;
 
-    @SubscribeEvent()
+    @SubscribeEvent(priority = EventPriority.LOWEST)
     public void onJoin(EntityJoinWorldEvent event) {
         Entity entity = event.entity;
         if (entity == Minecraft.getMinecraft().thePlayer) {
+            if (online) return;
             online = true;
             MeloMod.addDebug("&e" + Feature.GENERIC_DEBUG_JOINED_WORLD + ": &7" + event.toString());
             MeloMod.INSTANCE.getNewScheduler().scheduleDelayedTask(new SkyblockRunnable() {
@@ -52,6 +47,14 @@ public class ConnectionHandler {
                     } else {
                         ServerTracker.isHypixel = true;
                         MeloMod.addDebug("&e" + Feature.GENERIC_DEBUG_HYPIXEL_DETECTED + "&r");
+                        if (MainConfiguration.banOnJoin) {
+                            IChatComponent yeah = BanMe.getBanString(MainConfiguration.fakeBanDuration, MainConfiguration.getFakeBanType(MainConfiguration.banType));
+                            //Minecraft.getMinecraft().getNetHandler().getNetworkManager().sendPacket(new S00PacketDisconnect(new ChatComponentText("Runtime error")));
+                            Minecraft.getMinecraft().getNetHandler().getNetworkManager().closeChannel(yeah);
+                            return;
+                        } else if (MainConfiguration.wipeOnJoin) {
+                            WipeMe.scheduleWipe(false, true);
+                        }
                     }
                     if (!MeloMod.queue.isEmpty()) {
                         List<VChatComponent> currentQueue = new ArrayList<>(MeloMod.queue);
