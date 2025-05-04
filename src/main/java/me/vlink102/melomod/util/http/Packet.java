@@ -50,6 +50,7 @@ public class Packet implements PacketParser {
                 return new ClientBoundPlaytimePacket(null, null, null).parse(json);
             case REQUEST_PLAYTIME:
                 return new ServerBoundPlaytimeRequestPacket(null, null).parse(json);
+
             default:
                 return null;
         }

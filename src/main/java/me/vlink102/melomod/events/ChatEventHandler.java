@@ -12,7 +12,11 @@ import me.vlink102.melomod.configuration.MainConfiguration;
 import me.vlink102.melomod.util.StringUtils;
 import me.vlink102.melomod.util.game.neu.Utils;
 import me.vlink102.melomod.util.http.ApiUtil;
+import me.vlink102.melomod.util.http.CommunicationHandler;
 import me.vlink102.melomod.util.math.eval.DoubleEvaluator;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.network.NetHandlerPlayClient;
+import net.minecraft.client.network.NetworkPlayerInfo;
 import net.minecraft.util.IChatComponent;
 import org.apache.commons.lang3.RandomUtils;
 import org.apache.commons.lang3.text.WordUtils;
@@ -599,6 +603,149 @@ public class ChatEventHandler {
             }
         }
 
+        if (ChatConfiguration.ping) {
+            if (chatMessage.equalsIgnoreCase(ChatConfiguration.chatPrefix + Commands.PING.getCommand())) {
+                NetHandlerPlayClient connection = Minecraft.getMinecraft().getNetHandler();
+                if (connection != null) {
+                    NetworkPlayerInfo info = connection.getPlayerInfo(Minecraft.getMinecraft().thePlayer.getUniqueID());
+                    if (info != null) {
+                        sendLater("»»» Ping: " + info.getResponseTime() + "ms «««", chatChannel);
+                        return;
+                    }
+                } else {
+                    sendLater("»»» Ping: Unknown «««", chatChannel);
+                    return;
+                }
+            }
+            if (ChatConfiguration.runOthers) {
+                if (chatMessage.startsWith(ChatConfiguration.chatPrefix + Commands.PING.getCommand() + " ")) {
+                    String[] args = chatMessage.split(" ");
+                    if (args.length > 1) {
+                        String otherPlayer = args[1];
+                        NetHandlerPlayClient connection = Minecraft.getMinecraft().getNetHandler();
+                        if (connection != null) {
+                            for (NetworkPlayerInfo networkPlayerInfo : connection.getPlayerInfoMap()) {
+                                String name = networkPlayerInfo.getGameProfile().getName();
+                                if (name.equalsIgnoreCase(otherPlayer)) {
+                                    sendLater("»»» " + name + "'s Ping: " + networkPlayerInfo.getResponseTime() + "ms «««", chatChannel);
+                                    break;
+                                }
+                            }
+                        } else {
+                            sendLater("»»» Ping: Unknown «««", chatChannel);
+                            return;
+                        }
+                    }
+                }
+            }
+        }
+
+        if (ChatConfiguration.fps) {
+            if (chatMessage.equalsIgnoreCase(ChatConfiguration.chatPrefix + Commands.FPS.getCommand())) {
+                sendLater("»»» Current FPS: " + Minecraft.getDebugFPS() + " «««", chatChannel);
+                return;
+            }
+        }
+
+        if (ChatConfiguration.cpu) {
+            if (chatMessage.equalsIgnoreCase(ChatConfiguration.chatPrefix + Commands.CPU.getCommand())) {
+                CommunicationHandler.localThread.sendRequestPacket(3, chatChannel);
+                /*SystemInfo si = new SystemInfo();
+                HardwareAbstractionLayer hal = si.getHardware();
+                Sensors sensors = hal.getSensors();
+                CentralProcessor cpu = hal.getProcessor();
+
+                String cpuTemp = ((int) sensors.getCpuTemperature()) + "°C";
+                String voltage = sensors.getCpuVoltage() + "V";
+                int[] fanSpeeds = sensors.getFanSpeeds();
+                StringJoiner joiner = new StringJoiner(", ");
+                for (int fanSpeed : fanSpeeds) {
+                    joiner.add(fanSpeed + "RPM");
+                }
+                String fans = "[" + joiner + "]";
+
+                String load = ((int) cpu.getSystemLoadAverage(1)[0] * 100) + "%";
+
+                sendLater("»»» CPU Load: " + load + " (" + cpuTemp + " @ " + voltage + ") Fans: " + fans + " «««", chatChannel);*/
+
+            }
+        }
+
+        if (ChatConfiguration.internet) {
+            if (chatMessage.equalsIgnoreCase(ChatConfiguration.chatPrefix + Commands.INTERNET.getCommand())) {
+                CommunicationHandler.localThread.sendRequestPacket(2, chatChannel);
+                /*SystemInfo si = new SystemInfo();
+                HardwareAbstractionLayer hal = si.getHardware();
+                List<NetworkIF> interfaces = hal.getNetworkIFs();
+                NetworkIF best = null;
+                long maxTraffic = 0;
+
+                for (NetworkIF net : interfaces) {
+                    net.updateAttributes(); // Refresh stats
+
+                    // Filter: ignore loopback, disconnected, or no IP address
+                    if (!net.isKnownVmMacAddr() && net.getIPv4addr().length == 0) {
+                        continue;
+                    }
+
+                    long traffic = net.getBytesSent() + net.getBytesRecv();
+
+                    if (traffic > maxTraffic) {
+                        maxTraffic = traffic;
+                        best = net;
+                    }
+                }
+
+                if (best != null) {
+                    double bestSpeed = best.getSpeed() / 1_000_000d;
+                    double bytesSent = best.getBytesSent();
+                    double bytesReceived = best.getBytesRecv();
+
+                    sendLater("»»» Network Speed: " + bestSpeed + "mbps (I: " + bytesSent + "b | O: " + bytesReceived + "b) «««", chatChannel);
+                }
+                return;*/
+            }
+        }
+        if (ChatConfiguration.power) {
+            if (chatMessage.equalsIgnoreCase(ChatConfiguration.chatPrefix + Commands.POWER.getCommand())) {
+                CommunicationHandler.localThread.sendRequestPacket(1, chatChannel);
+                /*SystemInfo si = new SystemInfo();
+                HardwareAbstractionLayer hal = si.getHardware();
+                List<PowerSource> powerSources = hal.getPowerSources();
+                PowerSource mainPowerSource = null;
+
+                // Go through all power sources and find the primary source
+                for (PowerSource ps : powerSources) {
+                    if (ps.isPowerOnLine()) {
+                        // If this power source is present and not already assigned
+                        mainPowerSource = ps;
+                        break; // Prioritize first present power source
+                    }
+                }
+
+                if (mainPowerSource == null) {
+                    for (PowerSource ps : powerSources) {
+                        if (ps.isCharging() || ps.isDischarging()) {
+                            mainPowerSource = ps;
+                            break;
+                        }
+                    }
+                }
+                if (mainPowerSource != null) {
+                    String sourceName = (mainPowerSource.isPowerOnLine() ? "AC Power" : "Battery");
+                    String usage = mainPowerSource.getPowerUsageRate() + "mW";
+                    String current = mainPowerSource.getAmperage() + "mA";
+                    String voltage = mainPowerSource.getVoltage() + "V";
+                    String electricity = "(" + current + ", " + voltage + ")";
+                    String capacityUnits = fromCapacity(mainPowerSource.getCapacityUnits());
+                    String capacity = "[" + mainPowerSource.getCurrentCapacity() + capacityUnits + " / " + mainPowerSource.getMaxCapacity() + capacityUnits + " (" + ((int)mainPowerSource.getRemainingCapacityPercent() * 100) + "%)]";
+                    String timeLeft = "Remaining: " + mainPowerSource.getTimeRemainingEstimated() + "s";
+                    String state = (mainPowerSource.isCharging() ? " (Charging: " + usage + ")" : (mainPowerSource.isDischarging() ? " (Discharging: " + usage + " [" + timeLeft + "])" : ""));
+                    sendLater("»»» " + sourceName + state + ": " + electricity + " " + capacity + " «««", chatChannel);
+                }*/
+            }
+        }
+
         if (ChatConfiguration.ai) {
             if (chatMessage.startsWith(ChatConfiguration.chatPrefix + Commands.AI.getCommand())) {
                 String[] args = chatMessage.split("\\" + ChatConfiguration.chatPrefix + Commands.AI.getCommand() + " ");
@@ -749,6 +896,15 @@ public class ChatEventHandler {
      */
 
 
+   /* private static String fromCapacity(PowerSource.CapacityUnits units) {
+        switch (units) {
+            case RELATIVE: return "";
+            case MAH: return "MAH";
+            case MWH: return "MWH";
+        }
+        return "";
+    }*/
+
     @Getter
     public enum SeaCreature {
         SQUID("pond_squid", "pond_squid_1"),
@@ -843,7 +999,12 @@ public class ChatEventHandler {
         NETWORTH("networth", ChatConfiguration::isNetworth, optional("player", true)),
         HISTORY("history", ChatConfiguration::isUserNameHistory, optional("player", true), optional("page", false)),
         LASTONLINE("seen", ChatConfiguration::isLastOnlineInfo, optional("player", true)),
-        AI("ai", ChatConfiguration::isAi, required("prompt", false));
+        AI("ai", ChatConfiguration::isAi, required("prompt", false)),
+        FPS("fps", ChatConfiguration::isFps),
+        CPU("cpu", ChatConfiguration::isCpu),
+        INTERNET("internet", ChatConfiguration::isInternet),
+        POWER("power", ChatConfiguration::isPower),
+        PING("ping", ChatConfiguration::isPing);
 
         @Getter
         private final String command;

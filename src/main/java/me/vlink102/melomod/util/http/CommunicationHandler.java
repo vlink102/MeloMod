@@ -9,13 +9,9 @@ import me.vlink102.melomod.util.translation.Feature;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.Socket;
-import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ScheduledThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
 
 public class CommunicationHandler {
     private final MeloMod mod;
@@ -31,6 +27,27 @@ public class CommunicationHandler {
         this.add(DataThread.CloseReason.UNKNOWN);
     }};
     public static DataThread thread = null;
+    public static LocalThread localThread = null;
+
+    public static void establishInternal() {
+        MeloMod.runAsync(() -> {
+            try {
+                InetAddress address = InetAddress.getByName("localhost");
+                Socket socket = new Socket(address.getHostName(), 12345);
+
+                localThread = new LocalThread(socket);
+                localThread.start();
+
+            } catch (IOException e) {
+                MeloMod.addError("&cCould not connect to local server. &7(" + e.getMessage() + ": " + e.getCause() + ")", e);
+                if (localThread != null) {
+                    localThread.closeSocket(e);
+
+                    localThread = null;
+                }
+            }
+        });
+    }
 
     public static void establishConnection(UUID uuid, String prettyName, String endpoint) {
         MeloMod.runAsync(() -> {
@@ -61,6 +78,17 @@ public class CommunicationHandler {
             public void run() {
                 if (thread == null || reasons.contains(DataThread.closed)) {
                     establishConnection(uuid, name, endpoint);
+                }
+            }
+        }, 5 * 20);
+    }
+
+    public void beginLocalKeepAlive() {
+        mod.getNewScheduler().scheduleDelayedTask(new SkyblockRunnable() {
+            @Override
+            public void run() {
+                if (localThread == null) {
+                    establishInternal();
                 }
             }
         }, 5 * 20);

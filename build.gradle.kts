@@ -2,6 +2,9 @@
 
 import org.polyfrost.gradle.util.noServerRunConfigs
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
+import java.util.zip.ZipFile
+import java.util.zip.ZipEntry
+import org.polyfrost.gradle.util.RelocationTransform.Companion.registerRelocationAttribute
 
 // Adds support for kotlin, and adds the Polyfrost Gradle Toolkit
 // which we use to prepare the environment.
@@ -38,7 +41,7 @@ blossom {
 version = mod_version
 // Sets the group, make sure to change this to your own. It can be a website you own backwards or your GitHub username.
 // e.g. com.github.<your username> or com.<your domain>
-group = "org.polyfrost"
+group = "me.vlink102"
 
 // Sets the name of the output jar (the one you put in your mods folder and send to other people)
 // It outputs all versions of the mod into the `versions/{mcVersion}/build` directory.
@@ -100,24 +103,22 @@ val devenvMod: Configuration by configurations.creating {
     isTransitive = false
     isVisible = false
 }
-
 // Configures the libraries/dependencies for your mod.
 dependencies {
+    modCompileOnly("cc.polyfrost:oneconfig-$platform:0.2.2-alpha+")
     minecraft("com.mojang:minecraft:1.8.9")
     mappings("de.oceanlabs.mcp:mcp_stable:22-1.8.9")
-
     //implementation("org.asynchttpclient:async-http-client:3.0.0.Beta3")
     //implementation("net.hypixel:HypixelAPI:3.0.0")
     //compileOnly("net.hypixel:hypixel-api-transport-reactor:4.1")
     // Adds the OneConfig library, so we can develop with it.
-    modCompileOnly("cc.polyfrost:oneconfig-$platform:0.2.2-alpha+")
     forge("net.minecraftforge:forge:1.8.9-11.15.1.2318-1.8.9")
     // Adds DevAuth, which we can use to log in to Minecraft in development.
     implementation("net.hypixel:mod-api:0.3.1")
     modRuntimeOnly("me.djtheredstoner:DevAuth-${if (platform.isFabric) "fabric" else if (platform.isLegacyForge) "forge-legacy" else "forge-latest"}:1.2.0")
     implementation("com.github.ILikePlayingGames:DiscordIPC:-SNAPSHOT")
     shade("it.unimi.dsi:fastutil:8.5.14")
-
+    //shade("com.github.oshi:oshi-core:6.4.0")
 
     // If we are building for legacy forge, includes the launch wrapper with `shade` as we configured earlier, as well as mixin 0.7.11
     if (platform.isLegacyForge) {
@@ -125,8 +126,6 @@ dependencies {
         shade("cc.polyfrost:oneconfig-wrapper-launchwrapper:1.0.0-beta17")
     }
 }
-
-
 
 tasks {
     // Processes the `src/resources/mcmod.info`, `fabric.mod.json`, or `mixins.${mod_id}.json` and replaces
@@ -141,7 +140,7 @@ tasks {
             if (project.platform.mcMinor == 17)
                 16
             else
-                11 // For all previous versions, we **need** java 8 (for Forge support).
+                8 // For all previous versions, we **need** java 8 (for Forge support).
         }
         val compatLevel = "JAVA_${java}"
         inputs.property("java", java)
@@ -172,6 +171,7 @@ tasks {
                 )
             )
         }
+
     }
 
     // Configures the resources to include if we are building for forge or fabric.
@@ -195,6 +195,7 @@ tasks {
         configurations = listOf(shade, modShade)
         duplicatesStrategy = DuplicatesStrategy.EXCLUDE
     }
+
 
     remapJar {
         inputFile.set(shadowJar.get().archiveFile)

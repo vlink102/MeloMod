@@ -147,7 +147,47 @@ public class ChatConfiguration extends SubConfig {
     )
     public static boolean lastOnlineInfo = true;
 
+    @Getter
+    @Switch(
+            subcategory = "Commands",
+            name = "Enable FPS command"
+    )
+    public static boolean fps = true;
 
+    @Getter
+    @Switch(
+            subcategory = "Commands",
+            name = "Enable Ping command"
+    )
+    public static boolean ping = true;
+
+   /* @Getter
+    @Switch(
+            subcategory = "Commands",
+            name = "Enable CPU temp command"
+    )
+    public static boolean temp = true;*/
+
+    @Getter
+    @Switch(
+            subcategory = "Commands",
+            name = "Enable CPU command"
+    )
+    public static boolean cpu = true;
+
+    @Getter
+    @Switch(
+            subcategory = "Commands",
+            name = "Enable Internet command"
+    )
+    public static boolean internet = true;
+
+    @Getter
+    @Switch(
+            subcategory = "Commands",
+            name = "Enable Power command"
+    )
+    public static boolean power = true;
 
     @Switch(
             name = "Enable Chat Caching",

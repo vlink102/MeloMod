@@ -1,10 +1,7 @@
 package me.vlink102.melomod.util.http;
 
 
-import com.google.gson.Gson;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
+import com.google.gson.*;
 import lombok.Getter;
 import me.vlink102.melomod.MeloMod;
 import me.vlink102.melomod.chatcooldownmanager.TickHandler;
@@ -12,7 +9,6 @@ import me.vlink102.melomod.configuration.ChatConfiguration;
 import me.vlink102.melomod.configuration.MainConfiguration;
 import me.vlink102.melomod.events.LocrawHandler;
 import me.vlink102.melomod.util.BitMapFont;
-import me.vlink102.melomod.util.ImageUtils;
 import me.vlink102.melomod.util.ItemSerializer;
 import me.vlink102.melomod.util.enums.http.StatusCodes;
 import me.vlink102.melomod.util.enums.skyblock.Location;
@@ -21,12 +17,16 @@ import me.vlink102.melomod.util.http.packets.PacketPlayOutChat;
 import me.vlink102.melomod.util.wrappers.hypixel.Guild;
 import me.vlink102.melomod.util.wrappers.hypixel.PlayerUtil;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.util.JsonException;
 import net.minecraft.entity.player.EntityPlayer;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.text.WordUtils;
 import org.apache.commons.lang3.time.DurationFormatUtils;
 import org.apache.http.NameValuePair;
+import org.apache.http.client.CookieStore;
+import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.utils.URIBuilder;
+import org.apache.http.impl.client.BasicCookieStore;
 import org.apache.http.message.BasicNameValuePair;
 
 import javax.imageio.ImageIO;
@@ -42,6 +42,8 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.function.Consumer;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.zip.GZIPInputStream;
 
 import static me.vlink102.melomod.util.StringUtils.paginate;
@@ -68,6 +70,7 @@ public class ApiUtil {
     }
 
     public static void sendLater(String message, ChatChannel chatChannel) {
+        if (chatChannel == null) return;
         String prefixCommand = "";
         switch (chatChannel) {
             case PARTY:
@@ -163,8 +166,62 @@ public class ApiUtil {
         MeloMod.runAsync(() -> {
             try {
                 UUID uuid = fromName(player).get();
-                requestSkyCrypt(
-                        ApiUtil.SkyCryptEndpoint.PROFILE,
+
+                String endPoint = new SkyCryptEndpointClass(SkycryptV2Endpoint.PROFILE_ANON, player, "").getEndpoint();
+                //System.out.println(endPoint);
+                CookieStore cookieStore = new BasicCookieStore();
+
+                try (org.apache.http.impl.client.CloseableHttpClient httpClient = org.apache.http.impl.client.HttpClients.custom().setDefaultCookieStore(cookieStore).build()) {
+                    org.apache.http.client.methods.HttpGet request = new org.apache.http.client.methods.HttpGet(endPoint);
+
+
+                    try (CloseableHttpResponse response = httpClient.execute(request)) {
+                        String responseBody = org.apache.http.util.EntityUtils.toString(response.getEntity());
+                        int responseCode = response.getStatusLine().getStatusCode();
+                        // System.out.println("HTTP response for " + username + ": " + responseCode);
+
+                        if (responseCode == 200) {
+                            Pattern pattern = Pattern.compile("networth:([\\d.]*?),");
+                            Matcher matcher = pattern.matcher(responseBody);
+                            if (matcher.find()) {
+                                String networthString = matcher.group(1);
+                                Double networth = Double.parseDouble(networthString);
+                                if (uuid.equals(MeloMod.playerUUID)) {
+                                    sendLater("⛀⛁ Networth: $" + String.format("%,.0f", networth) + " ⛃⛂", chatChannel);
+                                } else {
+                                    sendLater("⛀⛁ " + player + "'s Networth: $" + String.format("%,.0f", networth) + " ⛃⛂", chatChannel);
+                                }
+                            }
+                            /*String rawData = extractJsonArray(responseBody);
+                            System.out.println(rawData);
+                            JsonArray array = new JsonParser().parse(rawData).getAsJsonArray();
+                            JsonObject dataWrapper = array.get(1).getAsJsonObject();
+                            JsonObject user = dataWrapper.get("data").getAsJsonObject().get("user").getAsJsonObject();
+                            JsonObject stats = user.get("stats").getAsJsonObject();
+                            JsonObject networth = stats.get("networth").getAsJsonObject();
+                            double value = networth.get("networth").getAsDouble();*/
+
+
+                        } else {
+                            //System.out.println("Non-200 response for " + username + ": " + responseBody);
+                        }
+                    } catch (JsonException e) {
+                        //System.out.println("Failed to parse response for " + username);
+                        e.printStackTrace();
+                    }
+                } catch (java.io.IOException e) {
+                    // System.out.println("IOException for " + username);
+                    e.printStackTrace();
+                }
+                /*requestHtml(
+                        endPoint,
+
+                        s -> {
+
+                        }
+                );*/
+                /*requestSkyCrypt(
+                        *//*ApiUtil.SkyCryptEndpoint.PROFILE*//*SkycryptV2Endpoint.PROFILE,
                         player, null,
                         object -> {
                             JsonObject profiles = SkyblockUtil.getAsJsonObject("profiles", object);
@@ -175,15 +232,11 @@ public class ApiUtil {
                                     JsonObject data = SkyblockUtil.getAsJsonObject("data", profile);
                                     JsonObject networth = SkyblockUtil.getAsJsonObject("networth", data);
                                     Double networthDouble = SkyblockUtil.getAsDouble("networth", networth);
-                                    if (uuid.equals(MeloMod.playerUUID)) {
-                                        sendLater("⛀⛁ Networth: $" + String.format("%,.0f", networthDouble) + " ⛃⛂", chatChannel);
-                                    } else {
-                                        sendLater("⛀⛁ " + player + "'s Networth: $" + String.format("%,.0f", networthDouble) + " ⛃⛂", chatChannel);
-                                    }
+
                                 }
                             }
                         }
-                );
+                );*/
             } catch (InterruptedException | ExecutionException e) {
                 throw new RuntimeException(e);
             }
@@ -339,10 +392,34 @@ public class ApiUtil {
         );
     }
 
+    public static String extractBetween(String input, String startDelimiter, String endDelimiter) {
+        // Escape regex special characters in delimiters
+        String regex = Pattern.quote(startDelimiter) + "(.*?)" + Pattern.quote(endDelimiter);
+        Pattern pattern = Pattern.compile(regex);
+        Matcher matcher = pattern.matcher(input);
+
+        if (matcher.find()) {
+            return matcher.group(1);  // Group 1 is the content between the delimiters
+        }
+        return null; // No match found
+    }
+    public static String extractJsonArray(String input) {
+        String regex = "data:\\s*(\\[\\{.*\\}\\])";
+        Pattern pattern = Pattern.compile(regex, Pattern.DOTALL); // DOTALL makes '.' match newlines
+        Matcher matcher = pattern.matcher(input);
+
+        if (matcher.find()) {
+            return matcher.group(1); // the JSON array: [{...}]
+        }
+        return null;
+    }
+
     public synchronized void lastLogin(String player, ChatChannel chatChannel) {
         MeloMod.runAsync(() -> {
-            requestSkyCrypt(
-                    ApiUtil.SkyCryptEndpoint.PROFILE,
+
+            sendLater("ℹ «" + player + "» Last Area: " + "Unknown" + " (Updated: Unknown) ℹ", chatChannel);
+            /*requestSkyCrypt(
+                    ApiUtil.SkycryptV2Endpoint.PROFILE,
                     player,
                     null,
                     object -> {
@@ -363,7 +440,7 @@ public class ApiUtil {
                             }
                         }
                     }
-            );
+            );*/
         });
 
     }
@@ -414,17 +491,49 @@ public class ApiUtil {
 
     }
 
+    public synchronized JsonArray getNameChanges(String username) {
+        String uuid = username; // Assuming username is already a UUID or valid identifier
+        String url = "https://laby.net/api/v3/user/" + uuid + "/profile";
+        CookieStore cookieStore = new BasicCookieStore();
+
+        try (org.apache.http.impl.client.CloseableHttpClient httpClient = org.apache.http.impl.client.HttpClients.custom().setDefaultCookieStore(cookieStore).build()) {
+            org.apache.http.client.methods.HttpGet request = new org.apache.http.client.methods.HttpGet(url);
+            request.setHeader("Content-Type", "application/json");
+            request.setHeader("Accept", "application/json");
+
+            try (CloseableHttpResponse response = httpClient.execute(request)) {
+                String responseBody = org.apache.http.util.EntityUtils.toString(response.getEntity());
+                int responseCode = response.getStatusLine().getStatusCode();
+               // System.out.println("HTTP response for " + username + ": " + responseCode);
+
+                if (responseCode == 200) {
+                    JsonObject object = new JsonParser().parse(responseBody).getAsJsonObject();
+                    JsonArray history = object.getAsJsonArray("name_history");
+                    return history;
+                } else {
+                    //System.out.println("Non-200 response for " + username + ": " + responseBody);
+                }
+            } catch (JsonException e) {
+                //System.out.println("Failed to parse response for " + username);
+                e.printStackTrace();
+            }
+        } catch (java.io.IOException e) {
+           // System.out.println("IOException for " + username);
+            e.printStackTrace();
+        }
+        return new JsonArray();
+    }
+
     /**
      * <a href="https://laby.net/api/v3/user/1871dfae-0a6a-4486-8366-6bc0131d370e/profile">LabyMod Endpoint (92/94)</a>
      * <a href="https://api.crafty.gg/api/v2/players/swageater34">Crafty Endpoint (67/94)</a>
      */
     public synchronized void getPlayerPastNames(String player, int page, ChatChannel chatChannel) {
         MeloMod.runAsync(() -> {
-            try {
-                UUID uuid = fromName(player).get();
-                requestServer(
-                        "https://laby.net/api/v3/user/" + uuid + "/profile",
-                /*
+            /*UUID uuid = fromName(player).get();*/
+                /*requestServer(
+                        "https://laby.net/api/v3/user/" + player + "/profile",
+                *//*
                 object -> {
                     System.out.println(player);
                     JsonObject data = SkyblockUtil.getAsJsonObject("data", object);
@@ -440,29 +549,28 @@ public class ApiUtil {
 
                     sendLaterParty(usernameList.get(page - 1) + " ❄");
                 }
-                 */
+                 *//*
                         object -> {
-                            JsonArray userNameHistory = SkyblockUtil.getAsJsonArray("username_history", object);
-                            List<String> names = new ArrayList<>();
-                            for (JsonElement jsonElement : userNameHistory) {
-                                JsonObject nameChange = jsonElement.getAsJsonObject();
-                                names.add(SkyblockUtil.getAsString("username", nameChange));
-                            }
-                            Collections.reverse(names);
-                            List<String> usernameList = paginate("❄ " + player + "'s Username History (Page #): ", names);
 
-                            sendLater(usernameList.get(page - 1) + " ❄", chatChannel);
-                        }
-                );
-            } catch (InterruptedException | ExecutionException e) {
-                throw new RuntimeException(e);
+*/
+            JsonArray userNameHistory = getNameChanges(player);
+            List<String> names = new ArrayList<>();
+            for (JsonElement jsonElement : userNameHistory) {
+                JsonObject nameChange = jsonElement.getAsJsonObject();
+                names.add(SkyblockUtil.getAsString("name", nameChange));
             }
+            Collections.reverse(names);
+            List<String> usernameList = paginate("❄ " + player + "'s Username History (Page #): ", names);
+
+            sendLater(usernameList.get(page - 1) + " ❄", chatChannel);
+                       /* }
+                );*/
         });
 
 
     }
 
-    public synchronized void requestSkyCrypt(SkyCryptEndpoint endpoint, String playerName, String profileName, Consumer<? super JsonObject> action) {
+    public synchronized void requestSkyCrypt(SkycryptV2Endpoint endpoint, String playerName, String profileName, Consumer<? super JsonObject> action) {
         ApiUtil.Request request = newApiRequest(new SkyCryptEndpointClass(endpoint, playerName, profileName)).method("GET");
 
         CompletableFuture<JsonObject> object = request.requestJson();
@@ -477,6 +585,13 @@ public class ApiUtil {
         }
         CompletableFuture<JsonObject> object = request.requestJson();
         object.thenAcceptAsync(action, executorService);
+    }
+
+    public synchronized void requestHtml(String url, Consumer<? super String> action) {
+        ApiUtil.Request request = new Request().url(url).method("GET");
+        CompletableFuture<String> string = request.requestString();
+
+        string.thenAcceptAsync(action, executorService);
     }
 
     public synchronized void requestServer(String url, Consumer<? super JsonObject> action) {
@@ -516,7 +631,39 @@ public class ApiUtil {
         OFFICER, // TODO
         PARTY,
         CUSTOM,
-        COOP // TODO
+        COOP; // TODO
+
+        public static ChatChannel fromString(String channel) {
+            for (ChatChannel value : ChatChannel.values()) {
+                if (value.toString().equals(channel)) {
+                    return value;
+                }
+            }
+            return null;
+        }
+    }
+
+    public enum SkycryptV2Endpoint {
+        PROFILE("stats/player_name/profile_name"),
+        PROFILE_ANON("stats/player_name");
+
+
+        private final String endPoint;
+
+        SkycryptV2Endpoint(String endPoint) {
+            this.endPoint = endPoint;
+        }
+
+        public String getReplacedEndPoint(String playerName, String playerProfile) {
+            String newEndpoint = endPoint;
+            if (playerName != null) {
+                newEndpoint = newEndpoint.replaceAll("player_name", playerName);
+            }
+            if (playerProfile != null) {
+                newEndpoint = newEndpoint.replaceAll("profile_name", playerProfile);
+            }
+            return newEndpoint;
+        }
     }
 
     public enum SkyCryptEndpoint {
@@ -760,6 +907,7 @@ public class ApiUtil {
                         }
                     }
                 } catch (IOException e) {
+                    System.out.println("error: " + url.toString());
                     throw new RuntimeException(e); // We can rethrow, since supplyAsync catches exceptions.
                 }
             }, executorService);
@@ -802,8 +950,8 @@ public class ApiUtil {
                             os.write(input, 0, input.length);
                         }
 
-                        if (conn instanceof HttpsURLConnection) {
-                            int response = ((HttpsURLConnection) conn).getResponseCode();
+                        if (conn instanceof HttpURLConnection) {
+                            int response = ((HttpURLConnection) conn).getResponseCode();
                             if (response != 200) {
                                 StatusCodes code = StatusCodes.getStatusCode(response);
                                 assert code != null;
@@ -861,8 +1009,8 @@ public class ApiUtil {
                             os.write(input, 0, input.length);
                         }
 
-                        if (conn instanceof HttpsURLConnection) {
-                            int response = ((HttpsURLConnection) conn).getResponseCode();
+                        if (conn instanceof HttpURLConnection) {
+                            int response = ((HttpURLConnection) conn).getResponseCode();
                             if (response != 200) {
                                 StatusCodes code = StatusCodes.getStatusCode(response);
                                 assert code != null;
@@ -909,10 +1057,10 @@ public class ApiUtil {
     }
 
     public static class SkyCryptEndpointClass implements Endpoint {
-        public static final String MAIN = "https://sky.shiiyu.moe/api/v2/";
+        public static final String MAIN = "https://sky.shiiyu.moe/";
         private final String endPoint;
 
-        public SkyCryptEndpointClass(SkyCryptEndpoint endpoint, String playerName, String profileName) {
+        public SkyCryptEndpointClass(SkycryptV2Endpoint endpoint, String playerName, String profileName) {
             this.endPoint = MAIN + endpoint.getReplacedEndPoint(playerName, profileName);
         }
 
