@@ -25,7 +25,6 @@ Available in 30 languages! See https://crowdin.com/project/melomod to contribute
   |guild|(player:string)|Retrieves information about a player's guild|?guild|✿ Guild: [✧BK✧] Bumble Kindergarten (???) ✿|
   |locate|(player:string)|Locates a player|?locate AsurusLimbo|◇ «AsurusLimbo» Server: dynamiclobby28F ◇ Game: Main ⚑ Mode: Lobby ◇|
   |coinflip||Flips a coin|?coinflip|»»» ZenmosM flipped a coin! It's Tails! «««|
-  |stalk|\<player:string>|Gets the last known location of a player|?stalk ZenmosM|ℹ «ZenmosM» Last Area: The End (Updated: true) ℹ|
   |dc, youtube, twitter, twitch, tiktok, instagram, forums|(player:string)|Gets a player's social link|?dc 56ms|»»» 56ms's DC: swavyw «««|
   |help|(page:int)||?help|⭐ Available Commands (Page 1): ...|
   |secrets|(player:string)||?secrets|☠ ZenmosM's secrets: 18100 ☠|
@@ -35,6 +34,15 @@ Available in 30 languages! See https://crowdin.com/project/melomod to contribute
   |history|\<player:string> (page:int)||?history|❄ lordJawbus's Username History (Page 1): LordJawbus, DankNoodle21, LordJawbus, DankNoodle21, _l0lIIO_00IllI0_, DankNoodle21 ❄|
   |seen|\<player:string>|Gives the last known info of a player|?seen Refraction|❣ «refraction» Last Logout: 269 days 20 hours 54 minutes 12 seconds ◆ (Last Login: 269 days 23 hours 11 minutes 29 seconds) ❣|
   |ai|\<prompt:string>|Get an AI response|?ai How do you make a souffle?|✉ AI: '1. Preheat oven to 375°F. Butter dish & coat with grated cheese.2. Whisk eggs, add flavors (e.g. grated cheese, cream, seasonings).3. Fold egg mixture gently into cheese coating.4. Pour mixture into dish & gently shake.5. Bake 25-30 minutes|
+  |fps||Sends your current FPS|»»» Current FPS: 257 «««|
+  |cpu||Sends CPU information|»»» CPU (2.1/3.0 GHz): 11% Load @ 52°C «««|
+  |internet||Displays your internet speed|»»» Internet Speed (wireless_32768): 1.9 Gbps «««|
+  |power||Displays your power usage|»»» System Battery (LIon): 76956MWH / 76956MWH (100%) 0.0nA, 17.3V «««|
+  |temp||Displays your CPU temperature|»»» CPU Temp: 52°C (126°F) «««|
+  |ping||Displays your average or current ping|»»» Average Ping: 144.7ms «««|
+  |tps||Displays the average or current server TPS|»»» Average TPS: 19.6 «««|
+  |entities||Displays the entities loaded|»»» Entity Count: 102 «««|
+  |**BROKEN** stalk|\<player:string>|Gets the last known location of a player|?stalk ZenmosM|ℹ «ZenmosM» Last Area: The End (Updated: true) ℹ|
 
 - ## Commands
 
