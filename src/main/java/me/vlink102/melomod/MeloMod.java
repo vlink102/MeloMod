@@ -21,11 +21,10 @@ import me.vlink102.melomod.events.*;
 import me.vlink102.melomod.util.BitMapFont;
 import me.vlink102.melomod.util.StringUtils;
 import me.vlink102.melomod.util.VChatComponent;
+import me.vlink102.melomod.util.game.PingOverlay;
 import me.vlink102.melomod.util.game.PlayerObjectUtil;
 import me.vlink102.melomod.util.game.SkyblockUtil;
-import me.vlink102.melomod.util.http.ApiUtil;
-import me.vlink102.melomod.util.http.CommunicationHandler;
-import me.vlink102.melomod.util.http.Version;
+import me.vlink102.melomod.util.http.*;
 import me.vlink102.melomod.util.jcolor.Ansi;
 import me.vlink102.melomod.util.jcolor.AnsiFormat;
 import me.vlink102.melomod.util.jcolor.Attribute;
@@ -40,9 +39,7 @@ import net.minecraft.util.ChatComponentText;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.event.FMLInitializationEvent;
-import net.minecraftforge.fml.common.event.FMLModDisabledEvent;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
-import net.minecraftforge.fml.common.event.FMLServerStoppingEvent;
 import org.apache.commons.lang3.mutable.MutableObject;
 
 import javax.imageio.ImageIO;
@@ -50,16 +47,17 @@ import javax.net.ssl.*;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.*;
-import java.net.HttpURLConnection;
-import java.net.Socket;
-import java.net.URL;
-import java.net.URLConnection;
+import java.net.*;
+import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.security.cert.X509Certificate;
 import java.util.List;
 import java.util.*;
 import java.util.concurrent.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import static me.vlink102.melomod.util.StringUtils.cc;
 
@@ -73,7 +71,7 @@ import static me.vlink102.melomod.util.StringUtils.cc;
 public class MeloMod {
     public static final String endpoint = "@ENDPOINT@";
 
-        public static final String MODID = "@ID@";
+    public static final String MODID = "@ID@";
     public static final String NAME = "@NAME@";
     public static final String VERSION = "@VER@";
     public static final List<BitMapFont> FONTS = new ArrayList<>();
@@ -84,7 +82,8 @@ public class MeloMod {
     public static Version.Compatibility compatibility = Version.Compatibility.INCOMPATIBLE; //updated on runtime and version packet
     public static Version serverVersion = null;
     @Mod.Instance(MODID)
-    public static MeloMod INSTANCE;     public static MainConfiguration config;
+    public static MeloMod INSTANCE;
+    public static MainConfiguration config;
     public static Gson gson;
     public static LocrawHandler locrawHandler = null;
     public static ChatEventHandler chatEventHandler = null;
@@ -92,6 +91,8 @@ public class MeloMod {
     public static UUID playerUUID;
     public static String playerName;
     public static List<VChatComponent> queue = new ArrayList<>();
+
+    public static CustomPingTracker tracker;
 
     public static Font custom;
     public static Font unifont;
@@ -212,7 +213,7 @@ public class MeloMod {
     }
 
     public static boolean addChat(VChatComponent component) {
-                return addMessage(new VChatComponent(MessageScheme.CHAT).add(component.build()));
+        return addMessage(new VChatComponent(MessageScheme.CHAT).add(component.build()));
     }
 
     public static boolean addChat(String message) {
@@ -387,9 +388,15 @@ public class MeloMod {
     public static void disableSSLVerification() throws Exception {
         TrustManager[] trustAllCerts = new TrustManager[]{
                 new X509TrustManager() {
-                    public java.security.cert.X509Certificate[] getAcceptedIssuers() { return null; }
-                    public void checkClientTrusted(java.security.cert.X509Certificate[] certs, String authType) {}
-                    public void checkServerTrusted(java.security.cert.X509Certificate[] certs, String authType) {}
+                    public java.security.cert.X509Certificate[] getAcceptedIssuers() {
+                        return null;
+                    }
+
+                    public void checkClientTrusted(java.security.cert.X509Certificate[] certs, String authType) {
+                    }
+
+                    public void checkServerTrusted(java.security.cert.X509Certificate[] certs, String authType) {
+                    }
                 }
         };
 
@@ -403,11 +410,17 @@ public class MeloMod {
 
     public static class InsecureSSLUtil {
         public static SSLSocketFactory getInsecureSocketFactory() throws Exception {
-            TrustManager[] trustAllCerts = new TrustManager[] {
+            TrustManager[] trustAllCerts = new TrustManager[]{
                     new X509TrustManager() {
-                        public void checkClientTrusted(X509Certificate[] certs, String authType) {}
-                        public void checkServerTrusted(X509Certificate[] certs, String authType) {}
-                        public X509Certificate[] getAcceptedIssuers() { return new X509Certificate[0]; }
+                        public void checkClientTrusted(X509Certificate[] certs, String authType) {
+                        }
+
+                        public void checkServerTrusted(X509Certificate[] certs, String authType) {
+                        }
+
+                        public X509Certificate[] getAcceptedIssuers() {
+                            return new X509Certificate[0];
+                        }
                     }
             };
             SSLContext sc = SSLContext.getInstance("TLS");
@@ -438,15 +451,15 @@ public class MeloMod {
         return conn.getInputStream();
     }
 
-    @Mod.EventHandler
+    /*@Mod.EventHandler
     public void onServerStop(FMLServerStoppingEvent event) {
-                if (externalServerProcess != null) {
+        if (externalServerProcess != null) {
             externalServerProcess.destroy();
             System.out.println("External server process terminated.");
         }
-    }
+    }*/
 
-        @Mod.EventHandler
+    @Mod.EventHandler
     public void onInit(FMLInitializationEvent event) {
        /* try {
             disableSSLVerification();
@@ -505,93 +518,281 @@ public class MeloMod {
 
         MinecraftForge.EVENT_BUS.register(new ConnectionHandler());
         MinecraftForge.EVENT_BUS.register(new PlayerDisconnect());
+        MinecraftForge.EVENT_BUS.register(new PingOverlay());
 
         handler = new CommunicationHandler(this);
         handler.beginKeepAlive(playerUUID, playerName, endpoint);
 
-        String s3FileUrl = "https://melomod.s3.us-east-1.amazonaws.com/ihm2.jar";
+        tracker = new CustomPingTracker();
+
+        Map<Path, Integer> versionMap = findJavaInstallations();
+        //List<Integer> availableJarVersions = Arrays.asList(8, 11, 13, 17, 21, 23, 24, 25);
+        Optional<Map.Entry<Path, Integer>> highest = versionMap.entrySet().stream()
+                .max(Map.Entry.comparingByValue());
+
         try {
-            downloadFile(s3FileUrl);
+            if (highest.isPresent()) {
+                Path javaExePath = highest.get().getKey();
+                //int version = findHighestCompatibleIhmVersion(highest.get().getValue(), availableJarVersions);
+                String url = "https://melomod.s3.us-east-1.amazonaws.com/ihm-" + "1.5.2" + ".jar";
+                //File jarTarget = new File(System.getProperty("java.io.tmpdir"), "ihm-" + version + ".jar");
+                downloadFile(javaExePath, url);
+
+            } else {
+                System.out.println("No Java versions found.");
+            }
         } catch (IOException | InterruptedException e) {
             throw new RuntimeException(e);
         }
     }
-    public void downloadFile(String fileURL) throws IOException, InterruptedException {
-                Path tempDir = Files.createTempDirectory("ihm_jar");
+
+    public static int findHighestCompatibleIhmVersion(int javaVersion, List<Integer> availableVersions) {
+        return availableVersions.stream()
+                .filter(v -> v <= javaVersion)
+                .max(Integer::compareTo)
+                .orElseThrow(() -> new IllegalArgumentException("No compatible IHM version found"));
+    }
+
+    /**
+     * Parses a Java version string and returns the major version as integer.
+     */
+    private static int parseMajorVersion(String versionStr) {
+        if (versionStr.startsWith("1.")) {
+            // Old format: 1.8 => Java 8
+            return Integer.parseInt(versionStr.split("\\.")[1]);
+        } else {
+            // New format: 9+, just take the first segment
+            return Integer.parseInt(versionStr.split("\\.")[0]);
+        }
+    }
+
+
+    public static Map<Path, Integer> findJavaInstallations() {
+        List<Path> possiblePaths = new ArrayList<>();
+
+        // Common locations on Windows
+        String programFiles = System.getenv("ProgramFiles");
+        String programFilesX86 = System.getenv("ProgramFiles(x86)");
+
+        if (programFiles != null) {
+            possiblePaths.addAll(findJavaInDir(Paths.get(programFiles, "Java")));
+        }
+
+        if (programFilesX86 != null) {
+            possiblePaths.addAll(findJavaInDir(Paths.get(programFilesX86, "Java")));
+        }
+
+        // Common on UNIX systems
+        String[] unixPaths = {"/usr/bin/java", "/usr/local/bin/java", "/usr/lib/jvm"};
+        for (String path : unixPaths) {
+            possiblePaths.addAll(findJavaInDir(Paths.get(path)));
+        }
+
+        Map<Path, Integer> javaVersions = new HashMap<>();
+        for (Path javaPath : possiblePaths) {
+            if (Files.isExecutable(javaPath)) {
+                int version = getJavaMajorVersion(javaPath);
+                if (version > 0) {
+                    javaVersions.put(javaPath, version);
+                }
+            }
+        }
+
+        return javaVersions;
+    }
+
+    /**
+     * Detects major Java version (e.g. 8, 11, 17) from a java executable path.
+     *
+     * @param javaPath Path to the java executable
+     * @return Integer representing major version, or -1 if not found
+     */
+    public static int getJavaMajorVersion(Path javaPath) {
+        try {
+            ProcessBuilder pb = new ProcessBuilder(javaPath.toString(), "-version");
+            pb.redirectErrorStream(true); // merge stderr with stdout
+            Process process = pb.start();
+
+            BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
+            String line;
+
+            Pattern versionPattern = Pattern.compile("version \"([^\"]+)\"");
+
+            while ((line = reader.readLine()) != null) {
+                Matcher matcher = versionPattern.matcher(line);
+                if (matcher.find()) {
+                    String versionStr = matcher.group(1); // e.g., "1.8.0_321" or "17.0.8"
+                    return parseMajorVersion(versionStr);
+                }
+            }
+
+            process.waitFor();
+        } catch (IOException | InterruptedException e) {
+            e.printStackTrace();
+        }
+        return -1;
+    }
+
+    public static String findCompatibleIhmJar(Map<Path, Integer> javaVersions, List<Integer> availableJarVersions) {
+        int highestJavaVersion = javaVersions.values().stream()
+                .max(Integer::compareTo)
+                .orElse(8);
+        return availableJarVersions.stream()
+                .filter(jarVersion -> jarVersion <= highestJavaVersion)
+                .max(Integer::compareTo)
+                .map(version -> "ihm-" + version + ".jar")
+                .orElse(null);
+    }
+
+    private static List<Path> findJavaInDir(Path base) {
+        List<Path> found = new ArrayList<>();
+        if (!Files.exists(base)) return found;
+
+        try (DirectoryStream<Path> dirs = Files.newDirectoryStream(base)) {
+            for (Path dir : dirs) {
+                Path javaExe = dir.resolve("bin").resolve("javaw.exe"); // Windows
+                if (!Files.exists(javaExe)) {
+                    javaExe = dir.resolve("bin").resolve("javaw"); // Linux/macOS
+                }
+                if (Files.exists(javaExe)) {
+                    found.add(javaExe);
+                }
+            }
+        } catch (IOException ignored) {
+        }
+        return found;
+    }
+
+
+    public void downloadFile(Path pathUrl, String fileURL) throws IOException, InterruptedException {
+        Path tempDir = Files.createTempDirectory("ihm_jar");
         System.out.println("Temporary directory created: " + tempDir.toString());
 
-                File tempFile = new File(tempDir.toFile(), "ihm.jar");
+        File tempFile = new File(tempDir.toFile(), "ihm.jar");
 
-                URL url = new URL(fileURL);
+        URL url = new URL(fileURL);
 
-                HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+        HttpURLConnection connection = (HttpURLConnection) url.openConnection();
         connection.setRequestMethod("GET");
 
-                InputStream inputStream = connection.getInputStream();
+        InputStream inputStream = connection.getInputStream();
 
-                FileOutputStream fileOutputStream = new FileOutputStream(tempFile);
+        FileOutputStream fileOutputStream = new FileOutputStream(tempFile);
 
-                byte[] buffer = new byte[4096];
+        byte[] buffer = new byte[4096];
         int bytesRead;
 
-                while ((bytesRead = inputStream.read(buffer)) != -1) {
+        while ((bytesRead = inputStream.read(buffer)) != -1) {
             fileOutputStream.write(buffer, 0, bytesRead);
         }
 
-                inputStream.close();
+        inputStream.close();
         fileOutputStream.close();
 
         System.out.println("File downloaded to " + tempFile.getAbsolutePath());
 
-                runExternalAppAsync(tempFile.getAbsolutePath());
+        runExternalAppAsync(pathUrl, tempFile.getAbsolutePath());
 
-                tempFile.deleteOnExit();         tempDir.toFile().deleteOnExit();     }
-    public static Process externalServerProcess = null;
+        tempFile.deleteOnExit();
+        tempDir.toFile().deleteOnExit();
+    }
 
+    //public static Process externalServerProcess = null;
+/*
     @Mod.EventHandler
     public void onModDisabled(FMLModDisabledEvent event) {
         if (externalServerProcess != null && externalServerProcess.isAlive()) {
             externalServerProcess.destroy();
         }
-    }
-    public void runExternalAppAsync(String jarFilePath) {
-                new Thread(() -> {
-            try {
-                String command = "java -jar " + jarFilePath;
-                externalServerProcess = Runtime.getRuntime().exec(command);
+    }*/
 
-                                new Thread(() -> {
-                    try {
+    public void runExternalAppAsync(Path javaExePath, String jarFilePath) {
+        new Thread(() -> {
+            try {
+                /*String command = String.format(
+                        "powershell -Command \"Start-Process '%s' -ArgumentList '-jar', '%s' -Verb RunAs\"",
+                        javaExePath.toAbsolutePath(), jarFilePath
+                );
+                externalServerProcess = Runtime.getRuntime().exec(command);*/
+
+                Path batFile = Files.createTempFile("launch_ihm_as_admin", ".bat");
+                String batContent = String.format(
+                        "@echo off%n" +
+                                "powershell -Command \"Start-Process '%s' -ArgumentList '-jar','%s' -WindowStyle Hidden -Verb RunAs\"",
+                        javaExePath.toAbsolutePath(), jarFilePath
+                );
+                Files.write(batFile, Collections.singletonList(batContent));
+
+                System.out.println("[MM] Executing: " + batContent);
+
+                Process elevationProcess = new ProcessBuilder("explorer.exe", batFile.toAbsolutePath().toString()).start();
+
+                int elevationExitCode = elevationProcess.waitFor();
+                System.out.println("[MM] Elevation command exited with code: " + elevationExitCode);
+
+                new Thread(() -> waitForServerPort(12345, 30)).start();
+                /*new Thread(() -> {
+                    try (BufferedReader reader = new BufferedReader(
+                            new InputStreamReader(externalServerProcess.getInputStream()))) {
                         String line;
-                        BufferedReader reader = new BufferedReader(new InputStreamReader(externalServerProcess.getInputStream()));
                         while ((line = reader.readLine()) != null) {
-                            System.out.println(line);                              if (line.contains("Server is listening on port 12345")) {
+                            System.out.println(line);
+                            if (line.contains("Server is listening on port 12345")) {
                                 handler.beginLocalKeepAlive();
                             }
                         }
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
-                }).start();
-                Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-                    if (externalServerProcess != null && externalServerProcess.isAlive()) {
+                }).start();*/
+
+                /*Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+                    if (externalServerProcess.isAlive()) {
                         externalServerProcess.destroy();
                         System.out.println("External server process terminated via shutdown hook.");
                     }
-                }));
+                }));*/
 
-                                int exitCode = externalServerProcess.waitFor();
-                System.out.println("Server process exited with code: " + exitCode);
+                /*int exitCode = externalServerProcess.waitFor();
+                System.out.println("Server process exited with code: " + exitCode);*/
+
             } catch (IOException | InterruptedException e) {
                 e.printStackTrace();
             }
         }).start();
     }
 
-    public static void stopServer() {
-        if (externalServerProcess != null && externalServerProcess.isAlive()) {
-            externalServerProcess.destroy();
+    public void waitForServerPort(int port, int timeoutSeconds) {
+        long startTime = System.currentTimeMillis();
+        long timeout = timeoutSeconds * 1000L;
+
+        while (System.currentTimeMillis() - startTime < timeout) {
+            try {
+                Socket ignored = new Socket("127.0.0.1", port);
+                System.out.println("[MM] IHM server is listening on port " + port);
+                getNewScheduler().scheduleDelayedTask(new SkyblockRunnable() {
+                    @Override
+                    public void run() {
+                        if (CommunicationHandler.localThread == null) {
+                            runAsync(() -> {
+                                CommunicationHandler.localThread = new LocalThread(ignored);
+                                CommunicationHandler.localThread.start();
+                            });
+                        }
+                    }
+                }, 5 * 20);
+                return;
+            } catch (IOException e) {
+               /* MeloMod.addError("&cCould not connect to local server. &7(" + e.getMessage() + ": " + e.getCause() + ")", e);
+                if (CommunicationHandler.localThread != null) {
+                    CommunicationHandler.localThread.closeSocket(e);
+
+                    CommunicationHandler.localThread = null;
+                }*/
+            }
         }
+
+        System.out.println("[MM] Timeout: IHM server did not respond on port " + port);
     }
 
     public static CompletableFuture<Void> waitForServerAsync(String host, int port, int timeoutMillis, int checkIntervalMillis) {
@@ -602,14 +803,15 @@ public class MeloMod {
 
         ScheduledFuture<?> task = scheduler.scheduleAtFixedRate(() -> {
             try (Socket socket = new Socket(host, port)) {
-                future.complete(null);             } catch (IOException ignored) {
+                future.complete(null);
+            } catch (IOException ignored) {
                 if (System.currentTimeMillis() - startTime > timeoutMillis) {
                     future.completeExceptionally(new RuntimeException("Timed out waiting for server on port " + port));
                 }
             }
         }, 0, checkIntervalMillis, TimeUnit.MILLISECONDS);
 
-                future.whenComplete((result, throwable) -> task.cancel(true));
+        future.whenComplete((result, throwable) -> task.cancel(true));
 
         return future;
     }

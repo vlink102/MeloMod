@@ -9,5 +9,8 @@
   "client": [
     "MinecraftMixin"
   ],
-  "verbose": true
+  "verbose": true,
+  "mixins": [
+    "MixinNetworkManager"
+  ]
 }

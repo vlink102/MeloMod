@@ -37,15 +37,15 @@ public class CommunicationHandler {
 
                 localThread = new LocalThread(socket);
                 localThread.start();
-
             } catch (IOException e) {
-                MeloMod.addError("&cCould not connect to local server. &7(" + e.getMessage() + ": " + e.getCause() + ")", e);
+                MeloMod.addError("&cCould not connect to local server &7(" + e.getMessage() + ": " + e.getCause() + ")", e);
                 if (localThread != null) {
                     localThread.closeSocket(e);
 
                     localThread = null;
                 }
             }
+
         });
     }
 
@@ -84,13 +84,6 @@ public class CommunicationHandler {
     }
 
     public void beginLocalKeepAlive() {
-        mod.getNewScheduler().scheduleDelayedTask(new SkyblockRunnable() {
-            @Override
-            public void run() {
-                if (localThread == null) {
-                    establishInternal();
-                }
-            }
-        }, 5 * 20);
+
     }
 }

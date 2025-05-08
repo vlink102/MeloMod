@@ -22,6 +22,9 @@ public class LocalThread extends Thread {
     @Getter
     private final Socket socket;
     public LocalThread(Socket socket) {
+        if (socket == null) {
+
+        }
         try {
             this.bufferedReader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
             this.printWriter = new PrintWriter(socket.getOutputStream());
@@ -76,8 +79,6 @@ public class LocalThread extends Thread {
                         MeloMod.addWarn("&e" + Feature.GENERIC_WARNING_MALFORMED_PACKET + ": &7" + data);
                     }
                 }
-
-                //MeloMod.addDebug("&7" + Feature.GENERIC_DEBUG_DATA + ": &8" + MeloMod.gson.toJson(ItemSerializer.INSTANCE.deserializeFromBase64(data)));
             }
         } catch (IOException e) {
             MeloMod.addError("&cLost connection to local server (" + e.getMessage() + ": " + e.getCause() + ")", e);

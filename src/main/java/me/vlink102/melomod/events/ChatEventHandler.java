@@ -10,6 +10,7 @@ import me.vlink102.melomod.chatcooldownmanager.ServerTracker;
 import me.vlink102.melomod.configuration.ChatConfiguration;
 import me.vlink102.melomod.configuration.MainConfiguration;
 import me.vlink102.melomod.util.StringUtils;
+import me.vlink102.melomod.util.game.PingOverlay;
 import me.vlink102.melomod.util.game.neu.Utils;
 import me.vlink102.melomod.util.http.ApiUtil;
 import me.vlink102.melomod.util.http.CommunicationHandler;
@@ -584,6 +585,7 @@ public class ChatEventHandler {
         if (ChatConfiguration.nWordPass) {
             if (chatMessage.equalsIgnoreCase(ChatConfiguration.chatPrefix + Commands.NPASS.getCommand())) {
                 sendLater("»»» " + playerName + " was granted the N pass. «««", chatChannel);
+                return;
             }
         }
         if (ChatConfiguration.femboy) {
@@ -603,9 +605,31 @@ public class ChatEventHandler {
             }
         }
 
+        if (ChatConfiguration.entities) {
+            if (chatMessage.equalsIgnoreCase(ChatConfiguration.chatPrefix + Commands.ENTITIES.getCommand())) {
+                int size = Minecraft.getMinecraft().theWorld.loadedEntityList.size();
+                sendLater("»»» Entity Count: " + size + " «««", chatChannel);
+                return;
+            }
+        }
+
+        if (ChatConfiguration.temp) {
+            if (chatMessage.equalsIgnoreCase(ChatConfiguration.chatPrefix + Commands.TEMP.getCommand())) {
+                CommunicationHandler.localThread.sendRequestPacket(4, chatChannel);
+                return;
+            }
+        }
+
+        if (ChatConfiguration.tps) {
+            if (chatMessage.equalsIgnoreCase(ChatConfiguration.chatPrefix + Commands.TPS.getCommand())) {
+                PingOverlay.sendPing(true, chatChannel, true);
+                return;
+            }
+        }
+
         if (ChatConfiguration.ping) {
             if (chatMessage.equalsIgnoreCase(ChatConfiguration.chatPrefix + Commands.PING.getCommand())) {
-                NetHandlerPlayClient connection = Minecraft.getMinecraft().getNetHandler();
+                /*NetHandlerPlayClient connection = Minecraft.getMinecraft().getNetHandler();
                 if (connection != null) {
                     NetworkPlayerInfo info = connection.getPlayerInfo(Minecraft.getMinecraft().thePlayer.getUniqueID());
                     if (info != null) {
@@ -615,7 +639,11 @@ public class ChatEventHandler {
                 } else {
                     sendLater("»»» Ping: Unknown «««", chatChannel);
                     return;
-                }
+                }*/
+
+                //MeloMod.tracker.sendPingRequest(chatChannel);
+                PingOverlay.sendPing(true, chatChannel, false);
+                return;
             }
             if (ChatConfiguration.runOthers) {
                 if (chatMessage.startsWith(ChatConfiguration.chatPrefix + Commands.PING.getCommand() + " ")) {
@@ -1004,7 +1032,10 @@ public class ChatEventHandler {
         CPU("cpu", ChatConfiguration::isCpu),
         INTERNET("internet", ChatConfiguration::isInternet),
         POWER("power", ChatConfiguration::isPower),
-        PING("ping", ChatConfiguration::isPing);
+        PING("ping", ChatConfiguration::isPing, optional("player", true)),
+        TPS("tps", ChatConfiguration::isTps),
+        TEMP("temp", ChatConfiguration::isTemp),
+        ENTITIES("entities", ChatConfiguration::isEntities);
 
         @Getter
         private final String command;

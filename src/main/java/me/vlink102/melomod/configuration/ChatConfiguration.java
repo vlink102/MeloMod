@@ -161,33 +161,62 @@ public class ChatConfiguration extends SubConfig {
     )
     public static boolean ping = true;
 
-   /* @Getter
+    @Getter
+    @Switch(
+            subcategory = "Commands",
+            name = "Enable TPS command"
+    )
+    public static boolean tps = true;
+
+    @Getter
+    @Switch(
+            subcategory = "Commands",
+            name = "Use instant TPS values"
+    )
+    public static boolean instantTPS = false;
+
+
+    @Getter
+    @Switch(
+            subcategory = "Commands",
+            name = "Use instant ping values"
+    )
+    public static boolean instantPing = false;
+
+    @Getter
     @Switch(
             subcategory = "Commands",
             name = "Enable CPU temp command"
     )
-    public static boolean temp = true;*/
+    public static boolean temp = true;
 
     @Getter
     @Switch(
             subcategory = "Commands",
             name = "Enable CPU command"
     )
-    public static boolean cpu = true;
+    public static boolean cpu = false;
 
     @Getter
     @Switch(
             subcategory = "Commands",
             name = "Enable Internet command"
     )
-    public static boolean internet = true;
+    public static boolean internet = false;
 
     @Getter
     @Switch(
             subcategory = "Commands",
             name = "Enable Power command"
     )
-    public static boolean power = true;
+    public static boolean power = false;
+
+    @Getter
+    @Switch(
+            subcategory = "Commands",
+            name = "Enable entities command"
+    )
+    public static boolean entities = true;
 
     @Switch(
             name = "Enable Chat Caching",
